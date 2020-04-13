@@ -1,0 +1,3 @@
+rootProject.name='performace'
+include ':app'
+include ':tool'
