@@ -1,3 +1,4 @@
 rootProject.name='performace'
 include ':app'
 include ':tool'
+include ':tool-noop'

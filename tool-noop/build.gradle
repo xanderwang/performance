@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-
+apply plugin: "maven"
 apply plugin: 'com.novoda.bintray-release'
 
 android {
@@ -29,13 +29,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-
-    implementation 'com.swift.sandhook:hooklib:4.2.0'
-    // need for android 11
-//  implementation 'com.swift.sandhook:nativehook:4.2.0'
-
 }
-
 
 // git项目的地址
 def _siteUrl = 'https://github.com/XanderWang/performance'
@@ -43,9 +37,8 @@ def _siteUrl = 'https://github.com/XanderWang/performance'
 def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
 def _group = 'com.xander.performance.tool'
-def _artifactId = 'tool'
+def _artifactId = 'tool-noop'
 def _version = "0.1.0"
-
 
 publish {
     // 各个字段的含义见 https://github.com/novoda/bintray-release/wiki/Configuration-of-the-publish-closure
