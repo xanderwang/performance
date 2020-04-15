@@ -44,7 +44,7 @@ def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
 def _group = 'com.xander.performance.tool'
 def _artifactId = 'tool'
-def _version = "0.1.0"
+def _version = rootProject.ext.lib_version
 
 
 publish {

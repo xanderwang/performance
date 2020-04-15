@@ -8,6 +8,10 @@ public class pTool {
 
   }
 
+  public static void startPerformance(long anrCheckTime) {
+
+  }
+
   private static void startCheckANR() {
 
   }
