@@ -6,7 +6,7 @@ import com.swift.sandhook.lib.BuildConfig;
 
 public class pTool {
 
-  private static final String TAG = "pTool";
+  public static final String TAG = "pTool";
 
   public static void startPerformance() {
     startPerformance(PerformanceConfig.ANR_CHECK_TIME);

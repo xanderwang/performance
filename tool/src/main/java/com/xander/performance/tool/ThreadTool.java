@@ -1,18 +1,13 @@
 package com.xander.performance.tool;
 
-import android.util.Log;
-
 import com.swift.sandhook.SandHook;
 import com.swift.sandhook.annotation.HookClass;
 import com.swift.sandhook.annotation.HookMethod;
 import com.swift.sandhook.annotation.HookMethodBackup;
-import com.swift.sandhook.annotation.MethodParams;
 import com.swift.sandhook.annotation.ThisObject;
 import com.swift.sandhook.wrapper.HookErrorException;
 import com.swift.sandhook.wrapper.HookWrapper;
-
 import java.lang.reflect.Method;
-import java.security.AccessControlContext;
 
 /**
  * @ProjectName: performance
