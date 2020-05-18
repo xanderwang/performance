@@ -1,13 +1,9 @@
 package com.xander.performance.tool;
 
-import com.swift.sandhook.SandHook;
-import com.swift.sandhook.annotation.HookClass;
-import com.swift.sandhook.annotation.HookMethod;
-import com.swift.sandhook.annotation.HookMethodBackup;
-import com.swift.sandhook.annotation.ThisObject;
-import com.swift.sandhook.wrapper.HookErrorException;
-import com.swift.sandhook.wrapper.HookWrapper;
-import java.lang.reflect.Method;
+import android.util.Log;
+import com.taobao.android.dexposed.DexposedBridge;
+import com.taobao.android.dexposed.XC_MethodHook;
+import java.lang.annotation.Target;
 
 /**
  * @ProjectName: performance
@@ -23,32 +19,47 @@ public class ThreadTool {
   private static final String TAG = "ThreadTool";
 
   public static void init() {
-    try {
-      SandHook.addHookClass(ThreadHooker.class);
-    } catch (HookErrorException e) {
-      e.printStackTrace();
+    DexposedBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
+    DexposedBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
+  }
+
+  static class ThreadConstructorHook extends XC_MethodHook {
+
+    @Override
+    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      super.beforeHookedMethod(param);
+      Thread t = (Thread) param.thisObject;
+      Log.i(TAG, "ThreadConstructorHook thread:" + t + ", started..");
+//      pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
+    }
+
+    @Override
+    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+      super.afterHookedMethod(param);
+      Thread t = (Thread) param.thisObject;
+      Log.i(TAG, "ThreadConstructorHook thread:" + t + ", exit..");
+//      pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
     }
   }
 
-  @HookClass(Thread.class)
-  static class ThreadHooker {
 
-    @HookMethodBackup("start")
-    static Method startOrigin;
+  static class ThreadStartHook extends XC_MethodHook {
 
-    @HookMethodBackup("start")
-    static HookWrapper.HookEntity startBackUp;
+    @Override
+    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      super.beforeHookedMethod(param);
+      Thread t = (Thread) param.thisObject;
+      Log.i(TAG, "ThreadStartHook thread:" + t + ", started..");
+      pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, ThreadStartHook.class.getName());
+    }
 
-    @HookMethod("start")
-    public static void startMethodHooked(@ThisObject Thread thread) {
-      pTool.printThreadStackTrace(TAG, Thread.currentThread());
-      try {
-        startBackUp.callOrigin(thread);
-        //SandHook.callOriginByBackup(startOrigin, thread);
-        //startOrigin.invoke(thread);
-      } catch (Throwable e) {
-        e.printStackTrace();
-      }
+    @Override
+    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+      super.afterHookedMethod(param);
+      Thread t = (Thread) param.thisObject;
+      Log.i(TAG, "ThreadStartHook thread:" + t + ", exit..");
+//      pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
     }
   }
+
 }
