@@ -1,38 +1,35 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android-extensions'
-apply plugin: 'kotlin-android'
 apply plugin: "maven"
 apply plugin: 'com.novoda.bintray-release'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+  def _android = rootProject.ext.android
+  compileSdkVersion _android['compileSdkVersion']
+  buildToolsVersion _android['buildToolsVersion']
 
-    defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+  defaultConfig {
+    minSdkVersion _android['minSdkVersion']
+    targetSdkVersion _android['targetSdkVersion']
+    versionCode 1
+    versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles 'consumer-rules.pro'
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    consumerProguardFiles 'consumer-rules.pro'
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
+  }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    implementation "androidx.core:core-ktx:+"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+  implementation fileTree(dir: 'libs', include: ['*.jar'])
+  testImplementation 'junit:junit:4.12'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+  androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
 
 // git项目的地址
@@ -45,19 +42,19 @@ def _artifactId = 'tool-noop'
 def _version = rootProject.ext.lib_version
 
 publish {
-    // 各个字段的含义见 https://github.com/novoda/bintray-release/wiki/Configuration-of-the-publish-closure
-    Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-    def user = properties.getProperty('BINTRAY_USER')
-    def key = properties.getProperty('BINTRAY_KEY')
-    userOrg = user
-    repoName = 'maven'
-    groupId = _group
-    artifactId = _artifactId
-    publishVersion = _version
-    dryRun = false
-    desc = 'a lib'
-    website = _siteUrl
-    bintrayUser = user
-    bintrayKey = key
+  // 各个字段的含义见 https://github.com/novoda/bintray-release/wiki/Configuration-of-the-publish-closure
+  Properties properties = new Properties()
+  properties.load(project.rootProject.file('local.properties').newDataInputStream())
+  def user = properties.getProperty('BINTRAY_USER', 'xanderwang')
+  def key = properties.getProperty('BINTRAY_KEY', 'xxx')
+  userOrg = user
+  repoName = 'maven'
+  groupId = _group
+  artifactId = _artifactId
+  publishVersion = _version
+  dryRun = false
+  desc = 'a lib'
+  website = _siteUrl
+  bintrayUser = user
+  bintrayKey = key
 }
