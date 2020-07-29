@@ -33,15 +33,16 @@ dependencies {
   androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
   def _dependencies = rootProject.ext.dependencies
-//  implementation _dependencies['hooklib']
+  //implementation _dependencies['hooklib']
   // need for android 11
-//  implementation _dependencies['nativehook']
+  //implementation _dependencies['nativehook']
 
   implementation _dependencies['core-ktx']
   implementation "${_dependencies['kotlin-stdlib-jdk7']}:$kotlin_version"
+  //implementation _dependencies['kotlinx-coroutines-core']
   //implementation _dependencies['kotlinx-coroutines-android']
 
-  implementation _dependencies['epic']
+  api _dependencies['epic']
 
 }
 

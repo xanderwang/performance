@@ -37,15 +37,16 @@ dependencies {
   implementation _dependencies['appcompat']
   implementation _dependencies['constraintlayout']
 
-//  implementation project(path: ':tool')
+  //implementation project(path: ':tool')
   implementation _dependencies['performance_tool']
-//  implementation _dependencies['performance_tool_noop']
+  //implementation _dependencies['performance_tool_noop']
 
-//  implementation _dependencies['hooklib']
+  //implementation _dependencies['hooklib']
   // need for android 11
-//  implementation _dependencies['nativehook']
+  //implementation _dependencies['nativehook']
 
   implementation _dependencies['core-ktx']
   implementation "${_dependencies['kotlin-stdlib-jdk7']}:$kotlin_version"
+  implementation _dependencies['kotlinx-coroutines-core']
   implementation _dependencies['kotlinx-coroutines-android']
 }
