@@ -14,6 +14,7 @@ public class pTool {
     PerformanceConfig.ANR_CHECK_TIME = anrCheckTime;
     startCheckThread();
     startCheckANR();
+    startDumpTool();
   }
 
   private static void startCheckANR() {
@@ -22,6 +23,10 @@ public class pTool {
 
   private static void startCheckThread() {
     ThreadTool.init();
+  }
+
+  private static void startDumpTool() {
+    DumpTool.init("xxxxxx");
   }
 
 
