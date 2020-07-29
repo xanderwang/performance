@@ -58,6 +58,7 @@ public class pTool {
       return;
     }
     tag = TAG + "-" + tag;
+    Log.e(TAG, "============================printThreadStackTrace==================================");
     boolean findSkipToken = false;
     StackTraceElement[] stacks = thread.getStackTrace();
     // 没有执行完，说明 ui 线程阻塞了，打印方法堆栈

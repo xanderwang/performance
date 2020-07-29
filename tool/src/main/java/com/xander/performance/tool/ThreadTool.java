@@ -3,7 +3,6 @@ package com.xander.performance.tool;
 import android.util.Log;
 import com.taobao.android.dexposed.DexposedBridge;
 import com.taobao.android.dexposed.XC_MethodHook;
-import java.lang.annotation.Target;
 
 /**
  * @ProjectName: performance
@@ -16,11 +15,15 @@ import java.lang.annotation.Target;
  */
 public class ThreadTool {
 
-  private static final String TAG = "ThreadTool";
+  private static final String TAG = pTool.TAG + "_ThreadTool";
 
   public static void init() {
-    DexposedBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
-    DexposedBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
+    try {
+      DexposedBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
+      DexposedBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   static class ThreadConstructorHook extends XC_MethodHook {
@@ -28,37 +31,36 @@ public class ThreadTool {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
-      Thread t = (Thread) param.thisObject;
-      Log.i(TAG, "ThreadConstructorHook thread:" + t + ", started..");
-//      pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
+      Thread cThread = Thread.currentThread();
+      Log.e(TAG, "Thread ConstructorHook thread:" + cThread.getName() + ", started..");
+      //pTool.printThreadStackTrace(TAG, cThread, false, this.getClass().getName());
     }
 
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       super.afterHookedMethod(param);
-      Thread t = (Thread) param.thisObject;
-      Log.i(TAG, "ThreadConstructorHook thread:" + t + ", exit..");
-//      pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
+      Thread cThread = Thread.currentThread();
+      Log.e(TAG, "Thread ConstructorHook thread:" + cThread.getName() + ", exit..");
+      //pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
     }
   }
 
 
   static class ThreadStartHook extends XC_MethodHook {
-
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
-      Thread t = (Thread) param.thisObject;
-      Log.i(TAG, "ThreadStartHook thread:" + t + ", started..");
-      pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, ThreadStartHook.class.getName());
+      Thread cThread = Thread.currentThread();
+      Log.e(TAG, "Thread StartHook thread:" + cThread.getName() + ", started..");
+      pTool.printThreadStackTrace(TAG, cThread, false, ThreadStartHook.class.getName());
     }
 
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       super.afterHookedMethod(param);
-      Thread t = (Thread) param.thisObject;
-      Log.i(TAG, "ThreadStartHook thread:" + t + ", exit..");
-//      pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
+      Thread cThread = Thread.currentThread();
+      Log.e(TAG, "Thread StartHook thread:" + cThread.getName() + ", exit..");
+      //pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
     }
   }
 
