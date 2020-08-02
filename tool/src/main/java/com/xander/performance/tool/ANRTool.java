@@ -2,7 +2,6 @@ package com.xander.performance.tool;
 
 import android.annotation.SuppressLint;
 import android.os.Handler;
-import android.util.Log;
 
 /**
  * @author xander
@@ -11,7 +10,7 @@ import android.util.Log;
  */
 public class ANRTool {
 
-  private static final String TAG = "ANRTool";
+  private static final String TAG = pTool.TAG + "_ANRTool";
 
   private static volatile CheckUiThread checkUiThread;
 
@@ -55,7 +54,7 @@ public class ANRTool {
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
-        Log.e(TAG, "---------- start check ui thread ----------");
+        xLog.e(TAG, "---------- start check ui thread ----------");
         if (!uiRunnable.done) {
           pTool.printThreadStackTrace(TAG, checkHandler.getLooper().getThread());
         }

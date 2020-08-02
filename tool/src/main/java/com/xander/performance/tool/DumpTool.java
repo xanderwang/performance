@@ -3,14 +3,11 @@ package com.xander.performance.tool;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.IInterface;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.io.FileDescriptor;
-import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 public class DumpTool {
@@ -36,23 +33,23 @@ public class DumpTool {
         addServiceMethod.invoke((Object) null, serviceName, (new DumpBinder()));
       }
     } catch (Exception e) {
-      Log.e(TAG, "DumpTool init error:", e);
+      xLog.e(TAG, "DumpTool init error:", e);
     }
   }
 
   public static class DumpBinder extends Binder implements IInterface {
 
-    @Override
-    protected void dump(@NonNull FileDescriptor fd, @NonNull PrintWriter fout,
-        @Nullable String[] args) {
-      super.dump(fd, fout, args);
-      xLog.e(TAG, "dump 3");
-    }
+    //@Override
+    //protected void dump(@NonNull FileDescriptor fd, @NonNull PrintWriter fout,
+    //    @Nullable String[] args) {
+    //  super.dump(fd, fout, args);
+    //  xLog.e(TAG, "dump 3");
+    //}
 
     @Override
     public void dump(@NonNull FileDescriptor fd, @Nullable String[] args) {
       super.dump(fd, args);
-      xLog.e(TAG, "dump 2 ");
+      xLog.e(TAG, "dump");
       dump(args);
     }
 
@@ -66,9 +63,7 @@ public class DumpTool {
     private void dump(String[] args) {
       // 需要注意
       xLog.e(TAG, Arrays.toString(args));
-      Iterator<DumpListener> iterator = DumpTool.linkedHashSet.iterator();
-      while (iterator.hasNext()) {
-        DumpListener listener = iterator.next();
+      for (DumpListener listener : DumpTool.linkedHashSet) {
         if (listener.dump(args)) {
           break;
         }
@@ -81,7 +76,7 @@ public class DumpTool {
     }
   }
 
-  public static interface DumpListener {
+  public interface DumpListener {
 
     boolean dump(String[] args);
   }

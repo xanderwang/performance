@@ -42,7 +42,9 @@ dependencies {
   //implementation _dependencies['kotlinx-coroutines-core']
   //implementation _dependencies['kotlinx-coroutines-android']
 
-  api _dependencies['epic']
+  implementation _dependencies['free_reflection']
+  implementation _dependencies['epic']
+  //api project(path: ':tool-epic')
 
 }
 

@@ -1,16 +1,18 @@
 package com.xander.performance.tool;
 
-import android.util.Log;
+import android.content.Context;
+import me.weishu.reflection.Reflection;
 
 public class pTool {
 
   public static final String TAG = "pTool";
 
-  public static void startPerformance() {
-    startPerformance(PerformanceConfig.ANR_CHECK_TIME);
+  public static void startPerformance(Context context) {
+    startPerformance(context, PerformanceConfig.ANR_CHECK_TIME);
   }
 
-  public static void startPerformance(long anrCheckTime) {
+  public static void startPerformance(Context context,long anrCheckTime) {
+    Reflection.unseal(context);
     PerformanceConfig.ANR_CHECK_TIME = anrCheckTime;
     startCheckThread();
     startCheckANR();
@@ -34,6 +36,7 @@ public class pTool {
 
   static String[] LIB_PACKAGE_NAMES = {
       pTool.class.getName(),
+      "com.swift.sandhook",
       "me.weishu.epic",
       "com.taobao.android.dexposed"
   };
@@ -54,11 +57,10 @@ public class pTool {
    */
   static void printThreadStackTrace(String tag, Thread thread, boolean allTrace, String skipToken) {
     if (null == thread) {
-      Log.e(TAG, "null thread!!!");
+      xLog.e(tag, "null thread!!!");
       return;
     }
-    tag = TAG + "-" + tag;
-    Log.e(TAG, "============================printThreadStackTrace==================================");
+    xLog.e(tag, "============================printThreadStackTrace==================================");
     boolean findSkipToken = false;
     StackTraceElement[] stacks = thread.getStackTrace();
     // 没有执行完，说明 ui 线程阻塞了，打印方法堆栈
@@ -70,7 +72,7 @@ public class pTool {
           stacks[i].getLineNumber()
       );
       if (allTrace) {
-        Log.e(tag, token);
+        xLog.e(tag, token);
         continue;
       }
       if (!findSkipToken) {
@@ -91,7 +93,7 @@ public class pTool {
       if (needContinue) {
         continue;
       }
-      Log.e(tag, token);
+      xLog.e(tag, token);
     }
   }
 

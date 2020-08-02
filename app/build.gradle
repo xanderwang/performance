@@ -37,8 +37,8 @@ dependencies {
   implementation _dependencies['appcompat']
   implementation _dependencies['constraintlayout']
 
-  //implementation project(path: ':tool')
-  implementation _dependencies['performance_tool']
+  implementation project(path: ':tool')
+  //implementation _dependencies['performance_tool']
   //implementation _dependencies['performance_tool_noop']
 
   //implementation _dependencies['hooklib']

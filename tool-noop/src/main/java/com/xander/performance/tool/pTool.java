@@ -1,14 +1,15 @@
 package com.xander.performance.tool;
 
+import android.content.Context;
 import android.util.Log;
 
 public class pTool {
 
-  public static void startPerformance() {
+  public static void startPerformance(Context context) {
 
   }
 
-  public static void startPerformance(long anrCheckTime) {
+  public static void startPerformance(Context context, long anrCheckTime) {
 
   }
 

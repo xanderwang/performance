@@ -7,6 +7,6 @@ import com.xander.performance.tool.pTool
 class MyApplication : Application() {
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(base)
-    pTool.startPerformance()
+    pTool.startPerformance(this)
   }
 }
