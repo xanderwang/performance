@@ -32,6 +32,10 @@ public class xLog {
     Log.w(tag, msg);
   }
 
+  public static void w(String tag, String msg, Throwable tr) {
+    Log.w(tag, msg, tr);
+  }
+
   public static void eft(String tag, String msg, Object... args) {
     xLog.e(tag, String.format(msg, args));
   }
@@ -41,7 +45,7 @@ public class xLog {
   }
 
   public static void e(String tag, String msg, Throwable tr) {
-    Log.e(tag, msg,tr);
+    Log.e(tag, msg, tr);
   }
 
 }
