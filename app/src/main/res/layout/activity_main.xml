@@ -4,19 +4,27 @@
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  tools:context=".MainActivity"
-  >
+  tools:context=".MainActivity">
 
   <Button
-    android:id="@+id/ui_check"
+    android:id="@+id/start_thread"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:onClick="testUiCheck"
-    android:text="Hello World!"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintLeft_toLeftOf="parent"
-    app:layout_constraintRight_toRightOf="parent"
+    android:layout_marginTop="16dp"
+    android:layout_marginStart="16dp"
+    android:onClick="startThread"
+    android:text="@string/start_thread"
+    app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent"
-    />
+    tools:ignore="MissingConstraints" />
+  <Button
+    android:id="@+id/test_anr"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:onClick="testANR"
+    android:text="@string/test_anr"
+    app:layout_constraintStart_toStartOf="@+id/start_thread"
+    app:layout_constraintTop_toBottomOf="@+id/start_thread"
+    tools:ignore="MissingConstraints" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
