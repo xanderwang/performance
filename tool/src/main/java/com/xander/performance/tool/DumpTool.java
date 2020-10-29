@@ -1,11 +1,14 @@
 package com.xander.performance.tool;
 
+import android.annotation.SuppressLint;
 import android.os.Binder;
+import android.os.Build.VERSION;
 import android.os.IBinder;
 import android.os.IInterface;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.io.FileDescriptor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -25,26 +28,27 @@ public class DumpTool {
   }
 
   public static void init(String serviceName) {
+    xLog.e(TAG, "DumpTool init");
     try {
-      Class<?> smClass = Class.forName("android.os.ServiceManager");
-      Method addServiceMethod = smClass.getMethod("addService", new Class[]{String.class, IBinder.class});
-      if (addServiceMethod != null) {
-        addServiceMethod.setAccessible(true);
-        addServiceMethod.invoke((Object) null, serviceName, (new DumpBinder()));
+      if (VERSION.SDK_INT < 28) {
+        addService(serviceName);
       }
     } catch (Exception e) {
-      xLog.e(TAG, "DumpTool init error:", e);
+      xLog.e(TAG, "=====================================================================");
+      xLog.w(TAG, "DumpTool init error:", e);
     }
   }
 
-  public static class DumpBinder extends Binder implements IInterface {
+  private static void addService(String serviceName)
+      throws NoSuchMethodException, ClassNotFoundException, InvocationTargetException, IllegalAccessException {
+    @SuppressLint("PrivateApi") Class<?> smClass = Class.forName("android.os.ServiceManager");
+    Method addServiceMethod = smClass.getMethod("addService", String.class, IBinder.class);
+    addServiceMethod.setAccessible(true);
+    addServiceMethod.invoke((Object) null, serviceName, (new DumpBinder()));
+  }
 
-    //@Override
-    //protected void dump(@NonNull FileDescriptor fd, @NonNull PrintWriter fout,
-    //    @Nullable String[] args) {
-    //  super.dump(fd, fout, args);
-    //  xLog.e(TAG, "dump 3");
-    //}
+
+  public static class DumpBinder extends Binder implements IInterface {
 
     @Override
     public void dump(@NonNull FileDescriptor fd, @Nullable String[] args) {

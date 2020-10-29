@@ -6,15 +6,16 @@ import android.os.Handler;
 /**
  * @author xander
  * <p>
- * 通过向 main thread 里面放一个指定的 runnable 然后定时去查看是否被运行过
+ * 通过向 main thread 里面放一个指定的 runnable 然后定时去查看是否被运行过来检测是否有 ANR
  */
 public class ANRTool {
 
   private static final String TAG = pTool.TAG + "_ANRTool";
 
-  private static volatile CheckUiThread checkUiThread;
+  private static CheckUiThread checkUiThread;
 
   public static void start() {
+    xLog.e(TAG, "ANRTool start");
     // 不严谨，后续需要优化。
     if (null != checkUiThread) {
       return;

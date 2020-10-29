@@ -11,7 +11,7 @@ public class pTool {
     startPerformance(context, PerformanceConfig.ANR_CHECK_TIME);
   }
 
-  public static void startPerformance(Context context,long anrCheckTime) {
+  public static void startPerformance(Context context, long anrCheckTime) {
     Reflection.unseal(context);
     PerformanceConfig.ANR_CHECK_TIME = anrCheckTime;
     startCheckThread();
@@ -28,7 +28,7 @@ public class pTool {
   }
 
   private static void startDumpTool() {
-    DumpTool.init("xxxxxx");
+    DumpTool.init("dumptool");
   }
 
 
