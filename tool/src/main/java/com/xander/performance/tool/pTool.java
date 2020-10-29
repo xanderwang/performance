@@ -38,21 +38,21 @@ public class pTool {
       pTool.class.getName(),
       "com.swift.sandhook",
       "me.weishu.epic",
-      "com.taobao.android.dexposed"
+      "com.taobao.android.dexposed",
+      "de.robv.android.xposed"
   };
 
   /**
    * 打印指定线程的方法调用栈
    */
   static void printThreadStackTrace(String tag, Thread thread) {
-    printThreadStackTrace(tag, thread, true,"");
+    printThreadStackTrace(tag, thread, true, "");
   }
 
   /**
-   *
    * @param tag
-   * @param thread 需要打印的线程
-   * @param allTrace 是否打印完整的 log
+   * @param thread    需要打印的线程
+   * @param allTrace  是否打印完整的 log
    * @param skipToken 过滤框架之前的方法栈的打印 allTrace 为 false 的时候才生效
    */
   static void printThreadStackTrace(String tag, Thread thread, boolean allTrace, String skipToken) {
@@ -60,7 +60,7 @@ public class pTool {
       xLog.e(tag, "null thread!!!");
       return;
     }
-    xLog.e(tag, "============================printThreadStackTrace==================================");
+    xLog.e(tag, "=======================printThreadStackTrace===========================");
     boolean findSkipToken = false;
     StackTraceElement[] stacks = thread.getStackTrace();
     // 没有执行完，说明 ui 线程阻塞了，打印方法堆栈
