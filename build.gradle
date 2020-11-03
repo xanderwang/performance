@@ -47,7 +47,7 @@ allprojects {
       // Substitute project and module dependencies
       // 远程的 lib 依赖变成本地的依赖
       if (rootProject.ext.use_local_lib) {
-        substitute module('com.xander.performance.tool:tool') with project(':tool')
+        substitute module('com.xander.performance:tool') with project(':tool')
       }
       // Substitute one module dependency for another
       // 修改某个依赖的版本

@@ -1,49 +1,49 @@
-package com.xander.performance.tool;
+package com.xander.performance;
 
 import android.annotation.SuppressLint;
 import android.os.Handler;
-import android.util.Log;
+import android.os.Looper;
 
 /**
  * @author xander
  * <p>
- * 通过向 main thread 里面放一个指定的 runnable 然后定时去查看是否被运行过
+ * 通过向 main thread 里面放一个指定的 runnable 然后定时去查看是否被运行过来检测是否有 ANR
  */
 public class ANRTool {
 
-  private static final String TAG = "ANRTool";
+  private static final String TAG = pTool.TAG + "_ANRTool";
 
-  private static volatile CheckUiThread checkUiThread;
+  private static volatile CheckMainThread checkMainThread;
 
   public static void start() {
+    xLog.e(TAG, "ANRTool start");
     // 不严谨，后续需要优化。
-    if (null != checkUiThread) {
+    if (null != checkMainThread) {
       return;
     }
     // 后台检测线程
-    checkUiThread = new CheckUiThread("check-ui");
-    checkUiThread.start();
+    checkMainThread = new CheckMainThread("check-main-thread");
+    checkMainThread.start();
   }
 
   public static void stop() {
-    if (null != checkUiThread && !checkUiThread.isInterrupted()) {
-      checkUiThread.interrupt();
+    if (null != checkMainThread && !checkMainThread.isInterrupted()) {
+      checkMainThread.interrupt();
     }
-    checkUiThread = null;
+    checkMainThread = null;
   }
 
 
   /**
    * 检测 main thread 的 Thread ,在后台指定的时间
    */
-  static class CheckUiThread extends Thread {
+  static class CheckMainThread extends Thread {
 
     MainThreadRunnable uiRunnable = new MainThreadRunnable();
     @SuppressLint("HandlerLeak")
-    Handler checkHandler = new Handler() {
-    };
+    Handler checkHandler = new Handler(Looper.getMainLooper()) {};
 
-    public CheckUiThread(String name) {
+    public CheckMainThread(String name) {
       super(name);
     }
 
@@ -55,9 +55,9 @@ public class ANRTool {
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
-        Log.e(TAG, "---------- start check ui thread ----------");
+        xLog.e(TAG, "---------- start check main thread ----------");
         if (!uiRunnable.done) {
-          pTool.printThreadStackTrace(TAG, checkHandler.getLooper().getThread());
+          pTool.printThreadStackTrace(TAG, Looper.getMainLooper().getThread());
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();

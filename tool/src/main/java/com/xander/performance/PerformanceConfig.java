@@ -1,4 +1,4 @@
-package com.xander.performance.tool;
+package com.xander.performance;
 
 /**
  * @author xander

@@ -27,7 +27,8 @@ android {
 }
 
 dependencies {
-  implementation fileTree(dir: 'libs', include: ['*.jar'])
+  api fileTree(dir: 'libs', include: ['*.jar'])
+
   testImplementation 'junit:junit:4.12'
   androidTestImplementation 'androidx.test.ext:junit:1.1.2'
   androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
@@ -37,15 +38,15 @@ dependencies {
   // need for android 11
   //api _dependencies['nativehook']
 
-  implementation _dependencies['core-ktx']
-  implementation "${_dependencies['kotlin-stdlib-jdk7']}:$kotlin_version"
-  //implementation _dependencies['kotlinx-coroutines-core']
-  //implementation _dependencies['kotlinx-coroutines-android']
+  api _dependencies['core-ktx']
+  api "${_dependencies['kotlin-stdlib-jdk7']}:$kotlin_version"
+  //api _dependencies['kotlinx-coroutines-core']
+  //api _dependencies['kotlinx-coroutines-android']
 
   api _dependencies['epic']
-  //implementation project(path: ':tool-epic')
+  //api project(path: ':tool-epic')
 
-  implementation _dependencies['free_reflection']
+  api _dependencies['free_reflection']
 
 }
 
