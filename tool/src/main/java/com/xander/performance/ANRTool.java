@@ -3,6 +3,9 @@ package com.xander.performance;
 import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
+
+import androidx.annotation.NonNull;
 
 /**
  * @author xander
@@ -41,7 +44,14 @@ public class ANRTool {
 
     MainThreadRunnable uiRunnable = new MainThreadRunnable();
     @SuppressLint("HandlerLeak")
-    Handler checkHandler = new Handler(Looper.getMainLooper()) {
+    Handler mainThreadHandler = new Handler(Looper.getMainLooper()) {
+      @Override
+      public void handleMessage(@NonNull Message msg) {
+        super.handleMessage(msg);
+        if( msg.obj instanceof MainThreadRunnable ) {
+          ((MainThreadRunnable)msg.obj).run();
+        }
+      }
     };
 
     public CheckMainThread(String name) {
@@ -62,7 +72,9 @@ public class ANRTool {
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();
-        checkHandler.post(uiRunnable);
+        Message msg = new Message();
+        msg.obj = uiRunnable;
+        mainThreadHandler.sendMessage(msg);
       }
     }
   }

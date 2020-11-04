@@ -73,7 +73,7 @@ publish {
   artifactId = _artifactId
   publishVersion = _version
   dryRun = false
-  desc = 'a lib'
+  desc = 'a lib for android , it can check app performance'
   website = _siteUrl
   bintrayUser = user
   bintrayKey = key

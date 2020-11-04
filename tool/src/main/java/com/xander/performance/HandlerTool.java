@@ -4,9 +4,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
+
 import de.robv.android.xposed.DexposedBridge;
 import de.robv.android.xposed.XC_MethodHook;
+
 import java.util.HashMap;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -42,7 +45,7 @@ public class HandlerTool {
     }
   }
 
-  static HashMap<Message, MethodStackInfo> methodTraceMap = new HashMap<>();
+  static HashMap<String, MethodStackInfo> methodTraceMap = new HashMap<>();
 
   static class MethodStackInfo {
 
@@ -54,8 +57,8 @@ public class HandlerTool {
     String toJson() {
       JSONObject jsonObject = new JSONObject();
       try {
-        jsonObject.put("cost_time",costTime);
-        jsonObject.put("stack_trace",stackTrace);
+        jsonObject.put("cost_time", costTime);
+        jsonObject.put("stack_trace", stackTrace);
       } catch (JSONException e) {
         e.printStackTrace();
       }
@@ -81,40 +84,8 @@ public class HandlerTool {
         MethodStackInfo methodStackInfo = new MethodStackInfo();
         // 保存调用栈
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        StringBuilder stringBuilder = new StringBuilder();
-        boolean findClass = false;
-        boolean needContinue = false;
-        for (int i = 0; i < stackTrace.length; i++) {
-          String className = stackTrace[i].getClassName();
-          if (!findClass && !className.equals(this.getClass().getName())) {
-            continue;
-          }
-          if (!findClass) {
-            findClass = true;
-            continue;
-          }
-          needContinue = false;
-          for (int j = 0; j < pTool.LIB_PACKAGE_NAMES.length; j++) {
-            if (className.contains(pTool.LIB_PACKAGE_NAMES[j])) {
-              needContinue = true;
-              break;
-            }
-          }
-          if (needContinue) {
-            continue;
-          }
-          stringBuilder
-              .append(stackTrace[i].getClassName())
-              .append('.')
-              .append(stackTrace[i].getMethodName())
-              .append("():")
-              .append(stackTrace[i].getLineNumber());
-          if (i < stackTrace.length - 1) {
-            stringBuilder.append(" <- ");
-          }
-        }
-        methodStackInfo.stackTrace = stringBuilder.toString();
-        methodTraceMap.put((Message) param.args[0],methodStackInfo);
+        methodStackInfo.stackTrace = StackTraceUtils.string(stackTrace, true, HandlerSendMessageHook.class.getName());
+        methodTraceMap.put(Integer.toHexString(param.args[0].hashCode()), methodStackInfo);
       }
     }
   }
@@ -126,8 +97,9 @@ public class HandlerTool {
       //xLog.d(TAG,"before dispatch msg:" + param.args[0]);
       super.beforeHookedMethod(param);
       Object msg = param.args[0];
+      String msgKey = Integer.toHexString(param.args[0].hashCode());
       if (msg instanceof Message) {
-        MethodStackInfo methodStackInfo = methodTraceMap.get((Message) msg);
+        MethodStackInfo methodStackInfo = methodTraceMap.get(msgKey);
         if (null != methodStackInfo) {
           // 保存执行时间
           methodStackInfo.startTime = SystemClock.elapsedRealtime();
@@ -144,9 +116,10 @@ public class HandlerTool {
       long endTime = SystemClock.elapsedRealtime();
 
       Object msg = param.args[0];
+      String msgKey = Integer.toHexString(param.args[0].hashCode());
 
       if (msg instanceof Message) {
-        methodStackInfo = methodTraceMap.get((Message) msg);
+        methodStackInfo = methodTraceMap.get(msgKey);
         if (null != methodStackInfo) {
           startTime = methodStackInfo.startTime;
           methodStackInfo.costTime = endTime - startTime;
@@ -158,10 +131,8 @@ public class HandlerTool {
         // 需要打印
         xLog.e(TAG, methodStackInfo.toJson());
       }
-      if( startTime > 0 ) {
-        // 移除信息
-        methodTraceMap.remove(msg);
-      }
+      // 移除信息
+      methodTraceMap.remove(msgKey);
     }
   }
 }

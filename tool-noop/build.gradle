@@ -53,7 +53,7 @@ publish {
   artifactId = _artifactId
   publishVersion = _version
   dryRun = false
-  desc = 'a lib'
+  desc = 'a lib for android , it can check app performance, this is a noop lib'
   website = _siteUrl
   bintrayUser = user
   bintrayKey = key

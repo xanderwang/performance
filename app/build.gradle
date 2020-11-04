@@ -38,6 +38,7 @@ dependencies {
   implementation _dependencies['constraintlayout']
 
   implementation project(path: ':tool')
+  //implementation project(path: ':tool-noop')
   //implementation _dependencies['performance_tool']
   //implementation _dependencies['performance_tool_noop']
 
