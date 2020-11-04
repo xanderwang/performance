@@ -12,11 +12,12 @@
     android:layout_height="wrap_content"
     android:layout_marginTop="16dp"
     android:layout_marginStart="16dp"
-    android:onClick="startThread"
+    android:onClick="testThread"
     android:text="@string/start_thread"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent"
     tools:ignore="MissingConstraints" />
+
   <Button
     android:id="@+id/test_anr"
     android:layout_width="wrap_content"
@@ -25,6 +26,36 @@
     android:text="@string/test_anr"
     app:layout_constraintStart_toStartOf="@+id/start_thread"
     app:layout_constraintTop_toBottomOf="@+id/start_thread"
+    tools:ignore="MissingConstraints" />
+
+  <Button
+    android:id="@+id/test_fps"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:onClick="testFps"
+    android:text="@string/test_fps"
+    app:layout_constraintStart_toStartOf="@+id/test_anr"
+    app:layout_constraintTop_toBottomOf="@+id/test_anr"
+    tools:ignore="MissingConstraints" />
+
+  <Button
+    android:id="@+id/test_ipc"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:onClick="testIPC"
+    android:text="@string/test_ipc"
+    app:layout_constraintStart_toStartOf="@+id/test_fps"
+    app:layout_constraintTop_toBottomOf="@+id/test_fps"
+    tools:ignore="MissingConstraints" />
+
+  <Button
+    android:id="@+id/test_handler"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:onClick="testHandler"
+    android:text="@string/test_handler"
+    app:layout_constraintStart_toStartOf="@+id/test_ipc"
+    app:layout_constraintTop_toBottomOf="@+id/test_ipc"
     tools:ignore="MissingConstraints" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

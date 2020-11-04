@@ -10,4 +10,6 @@ public class PerformanceConfig {
    */
   public static long ANR_CHECK_TIME = 5000L;
 
+  public static long HANDLER_CHECK_TIME = 50;
+
 }

@@ -56,7 +56,7 @@ def _siteUrl = 'https://github.com/XanderWang/performance'
 // git的路径
 def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
-def _group = 'com.xander.performance.tool'
+def _group = 'com.xander.performance'
 def _artifactId = 'tool'
 def _version = rootProject.ext.lib_version
 

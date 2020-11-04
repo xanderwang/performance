@@ -7,6 +7,13 @@ import com.xander.performance.pTool
 class MyApplication : Application() {
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(base)
-    pTool.init(pTool.Builder().checkANR(true,5000).checkThread(true).checkFps(true).build())
+    pTool.init(pTool.Builder()
+        .checkANR(true,5000)
+        .checkThread(true)
+        .checkFps(true)
+        .checkIPC(false)
+        .checkHandler(true, 50)
+        .build()
+    )
   }
 }

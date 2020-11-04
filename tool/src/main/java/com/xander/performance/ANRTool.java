@@ -15,7 +15,7 @@ public class ANRTool {
 
   private static volatile CheckMainThread checkMainThread;
 
-  public static void start() {
+  static void start() {
     xLog.e(TAG, "ANRTool start");
     // 不严谨，后续需要优化。
     if (null != checkMainThread) {
@@ -26,7 +26,7 @@ public class ANRTool {
     checkMainThread.start();
   }
 
-  public static void stop() {
+  static void stop() {
     if (null != checkMainThread && !checkMainThread.isInterrupted()) {
       checkMainThread.interrupt();
     }
@@ -41,7 +41,8 @@ public class ANRTool {
 
     MainThreadRunnable uiRunnable = new MainThreadRunnable();
     @SuppressLint("HandlerLeak")
-    Handler checkHandler = new Handler(Looper.getMainLooper()) {};
+    Handler checkHandler = new Handler(Looper.getMainLooper()) {
+    };
 
     public CheckMainThread(String name) {
       super(name);
@@ -55,9 +56,9 @@ public class ANRTool {
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
-        xLog.e(TAG, "---------- start check main thread ----------");
+        //xLog.e(TAG, "---------- start check main thread ----------");
         if (!uiRunnable.done) {
-          pTool.printThreadStackTrace(TAG, Looper.getMainLooper().getThread());
+          pTool.printThreadStackTrace(TAG, Looper.getMainLooper().getThread(), "ANR");
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();
@@ -67,7 +68,9 @@ public class ANRTool {
   }
 
   /**
-   * main thread 里面执行的 runnable ，执行完标记值为 true ， 否则为 false ，通过后台线程持续检测标记值可以知道 main thread 是否有阻塞。
+   * main thread 里面执行的 runnable ，执行完标记值为 true ， 否则为 false ，
+   * 通过后台线程持续检测标记值可以知道 main thread
+   * 是否有阻塞。
    */
   static class MainThreadRunnable implements Runnable {
 
