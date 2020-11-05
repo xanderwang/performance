@@ -38,7 +38,13 @@ public class ThreadTool {
       super.beforeHookedMethod(param);
       Thread cThread = (Thread) param.thisObject;
       //xLog.e(TAG, "Thread ConstructorHook thread:" + cThread.getName() + ", started..");
-      pTool.printThreadStackTrace(TAG, Thread.currentThread(), "create thread",false, this.getClass().getName());
+      StackTraceUtils.print(
+          TAG,
+          Thread.currentThread().getStackTrace(),
+          "create thread",
+          true,
+          this.getClass().getName()
+      );
     }
 
     /*@Override
@@ -57,7 +63,13 @@ public class ThreadTool {
       super.beforeHookedMethod(param);
       Thread cThread = (Thread) param.thisObject;
       //xLog.e(TAG, "Thread StartHook thread:" + cThread.getName() + ", started..");
-      pTool.printThreadStackTrace(TAG, Thread.currentThread(), "thread start",false, ThreadStartHook.class.getName());
+      StackTraceUtils.print(
+          TAG,
+          Thread.currentThread().getStackTrace(),
+          "thread start",
+          true,
+          this.getClass().getName()
+      );
     }
 
     /*@Override

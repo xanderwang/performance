@@ -21,38 +21,58 @@ class StackTraceUtils {
   static {
     filterPackageSet = new String[]{
         //"com.swift.sandhook",
-        //pTool.class.getPackage().getName(),
         me.weishu.epic.BuildConfig.class.getPackage().getName(),
         de.robv.android.xposed.DexposedBridge.class.getPackage().getName()
 
     };
   }
 
-  static void print(String tag, Thread thread, boolean filterClassName, String className) {
-    print(tag, thread.getStackTrace(), filterPackageSet, filterClassName, className);
+  /**
+   * @param tag                log 的 TAG
+   * @param stackTraceElements 调用栈
+   * @param traceName          trace 名称
+   */
+  static void print(String tag, StackTraceElement[] stackTraceElements, String traceName) {
+    print(tag, stackTraceElements, traceName, false, "");
   }
 
   /**
    * @param tag                log 的 TAG
    * @param stackTraceElements 调用栈
+   * @param traceName          trace 名称
    * @param filterClassName    是否需要从指定的类名开始
    * @param className          指定的类名
    */
-  static void print(String tag, StackTraceElement[] stackTraceElements,
-                    boolean filterClassName, String className) {
-    print(tag, stackTraceElements, filterPackageSet, filterClassName, className);
+  static void print(String tag, StackTraceElement[] stackTraceElements, String traceName,
+      boolean filterClassName, String className) {
+    print(tag, stackTraceElements, traceName, filterPackageSet, filterClassName, className);
   }
 
   /**
    * @param tag                log 的 TAG
    * @param stackTraceElements 调用栈
+   * @param traceName          trace 名称
    * @param filterPackageSet   需要过滤的包名的 set
    * @param filterClassName    是否需要从指定的类名开始
    * @param className          指定的类名
    */
-  static void print(String tag, StackTraceElement[] stackTraceElements, String[] filterPackageSet,
-                    boolean filterClassName, String className) {
-    formatStackTrace(tag, true, stackTraceElements, filterPackageSet, filterClassName, className);
+  static void print(String tag, StackTraceElement[] stackTraceElements, String traceName,
+      String[] filterPackageSet, boolean filterClassName, String className) {
+    xLog.e(tag, "|==================  " + traceName + "  ==================");
+    if (null == stackTraceElements || stackTraceElements.length == 0) {
+      xLog.e(tag, "| Thread StackTraceElements is null !!!");
+    } else {
+      formatStackTrace(
+          stackTraceElements,
+          filterPackageSet,
+          filterClassName,
+          className,
+          tag,
+          true,
+          false
+      );
+    }
+    xLog.e(tag, "|---------------------------------------------------------");
   }
 
   static String string(StackTraceElement[] stackTraceElements) {
@@ -64,12 +84,20 @@ class StackTraceUtils {
   }
 
   static String string(StackTraceElement[] stackTraceElements, String[] filterPackageSet,
-                       boolean filterClassName, String className) {
-    return formatStackTrace("", false, stackTraceElements, filterPackageSet, filterClassName, className);
+      boolean filterClassName, String className) {
+    return formatStackTrace(
+        stackTraceElements,
+        filterPackageSet,
+        filterClassName,
+        className,
+        pTool.TAG + "_stack_string",
+        false,
+        true
+    );
   }
 
-  private static String formatStackTrace(String tag, boolean printMode, StackTraceElement[] stackTraceElements,
-                                         String[] filterPackageSet, boolean filterClassName, String className) {
+  private static String formatStackTrace(StackTraceElement[] stackTraceElements, String[] filterPackageSet,
+      boolean filterClassName, String className,String tag, boolean printMode, boolean stringMode) {
     StringBuilder stringBuilder = new StringBuilder();
     boolean hasFindClass = !filterClassName;
     for (int i = 0; i < stackTraceElements.length; i++) {
@@ -104,7 +132,8 @@ class StackTraceUtils {
             element.getLineNumber()
         );
         xLog.e(tag, token);
-      } else {
+      }
+      if (stringMode) {
         stringBuilder.append(element.getClassName())
             .append('.')
             .append(element.getMethodName())

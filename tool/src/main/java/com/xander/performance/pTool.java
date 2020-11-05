@@ -57,6 +57,7 @@ public class pTool {
       return this;
     }
 
+    @Deprecated
     public Builder checkHandler(boolean check, long time) {
       mCheckHandler = check;
       mHandlerCheckTime = time;
@@ -91,30 +92,6 @@ public class pTool {
       PerformanceConfig.HANDLER_CHECK_TIME = builder.mHandlerCheckTime;
       HandlerTool.start();
     }
-  }
-
-
-  /**
-   * 打印指定线程的方法调用栈
-   */
-  static void printThreadStackTrace(String tag, Thread thread, String traceName) {
-    printThreadStackTrace(tag, thread, traceName, false, "");
-  }
-
-  /**
-   * @param tag
-   * @param thread    需要打印的线程
-   * @param filterClassName  是否打印完整的 log
-   * @param className 过滤框架之前的方法栈的打印 filterClassName 为 false 的时候才生效
-   */
-  static void printThreadStackTrace(String tag, Thread thread, String traceName, boolean filterClassName, String className) {
-    xLog.e(tag, "|==================  " + traceName + "  ==================");
-    if (null != thread) {
-      StackTraceUtils.print(tag, thread, filterClassName, className);
-    } else {
-      xLog.e(tag, "| thread is null !!!");
-    }
-    xLog.e(tag, "|---------------------------------------------------------");
   }
 
 }

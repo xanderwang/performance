@@ -68,7 +68,7 @@ public class ANRTool {
         }
         //xLog.e(TAG, "---------- start check main thread ----------");
         if (!uiRunnable.done) {
-          pTool.printThreadStackTrace(TAG, Looper.getMainLooper().getThread(), "ANR");
+          StackTraceUtils.print(TAG, Looper.getMainLooper().getThread().getStackTrace(), "ANR");
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();

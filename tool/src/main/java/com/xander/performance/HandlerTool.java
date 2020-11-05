@@ -67,24 +67,27 @@ public class HandlerTool {
 
   }
 
+  // todo 有个问题就是, hook 后，好像 msg 会有些异常 囧
   static class HandlerSendMessageHook extends XC_MethodHook {
 
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-      //xLog.e(TAG,"after send msg:" + param.args[0]);
       super.afterHookedMethod(param);
       Object result = param.getResult();
-      boolean resultIsBoolean = result != null && (result instanceof Boolean || result.getClass() == boolean.class);
+      boolean resultIsBoolean = result instanceof Boolean;
       if (!resultIsBoolean) {
         return;
       }
-      //pTool.printThreadStackTrace(TAG,Thread.currentThread(),"handler",true,HandlerSendMessageHook.class.getName());
       Boolean bResult = (Boolean) result;
       if (bResult) {
         MethodStackInfo methodStackInfo = new MethodStackInfo();
         // 保存调用栈
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        methodStackInfo.stackTrace = StackTraceUtils.string(stackTrace, true, HandlerSendMessageHook.class.getName());
+        methodStackInfo.stackTrace = StackTraceUtils.string(
+            stackTrace,
+            true,
+            this.getClass().getName()
+        );
         methodTraceMap.put(Integer.toHexString(param.args[0].hashCode()), methodStackInfo);
       }
     }
@@ -94,7 +97,6 @@ public class HandlerTool {
 
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      //xLog.d(TAG,"before dispatch msg:" + param.args[0]);
       super.beforeHookedMethod(param);
       Object msg = param.args[0];
       String msgKey = Integer.toHexString(param.args[0].hashCode());
@@ -109,7 +111,6 @@ public class HandlerTool {
 
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-      //xLog.d(TAG,"after dispatch msg:" + param.args[0]);
       super.afterHookedMethod(param);
       MethodStackInfo methodStackInfo = null;
       long startTime = 0;
@@ -125,7 +126,6 @@ public class HandlerTool {
           methodStackInfo.costTime = endTime - startTime;
         }
       }
-      //xLog.d(TAG, methodStackInfo.toJson());
       if (Looper.myLooper() == Looper.getMainLooper() && startTime > 0
           && (methodStackInfo.costTime > PerformanceConfig.HANDLER_CHECK_TIME)) {
         // 需要打印

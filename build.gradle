@@ -7,7 +7,7 @@ buildscript {
 
   ext.lib_version = "0.1.0"
 
-  ext.use_local_lib = true
+  ext.use_local_lib = false
 
   repositories {
     maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }

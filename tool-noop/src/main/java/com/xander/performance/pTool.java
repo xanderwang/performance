@@ -24,6 +24,7 @@ public class pTool {
       return this;
     }
 
+    @Deprecated
     public Builder checkHandler(boolean check, long time) {
       return this;
     }

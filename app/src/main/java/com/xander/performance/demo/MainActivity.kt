@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
   }
 
   fun testANR(v: View) {
-    Thread.sleep(10000)
+    Thread.sleep(4000)
   }
 
   fun testFps(v: View) {
@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
   fun testHandler(v: View) {
     h.value.post {
-      Thread.sleep(100)
+      Thread.sleep(300)
     }
   }
 

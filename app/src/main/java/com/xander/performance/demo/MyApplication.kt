@@ -8,11 +8,11 @@ class MyApplication : Application() {
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(base)
     pTool.init(pTool.Builder()
-        .checkANR(true,5000)
+        .checkANR(true, 100)
         .checkThread(true)
         .checkFps(true)
         .checkIPC(false)
-        .checkHandler(true, 50)
+        .checkHandler(false, 500)
         .build()
     )
   }
