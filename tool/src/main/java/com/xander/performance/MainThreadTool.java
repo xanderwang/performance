@@ -12,14 +12,14 @@ import androidx.annotation.NonNull;
  * <p>
  * 通过向 main thread 里面放一个指定的 runnable 然后定时去查看是否被运行过来检测是否有 ANR
  */
-public class ANRTool {
+public class MainThreadTool {
 
-  private static final String TAG = pTool.TAG + "_ANRTool";
+  private static final String TAG = pTool.TAG + "_MainThreadTool";
 
   private static volatile CheckMainThread checkMainThread;
 
   static void start() {
-    xLog.e(TAG, "ANRTool start");
+    xLog.e(TAG, "MainThreadTool start");
     // 不严谨，后续需要优化。
     if (null != checkMainThread) {
       return;

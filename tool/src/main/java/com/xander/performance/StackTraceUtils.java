@@ -11,9 +11,6 @@ package com.xander.performance;
  */
 class StackTraceUtils {
 
-
-  private static final String TAG = pTool.TAG + "_StackTraceUtils";
-
   static String STACK_TRACE_FORMAT = "|\t%s.%s():%s";
 
   static String[] filterPackageSet;
@@ -23,7 +20,6 @@ class StackTraceUtils {
         //"com.swift.sandhook",
         me.weishu.epic.BuildConfig.class.getPackage().getName(),
         de.robv.android.xposed.DexposedBridge.class.getPackage().getName()
-
     };
   }
 

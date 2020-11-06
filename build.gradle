@@ -5,18 +5,18 @@ apply from: 'config.gradle'
 buildscript {
   ext.kotlin_version = '1.4.10'
 
-  ext.lib_version = "0.1.0"
+  ext.lib_version = "0.1.1"
 
   ext.use_local_lib = false
 
   repositories {
-    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    maven { url "https://maven.aliyun.com/repository/public" }
     maven { url "https://maven.aliyun.com/repository/google" }
-    maven { url "https://maven.aliyun.com/repository/jcenter" }
     google()
     jcenter()
     mavenCentral()
   }
+
   dependencies {
     classpath 'com.android.tools.build:gradle:3.6.2'
 
@@ -25,6 +25,7 @@ buildscript {
     classpath 'com.novoda:bintray-release:0.9.2'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
+
 }
 
 //tasks.getByPath(":tool-noop:javadocRelease").enabled = false
@@ -37,10 +38,13 @@ allprojects {
   tasks.getByPath(":tool-noop:javadocRelease").enabled = false
 
   repositories {
+    maven { url "https://maven.aliyun.com/repository/public" }
+    maven { url "https://maven.aliyun.com/repository/google" }
     google()
     jcenter()
     mavenCentral()
   }
+
   // add dependency substitution rules
   configurations.all {
     resolutionStrategy.dependencySubstitution {

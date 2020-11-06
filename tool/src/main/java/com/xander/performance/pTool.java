@@ -8,7 +8,7 @@ public class pTool {
     /**
      * 是否开启 debug 模式，这种模式下会打印相对多的 log
      */
-    boolean debug = true;
+    boolean debug = false;
     /**
      * 是否开启检测 ANR
      */
@@ -26,14 +26,13 @@ public class pTool {
      */
     boolean mCheckFPS = true;
 
-    boolean mCheckIPC = true;
+    boolean mCheckIPC = false;
 
-    boolean mCheckHandler = true;
+    boolean mCheckHandler = false;
     long mHandlerCheckTime = 0;
 
     public Builder checkANR(boolean check) {
-      mCheckANR = check;
-      return this;
+      return checkANR(check, 5000);
     }
 
     public Builder checkANR(boolean check, long time) {
@@ -80,7 +79,7 @@ public class pTool {
     }
     if (builder.mCheckANR) {
       PerformanceConfig.ANR_CHECK_TIME = builder.mAnrCheckTime;
-      ANRTool.start();
+      MainThreadTool.start();
     }
     if (builder.mCheckFPS) {
       FPSTool.start();
