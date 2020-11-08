@@ -3,59 +3,78 @@ package com.xander.performance;
 import de.robv.android.xposed.DexposedBridge;
 import de.robv.android.xposed.XC_MethodHook;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @ProjectName: performance
- * @Package: com.xander.performance.tool
+ * @Package: com.xander.performance
  * @ClassName: ThreadTool
- * @Description: 通过 hook 手续来监听自定义线程的创建，打印创建线程的堆栈
- * 主要原理就是通过 hook ，在调用 线程 start 方法的时候，保存调用栈
- * 然后需要处理线程池，线程池需要注意构造方法和 thread factory 这是后续关联线程池和线程的关键方法
+ * @Description:
+ * 通过 hook 类的方法来监听线程的创建、启动，线程池的创建和执行任务
+ *
+ * 监听线程的创建、启动：主要原理就是通过 hook ，在调用线程 start 方法的时候，保存调用栈。
+ * 监听线程池的创建、启动: 要原理就是通过 hook，在线程池构造方法里保存调用栈，然后保存调用栈，
+ * 在线程执行任务的时候，保存任务和线程池的关联，如果线程池需要创建线程了，根据线程和任务的关系，
+ * 从而获取线程和线程池的关联。
  * @Author: Xander
  * @CreateDate: 2020/4/13 22:30
  * @Version: 1.0
  */
 public class ThreadTool {
 
-  private static final String TAG = pTool.TAG + "_ThreadTool";
+  private static String TAG = pTool.TAG + "_ThreadTool";
 
   static class ThreadInfo {
 
-    int id;
-    String name;
+    String key;
+    String threadPoolInfoKey;
+    String createStackTrace;
     String startStackTrace;
   }
 
   static class ThreadPoolInfo {
 
-    String name;
+    String key;
     String createStackTrace;
-    String threadFactoryKey;
     List<ThreadInfo> childThreadsInfo = new ArrayList<>();
+
+    void removeThreadInfo(ThreadInfo threadInfo) {
+      synchronized (ThreadPoolInfo.class) {
+        childThreadsInfo.remove(threadInfo);
+      }
+    }
+
+    void addThreadInfo(ThreadInfo threadInfo) {
+      synchronized (ThreadPoolInfo.class) {
+        childThreadsInfo.add(threadInfo);
+      }
+    }
+
+    boolean isEmpty() {
+      return childThreadsInfo.isEmpty();
+    }
   }
 
   static Map<String, ThreadInfo> threadInfoMap = new HashMap<>();
 
   static Map<String, ThreadPoolInfo> threadPoolInfoMap = new HashMap<>();
 
+  static Map<String, ThreadPoolInfo> runnableThreadPoolMap = new HashMap<>(32);
+
 
   static void init() {
-    xLog.e(TAG, "ThreadTool init");
+    TAG = pTool.TAG + "_ThreadTool";
+    xLog.e(TAG, "init");
     hookWithEpic();
     //hookWithSandHook(); // sandhook 不是很好用，先注释
   }
 
   public static void hookWithEpic() {
     try {
-      //DexposedBridge.hookAllConstructors(
-      //    Thread.class,
-      //    new ThreadConstructorHook()
-      //);
 
       DexposedBridge.hookAllConstructors(
           ThreadPoolExecutor.class,
@@ -63,18 +82,29 @@ public class ThreadTool {
       );
 
       DexposedBridge.findAndHookMethod(
-          ThreadFactory.class,
-          "newThread" ,
+          ThreadPoolExecutor.class,
+          "execute",
           Runnable.class,
+          new ThreadPoolExecuteHook()
+      );
+
+      DexposedBridge.hookAllConstructors(
+          Thread.class,
           new ThreadConstructorHook()
       );
 
-      //DexposedBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
       DexposedBridge.findAndHookMethod(
           Thread.class,
           "start",
           new ThreadStartHook()
       );
+
+      DexposedBridge.findAndHookMethod(
+          Thread.class,
+          "run",
+          new ThreadRunHook()
+      );
+
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -83,37 +113,40 @@ public class ThreadTool {
   static class ThreadPoolExecutorConstructorHook extends XC_MethodHook {
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-      super.afterHookedMethod(param);
+      xLog.e(TAG, "Thread pool constructor: " + Arrays.toString(param.args));
       if (param.args.length == 7) {
-        // 开始记忆
-        String key = Integer.toHexString(param.thisObject.hashCode());
+        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        // 开始记录信息
+        String threadPoolInfoKey = Integer.toHexString(param.thisObject.hashCode());
         ThreadPoolInfo threadPoolInfo = new ThreadPoolInfo();
         threadPoolInfo.createStackTrace = StackTraceUtils.string(
-            Thread.currentThread().getStackTrace(),
+            stackTraceElements,
             true,
             this.getClass().getName()
         );
-        threadPoolInfo.name = key;
-        threadPoolInfo.threadFactoryKey = Integer.toHexString(param.args[5].hashCode());
-        threadPoolInfoMap.put(key, threadPoolInfo);
+        threadPoolInfo.key = threadPoolInfoKey;
+        threadPoolInfoMap.put(threadPoolInfoKey, threadPoolInfo);
+        StackTraceUtils.print(
+            TAG,
+            stackTraceElements,
+            "THREAD POOL CREATE",
+            true,
+            this.getClass().getName()
+        );
       }
     }
   }
 
-  static class ThreadFactoryHook extends XC_MethodHook {
+  static class ThreadPoolExecuteHook extends XC_MethodHook {
 
-    // 建立  runnable 和  factory 的关系，通过 factory 关系可以关联到 thread pool
-    // 然后 thread 在创建的时候，根据 runnable 可以关联到 thread pool
-
+    // execute(Runnable command)
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-    }
-
-    @Override
-    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-      super.afterHookedMethod(param);
-      // 这里一般是一个线程创建的
+      // 保存 runnable 和 thread pool 的关系
+      String threadPoolInfoKey = Integer.toHexString(param.thisObject.hashCode());
+      ThreadPoolInfo threadPoolInfo = threadPoolInfoMap.get(threadPoolInfoKey);
+      String runnableKey = Integer.toHexString(param.args[0].hashCode());
+      runnableThreadPoolMap.put(runnableKey, threadPoolInfo);
     }
   }
 
@@ -121,50 +154,97 @@ public class ThreadTool {
 
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-      Thread cThread = (Thread) param.thisObject;
-      //xLog.e(TAG, "Thread ConstructorHook thread:" + cThread.getName() + ", started..");
-      StackTraceUtils.print(
-          TAG,
-          Thread.currentThread().getStackTrace(),
-          "create thread",
+      StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+      ThreadInfo threadInfo = new ThreadInfo();
+
+      String threadKey = Integer.toHexString(param.thisObject.hashCode());
+      threadInfo.createStackTrace = StackTraceUtils.string(
+          stackTraceElements,
           true,
           this.getClass().getName()
       );
-    }
+      threadInfoMap.put(threadKey, threadInfo);
 
-    /*@Override
-    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-      super.afterHookedMethod(param);
-      Thread cThread = (Thread) param.thisObject;
-      //xLog.e(TAG, "Thread ConstructorHook thread:" + cThread.getName() + ", exit..");
-      //pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
-    }*/
+      boolean hasRunnable = (param.args.length == 1 && param.args[0] instanceof Runnable) ||
+          (param.args.length > 1 && param.args[1] instanceof Runnable);
+      // 获取 runnable
+      String runnableKey = "";
+      if (hasRunnable) {
+        Object runnable = param.args[0] instanceof Runnable ? param.args[0] : param.args[1];
+        runnableKey = Integer.toHexString(runnable.hashCode());
+      }
+      if (runnableThreadPoolMap.containsKey(runnableKey)) {
+        // 需要和 thread pool 绑定
+        ThreadPoolInfo threadPoolInfo = runnableThreadPoolMap.get(runnableKey);
+        threadInfo.threadPoolInfoKey = threadPoolInfo.key;
+        // 建立 thread 和 thread pool 的关联后，断开 runnable 和 thread pool 的关联
+        runnableThreadPoolMap.remove(runnableKey);
+        threadPoolInfo.addThreadInfo(threadInfo);
+      } else {
+        xLog.e(TAG, "Thread constructor: " + Arrays.toString(param.args));
+        // 和线程池没有关联的 thread ,打印线程池的创建调用链
+        StackTraceUtils.print(
+            TAG,
+            stackTraceElements,
+            "CREATE THREAD",
+            true,
+            this.getClass().getName()
+        );
+      }
+    }
   }
 
   static class ThreadStartHook extends XC_MethodHook {
 
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-      Thread cThread = (Thread) param.thisObject;
-      //xLog.e(TAG, "Thread StartHook thread:" + cThread.getName() + ", started..");
-      StackTraceUtils.print(
-          TAG,
-          Thread.currentThread().getStackTrace(),
-          "thread start",
+      //super.beforeHookedMethod(param);
+      //xLog.e(TAG, "ThreadStartHook:" + Arrays.toString(param.args));
+      StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+      String threadKey = Integer.toHexString(param.thisObject.hashCode());
+      ThreadInfo threadInfo = threadInfoMap.get(threadKey);
+      if (null == threadInfo) {
+        xLog.e(TAG, "can not find thread info !!!!!!");
+        return;
+      }
+      threadInfo.startStackTrace = StackTraceUtils.string(
+          stackTraceElements,
           true,
           this.getClass().getName()
       );
+      if (null == threadInfo.threadPoolInfoKey) {
+        // 说明和 thread pool 没有关联，直接打印
+        StackTraceUtils.print(
+            TAG,
+            stackTraceElements,
+            "THREAD START",
+            true,
+            this.getClass().getName()
+        );
+      }
     }
+  }
 
-    /*@Override
+  static class ThreadRunHook extends XC_MethodHook {
+
+    @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       super.afterHookedMethod(param);
-      Thread cThread = (Thread) param.thisObject;
-      //xLog.e(TAG, "Thread StartHook thread:" + cThread.getName() + ", exit..");
-      //pTool.printThreadStackTrace(TAG, Thread.currentThread(), false, this.getClass().getName());
-    }*/
+      // 线程 run 方法走完，线程即将被销毁，去除 thread info 相关的记录
+      String threadKey = Integer.toHexString(param.thisObject.hashCode());
+      ThreadInfo threadInfo = threadInfoMap.get(threadKey);
+      threadInfoMap.remove(threadKey);
+
+      String threadPoolInfoKey = threadInfo.threadPoolInfoKey;
+      ThreadPoolInfo threadPoolInfo = threadPoolInfoMap.get(threadPoolInfoKey);
+      if (null != threadPoolInfo) {
+        threadPoolInfo.removeThreadInfo(threadInfo);
+        if (threadPoolInfo.isEmpty()) {
+          threadPoolInfoMap.remove(threadPoolInfoKey);
+        }
+      }
+
+    }
   }
 
 

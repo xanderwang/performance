@@ -11,10 +11,11 @@ import de.robv.android.xposed.XC_MethodHook;
  */
 public class IPCTool {
 
-  private static final String TAG = pTool.TAG + "_IPCTool";
+  private static String TAG = pTool.TAG + "_IPCTool";
 
   static void start() {
-    xLog.e(TAG, "ThreadTool init");
+    TAG = pTool.TAG + "_IPCTool";
+    xLog.e(TAG, "start");
     hookWithEpic();
   }
 

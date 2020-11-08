@@ -2,7 +2,7 @@ package com.xander.performance;
 
 public class pTool {
 
-  public static final String TAG = "pTool";
+  static String TAG = "pTool";
 
   public static class Builder {
     /**
@@ -29,7 +29,10 @@ public class pTool {
     boolean mCheckIPC = false;
 
     boolean mCheckHandler = false;
+
     long mHandlerCheckTime = 0;
+
+    String globalTag = "pTool";
 
     public Builder checkANR(boolean check) {
       return checkANR(check, 5000);
@@ -63,6 +66,11 @@ public class pTool {
       return this;
     }
 
+    public Builder globalTag(String tag) {
+      globalTag = tag;
+      return this;
+    }
+
     public Builder build() {
       return this;
     }
@@ -74,6 +82,7 @@ public class pTool {
     if (builder == null) {
       builder = new Builder();
     }
+    TAG = builder.globalTag;
     if (builder.mCheckThread) {
       ThreadTool.init();
     }

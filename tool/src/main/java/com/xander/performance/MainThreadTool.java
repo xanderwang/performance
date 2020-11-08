@@ -14,12 +14,13 @@ import androidx.annotation.NonNull;
  */
 public class MainThreadTool {
 
-  private static final String TAG = pTool.TAG + "_MainThreadTool";
+  private static String TAG = pTool.TAG + "_MainThreadTool";
 
   private static volatile CheckMainThread checkMainThread;
 
   static void start() {
-    xLog.e(TAG, "MainThreadTool start");
+    TAG = pTool.TAG + "_MainThreadTool";
+    xLog.e(TAG, "start");
     // 不严谨，后续需要优化。
     if (null != checkMainThread) {
       return;

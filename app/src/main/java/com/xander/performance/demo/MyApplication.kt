@@ -8,6 +8,7 @@ class MyApplication : Application() {
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(base)
     pTool.init(pTool.Builder()
+        .globalTag("demo")
         .checkANR(true, 100)
         .checkThread(true)
         .checkFps(true)

@@ -29,6 +29,10 @@ public class pTool {
       return this;
     }
 
+    public Builder globalTag(String tag) {
+      return this;
+    }
+
     public Builder build() {
       return this;
     }

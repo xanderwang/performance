@@ -19,9 +19,11 @@ import org.json.JSONObject;
  */
 public class HandlerTool {
 
-  private static final String TAG = pTool.TAG + "_HandlerTool";
+  private static String TAG = pTool.TAG + "_HandlerTool";
 
   static void start() {
+    TAG = pTool.TAG + "_HandlerTool";
+    xLog.e(TAG, "start");
     hookWithEpic();
   }
 

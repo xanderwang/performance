@@ -44,7 +44,7 @@ dependencies {
   //api _dependencies['kotlinx-coroutines-android']
 
   api _dependencies['epic']
-  //api project(path: ':tool-epic')
+  //api project(path: ':lib-epic')
 
   api _dependencies['free_reflection']
 

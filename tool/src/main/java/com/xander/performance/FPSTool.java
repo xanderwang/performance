@@ -12,15 +12,17 @@ import android.view.Choreographer.FrameCallback;
  */
 public class FPSTool {
 
-  private static final String TAG = pTool.TAG + "_FPSTool";
+  private static String TAG = pTool.TAG + "_FPSTool";
 
-  static FrameRunnable frameRunnable = new FrameRunnable();
+  private static FrameRunnable frameRunnable = new FrameRunnable();
 
-  static Handler handler = new Handler();
+  private static Handler handler = new Handler();
 
-  static long FPS_INTERVAL_TIME = 1000;
+  private static long FPS_INTERVAL_TIME = 1000;
 
   static void start() {
+    TAG = pTool.TAG + "_FPSTool";
+    xLog.e(TAG, "start");
     handler = new Handler(Looper.getMainLooper());
     handler.post(frameRunnable);
     Choreographer.getInstance().postFrameCallback(frameRunnable);
@@ -44,7 +46,7 @@ public class FPSTool {
       if (time == 0) {
         // 第一次开始监控，跳过
       } else {
-        xLog.e(TAG, "app fps:" + (1000.f * count / (curTime - time)));
+        xLog.e(TAG, "APP FPS:" + (1000.f * count / (curTime - time)));
       }
       count = 0;
       time = curTime;

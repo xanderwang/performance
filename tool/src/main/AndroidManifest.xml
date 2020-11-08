@@ -1,2 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.xander.performance" />
+  xmlns:tools="http://schemas.android.com/tools"
+  package="com.xander.performance">
+
+  <uses-sdk tools:overrideLibrary="me.weishu.freereflection" />
+</manifest>

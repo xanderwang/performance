@@ -7,6 +7,9 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.newSingleThreadContext
+import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
@@ -14,6 +17,24 @@ class MainActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
+  }
+
+  fun testThread(v: View) {
+    thread(name = "test-thread", start = true) {
+      Log.d("pTool ThreadTool", Thread.currentThread().name)
+      Thread.sleep(3000)
+    }
+  }
+
+  private val threadPool by lazy {
+    Log.e(TAG,"newSingleThreadExecutor")
+    Executors.newSingleThreadExecutor()
+  }
+
+  fun testThreadPool( v: View) {
+    threadPool.submit {
+      Log.d(TAG,"testThreadPool")
+    }
   }
 
   fun testANR(v: View) {
@@ -31,19 +52,17 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
-  fun testThread(v: View) {
-    thread(name = "test-thread", start = true) {
-      Log.d("pTool ThreadTool", Thread.currentThread().name)
-      Thread.sleep(3000)
-    }
-  }
-
-  private val h = lazy { Handler(Looper.getMainLooper())}
+  private val h by lazy { Handler(Looper.getMainLooper())}
 
   fun testHandler(v: View) {
-    h.value.post {
+    h.post {
       Thread.sleep(300)
     }
   }
+
+  companion object {
+    private val TAG by lazy { "demo_" }
+  }
+
 
 }

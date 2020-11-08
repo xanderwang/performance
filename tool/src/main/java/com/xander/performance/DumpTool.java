@@ -15,7 +15,7 @@ import java.util.LinkedHashSet;
 
 public class DumpTool {
 
-  private static final String TAG = pTool.TAG + "_DumpTool";
+  private static String TAG = pTool.TAG + "_DumpTool";
 
   private static LinkedHashSet<DumpListener> linkedHashSet = new LinkedHashSet<>();
 
@@ -28,7 +28,8 @@ public class DumpTool {
   }
 
   public static void init(String serviceName) {
-    xLog.e(TAG, "DumpTool init");
+    TAG = pTool.TAG + "_DumpTool";
+    xLog.e(TAG, "init");
     try {
       if (VERSION.SDK_INT < 28) {
         addService(serviceName);
