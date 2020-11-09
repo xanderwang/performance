@@ -13,7 +13,7 @@
     android:layout_marginTop="16dp"
     android:layout_marginStart="16dp"
     android:onClick="testThread"
-    android:text="@string/test_thread_pool"
+    android:text="@string/test_thread"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent"
     tools:ignore="MissingConstraints" />

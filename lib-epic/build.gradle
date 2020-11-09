@@ -1,0 +1,39 @@
+apply plugin: 'com.android.library'
+
+android {
+  def _android = rootProject.ext.android
+  compileSdkVersion _android['compileSdkVersion']
+  buildToolsVersion _android['buildToolsVersion']
+
+  defaultConfig {
+    minSdkVersion _android['minSdkVersion']
+    targetSdkVersion _android['targetSdkVersion']
+    versionCode 1
+    versionName "1.0"
+
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    consumerProguardFiles 'consumer-rules.pro'
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    }
+  }
+}
+
+dependencies {
+  implementation fileTree(dir: 'libs', include: ['*.jar'])
+  testImplementation 'junit:junit:4.12'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+  androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+  def _dependencies = rootProject.ext.dependencies
+
+  api _dependencies['free_reflection']
+  api _dependencies['exposed-xposedapi']
+
+}
+
+

@@ -7,8 +7,6 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.asExecutor
-import kotlinx.coroutines.newSingleThreadContext
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
@@ -27,13 +25,21 @@ class MainActivity : AppCompatActivity() {
   }
 
   private val threadPool by lazy {
-    Log.e(TAG,"newSingleThreadExecutor")
+    Log.e(TAG, "newSingleThreadExecutor")
     Executors.newSingleThreadExecutor()
   }
 
-  fun testThreadPool( v: View) {
-    threadPool.submit {
-      Log.d(TAG,"testThreadPool")
+  fun testThreadPool(v: View) {
+    Log.e(TAG, "testThreadPool")
+//    threadPool.submit {
+//      Log.d(TAG,"testThreadPool")
+//    }
+    Executors.newSingleThreadExecutor().execute {
+      Log.d(TAG, "execute!!!")
+    }
+
+    Executors.newFixedThreadPool(3, Executors.defaultThreadFactory()).execute {
+      Log.d(TAG, "execute!!!")
     }
   }
 

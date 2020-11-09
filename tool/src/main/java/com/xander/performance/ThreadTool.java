@@ -2,12 +2,16 @@ package com.xander.performance;
 
 import de.robv.android.xposed.DexposedBridge;
 import de.robv.android.xposed.XC_MethodHook;
+import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @ProjectName: performance
@@ -17,9 +21,9 @@ import java.util.concurrent.ThreadPoolExecutor;
  * 通过 hook 类的方法来监听线程的创建、启动，线程池的创建和执行任务
  *
  * 监听线程的创建、启动：主要原理就是通过 hook ，在调用线程 start 方法的时候，保存调用栈。
- * 监听线程池的创建、启动: 要原理就是通过 hook，在线程池构造方法里保存调用栈，然后保存调用栈，
- * 在线程执行任务的时候，保存任务和线程池的关联，如果线程池需要创建线程了，根据线程和任务的关系，
- * 从而获取线程和线程池的关联。
+ * 监听线程池的创建、启动: 主要原理就是通过 hook，在线程池构造方法里保存调用栈，然后保存调用栈，
+ * 在线程池执行任务的时候，保存任务和线程池的关联，任务和 Worker 的关联，如果线程池需要创建线程了，
+ * 根据线程和任务的关系，从而获取线程和线程池的关联。
  * @Author: Xander
  * @CreateDate: 2020/4/13 22:30
  * @Version: 1.0
@@ -76,9 +80,30 @@ public class ThreadTool {
   public static void hookWithEpic() {
     try {
 
-      DexposedBridge.hookAllConstructors(
-          ThreadPoolExecutor.class,
-          new ThreadPoolExecutorConstructorHook()
+      // 7 个参数的方法 hook 好像会报错
+      ThreadPoolExecutorConstructorHook constructorHook = new ThreadPoolExecutorConstructorHook();
+      Member threadPoolExecutorConstructor = ThreadPoolExecutor.class.getDeclaredConstructor(
+          int.class,
+          int.class,
+          long.class,
+          TimeUnit.class,
+          BlockingQueue.class
+      );
+      DexposedBridge.hookMethod(
+          threadPoolExecutorConstructor,
+          constructorHook
+      );
+      threadPoolExecutorConstructor = ThreadPoolExecutor.class.getDeclaredConstructor(
+          int.class,
+          int.class,
+          long.class,
+          TimeUnit.class,
+          BlockingQueue.class,
+          ThreadFactory.class
+      );
+      DexposedBridge.hookMethod(
+          threadPoolExecutorConstructor,
+          constructorHook
       );
 
       DexposedBridge.findAndHookMethod(
@@ -114,7 +139,7 @@ public class ThreadTool {
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       xLog.e(TAG, "Thread pool constructor: " + Arrays.toString(param.args));
-      if (param.args.length == 7) {
+      //if (param.args.length == 7) {
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
         // 开始记录信息
         String threadPoolInfoKey = Integer.toHexString(param.thisObject.hashCode());
@@ -133,7 +158,7 @@ public class ThreadTool {
             true,
             this.getClass().getName()
         );
-      }
+      //}
     }
   }
 
@@ -142,6 +167,7 @@ public class ThreadTool {
     // execute(Runnable command)
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      xLog.e(TAG, "ThreadPoolExecuteHook: " + Arrays.toString(param.args));
       // 保存 runnable 和 thread pool 的关系
       String threadPoolInfoKey = Integer.toHexString(param.thisObject.hashCode());
       ThreadPoolInfo threadPoolInfo = threadPoolInfoMap.get(threadPoolInfoKey);
