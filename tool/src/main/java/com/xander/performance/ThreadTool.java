@@ -69,6 +69,8 @@ public class ThreadTool {
 
   static Map<String, ThreadPoolInfo> runnableThreadPoolMap = new HashMap<>(32);
 
+  static Map<String, String> workerRunnableMap = new HashMap<>(32);
+
 
   static void init() {
     TAG = pTool.TAG + "_ThreadTool";
@@ -113,6 +115,14 @@ public class ThreadTool {
           new ThreadPoolExecuteHook()
       );
 
+      // java.util.concurrent.ThreadPoolExecutor$Worker 构造方法可以将 worker 和线程池绑定
+      // run 方法执行完，表示线程池里面的一个线程执行完。
+      DexposedBridge.hookAllConstructors(
+          Class.forName("java.util.concurrent.ThreadPoolExecutor$Worker"),
+          new WorkerConstructorHook()
+      );
+
+      // 根据构造方法里面的 runnable 是否为 Worker 可知是否为线程池创建的线程。
       DexposedBridge.hookAllConstructors(
           Thread.class,
           new ThreadConstructorHook()
@@ -167,12 +177,29 @@ public class ThreadTool {
     // execute(Runnable command)
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      xLog.e(TAG, "ThreadPoolExecuteHook: " + Arrays.toString(param.args));
+      //xLog.e(TAG, "ThreadPoolExecuteHook: " + Arrays.toString(param.args));
       // 保存 runnable 和 thread pool 的关系
-      String threadPoolInfoKey = Integer.toHexString(param.thisObject.hashCode());
-      ThreadPoolInfo threadPoolInfo = threadPoolInfoMap.get(threadPoolInfoKey);
       String runnableKey = Integer.toHexString(param.args[0].hashCode());
+      String threadPoolInfoKey = Integer.toHexString(param.thisObject.hashCode());
+      //xLog.e(TAG, "ThreadPoolExecuteHook runnableKey:" + runnableKey);
+      //xLog.e(TAG, "ThreadPoolExecuteHook threadPoolInfoKey:" + threadPoolInfoKey);
+      ThreadPoolInfo threadPoolInfo = threadPoolInfoMap.get(threadPoolInfoKey);
       runnableThreadPoolMap.put(runnableKey, threadPoolInfo);
+    }
+  }
+
+  static class WorkerConstructorHook extends XC_MethodHook {
+    @Override
+    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      //xLog.e(TAG, "WorkerConstructorHook: " + Arrays.toString(param.args));
+      String workerKey = Integer.toHexString(param.thisObject.hashCode());
+      //xLog.e(TAG, "WorkerConstructorHook workerKey:" + workerKey);
+      if( param.args[1] instanceof Runnable ) { // 内部类，第一个参数是外部类
+        // link worker and runnable
+        String runnableKey = Integer.toHexString(param.args[1].hashCode());
+        //xLog.e(TAG, "WorkerConstructorHook runnableKey:" + runnableKey);
+        workerRunnableMap.put(workerKey, runnableKey);
+      }
     }
   }
 
@@ -180,6 +207,7 @@ public class ThreadTool {
 
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      //xLog.e(TAG, "Thread constructor: " + Arrays.toString(param.args));
       StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
       ThreadInfo threadInfo = new ThreadInfo();
 
@@ -193,21 +221,24 @@ public class ThreadTool {
 
       boolean hasRunnable = (param.args.length == 1 && param.args[0] instanceof Runnable) ||
           (param.args.length > 1 && param.args[1] instanceof Runnable);
+      //xLog.e(TAG, "ThreadConstructorHook hasRunnable:" + hasRunnable);
       // 获取 runnable
-      String runnableKey = "";
+      String workerKey = "";
       if (hasRunnable) {
         Object runnable = param.args[0] instanceof Runnable ? param.args[0] : param.args[1];
-        runnableKey = Integer.toHexString(runnable.hashCode());
+        workerKey = Integer.toHexString(runnable.hashCode());
       }
-      if (runnableThreadPoolMap.containsKey(runnableKey)) {
+      //xLog.e(TAG, "ThreadConstructorHook workerKey:" + workerKey);
+      if (workerRunnableMap.containsKey(workerKey)) {
         // 需要和 thread pool 绑定
+        String runnableKey = workerRunnableMap.get(workerKey);
         ThreadPoolInfo threadPoolInfo = runnableThreadPoolMap.get(runnableKey);
         threadInfo.threadPoolInfoKey = threadPoolInfo.key;
         // 建立 thread 和 thread pool 的关联后，断开 runnable 和 thread pool 的关联
         runnableThreadPoolMap.remove(runnableKey);
+        workerRunnableMap.remove(workerKey);
         threadPoolInfo.addThreadInfo(threadInfo);
       } else {
-        xLog.e(TAG, "Thread constructor: " + Arrays.toString(param.args));
         // 和线程池没有关联的 thread ,打印线程池的创建调用链
         StackTraceUtils.print(
             TAG,

@@ -38,9 +38,9 @@ class MainActivity : AppCompatActivity() {
       Log.d(TAG, "execute!!!")
     }
 
-    Executors.newFixedThreadPool(3, Executors.defaultThreadFactory()).execute {
-      Log.d(TAG, "execute!!!")
-    }
+//    Executors.newFixedThreadPool(3, Executors.defaultThreadFactory()).execute {
+//      Log.d(TAG, "execute!!!")
+//    }
   }
 
   fun testANR(v: View) {
