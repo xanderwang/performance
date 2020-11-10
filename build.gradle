@@ -5,15 +5,15 @@ apply from: 'config.gradle'
 buildscript {
   ext.kotlin_version = '1.4.10'
 
-  ext.lib_version = "0.1.1"
+  ext.lib_version = "0.1.2"
 
   ext.use_local_lib = false
 
   repositories {
     maven { url "https://maven.aliyun.com/repository/public" }
     maven { url "https://maven.aliyun.com/repository/google" }
-    google()
     jcenter()
+    google()
     mavenCentral()
   }
 
@@ -36,12 +36,13 @@ allprojects {
   // 这两个任务在上传的时候报错，先关闭
   tasks.getByPath(":tool:javadocRelease").enabled = false
   tasks.getByPath(":tool-noop:javadocRelease").enabled = false
+  tasks.getByPath(":lib-epic:javadocRelease").enabled = false
 
   repositories {
     maven { url "https://maven.aliyun.com/repository/public" }
     maven { url "https://maven.aliyun.com/repository/google" }
-    google()
     jcenter()
+    google()
     mavenCentral()
   }
 

@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: "maven"
+apply plugin: 'com.novoda.bintray-release'
 
 android {
   def _android = rootProject.ext.android
@@ -36,4 +38,30 @@ dependencies {
 
 }
 
+// git项目的地址
+def _siteUrl = 'https://github.com/XanderWang/performance'
+// git的路径
+def _gitUrl = 'https://github.com/XanderWang/performance.git'
+// group
+def _group = 'me.weishu.epic'
+def _artifactId = 'epic-xander'
+def _version = '1.0.0'
+
+publish {
+  // 各个字段的含义见 https://github.com/novoda/bintray-release/wiki/Configuration-of-the-publish-closure
+  Properties properties = new Properties()
+  properties.load(project.rootProject.file('local.properties').newDataInputStream())
+  def user = properties.getProperty('BINTRAY_USER', 'xanderwang')
+  def key = properties.getProperty('BINTRAY_KEY', 'xxx')
+  userOrg = user
+  repoName = 'maven'
+  groupId = _group
+  artifactId = _artifactId
+  publishVersion = _version
+  dryRun = false
+  desc = 'a lib for android , copy from '
+  website = _siteUrl
+  bintrayUser = user
+  bintrayKey = key
+}
 

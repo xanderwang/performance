@@ -21,5 +21,6 @@ ext {
       'free_reflection'           : 'me.weishu:free_reflection:3.0.1',
       "xposed"                    : "de.robv.android.xposed:api:82",
       "exposed-xposedapi"         : "me.weishu.exposed:exposed-xposedapi:0.4.5",
+      "epic-xander"               : "me.weishu.epic:epic-xander:1.0.0",
   ]
 }
