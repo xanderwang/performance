@@ -15,7 +15,10 @@ import org.json.JSONObject;
 
 /**
  * @author Xander Wang Created on 2020/11/4.
- * @Description 通过 hook 方法来
+ * @Description 通过 hook Handler 的 sendMessageAtTime 方法
+ * 和 dispatchMessage 方法来达到监测的目前。
+ *
+ * sendMessageAtTime 的时候，可以保存当前的
  */
 public class HandlerTool {
 
@@ -54,13 +57,17 @@ public class HandlerTool {
     long startTime = 0;
 
     long costTime = 0;
-    String stackTrace;
+
+    String sendMsgStackTrace;
+
+    String disPatchMsgStackTrace;
 
     String toJson() {
       JSONObject jsonObject = new JSONObject();
       try {
-        jsonObject.put("cost_time", costTime);
-        jsonObject.put("stack_trace", stackTrace);
+        jsonObject.put("costTime", costTime);
+        jsonObject.put("sendMsgStackTrace", sendMsgStackTrace);
+        jsonObject.put("disPatchMsgStackTrace", disPatchMsgStackTrace);
       } catch (JSONException e) {
         e.printStackTrace();
       }
@@ -85,7 +92,7 @@ public class HandlerTool {
         MethodStackInfo methodStackInfo = new MethodStackInfo();
         // 保存调用栈
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        methodStackInfo.stackTrace = StackTraceUtils.string(
+        methodStackInfo.sendMsgStackTrace = StackTraceUtils.string(
             stackTrace,
             true,
             this.getClass().getName()
