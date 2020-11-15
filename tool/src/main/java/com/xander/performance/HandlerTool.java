@@ -8,6 +8,8 @@ import android.os.SystemClock;
 import de.robv.android.xposed.DexposedBridge;
 import de.robv.android.xposed.XC_MethodHook;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 
 import org.json.JSONException;
@@ -33,11 +35,9 @@ public class HandlerTool {
   private static void hookWithEpic() {
     try {
       DexposedBridge.findAndHookMethod(
-          Handler.class,
-          "sendMessageAtTime",
           Message.class,
-          long.class,
-          new HandlerSendMessageHook()
+          "obtain",
+          new MessageObtainHook()
       );
       DexposedBridge.findAndHookMethod(
           Handler.class,
@@ -45,6 +45,13 @@ public class HandlerTool {
           Message.class,
           new HandlerDispatchMessageHook()
       );
+      /*DexposedBridge.findAndHookMethod(
+          Handler.class,
+          "sendMessageAtTime",
+          Message.class,
+          long.class,
+          new HandlerSendMessageHook()
+      );*/
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -81,7 +88,7 @@ public class HandlerTool {
 
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-      super.afterHookedMethod(param);
+      //super.afterHookedMethod(param);
       Object result = param.getResult();
       boolean resultIsBoolean = result instanceof Boolean;
       if (!resultIsBoolean) {
@@ -97,7 +104,46 @@ public class HandlerTool {
             true,
             this.getClass().getName()
         );
+
         methodTraceMap.put(Integer.toHexString(param.args[0].hashCode()), methodStackInfo);
+        Method isInUse = Message.class.getDeclaredMethod("isInUse");
+        isInUse.setAccessible(true);
+        if ((Boolean) isInUse.invoke(param.args[0])) {
+          xLog.e(TAG,"HandlerSendMessageHook msg is in use!!!");
+          Field flags = Message.class.getDeclaredField("flags");
+          flags.setAccessible(true);
+          flags.setInt(param.args[0], 0);
+          if ((Boolean) isInUse.invoke(param.args[0])) {
+            StackTraceUtils.print(
+                TAG,
+                stackTrace,
+                "msg is in use",
+                true,
+                this.getClass().getName()
+            );
+          }
+        }
+      }
+    }
+  }
+
+  static class MessageObtainHook extends XC_MethodHook {
+    @Override
+    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+      //super.afterHookedMethod(param);
+      Message msg = (Message) param.getResult();
+      Field flag = Message.class.getDeclaredField("flags");
+      flag.setAccessible(true);
+      if (flag.getInt(msg) != 0) {
+        xLog.e(TAG, "!!!!error for msg flags:" + flag.getInt(msg));
+        flag.setInt(msg, 0);
+        StackTraceUtils.print(
+            TAG,
+            Thread.currentThread().getStackTrace(),
+            "obtain msg",
+            true,
+            this.getClass().getName()
+        );
       }
     }
   }
@@ -106,21 +152,29 @@ public class HandlerTool {
 
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      super.beforeHookedMethod(param);
+      //super.beforeHookedMethod(param);
       Object msg = param.args[0];
       String msgKey = Integer.toHexString(param.args[0].hashCode());
       if (msg instanceof Message) {
         MethodStackInfo methodStackInfo = methodTraceMap.get(msgKey);
         if (null != methodStackInfo) {
-          // 保存执行时间
-          methodStackInfo.startTime = SystemClock.elapsedRealtime();
+        } else {
+          methodStackInfo = new MethodStackInfo();
+          methodStackInfo.disPatchMsgStackTrace = StackTraceUtils.string(
+              Thread.currentThread().getStackTrace(),
+              true,
+              this.getClass().getName()
+          );
+          methodTraceMap.put(msgKey, methodStackInfo);
         }
+        // 保存执行时间
+        methodStackInfo.startTime = SystemClock.elapsedRealtime();
       }
     }
 
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-      super.afterHookedMethod(param);
+      //super.afterHookedMethod(param);
       MethodStackInfo methodStackInfo = null;
       long startTime = 0;
       long endTime = SystemClock.elapsedRealtime();
@@ -138,7 +192,9 @@ public class HandlerTool {
       if (Looper.myLooper() == Looper.getMainLooper() && startTime > 0
           && (methodStackInfo.costTime > PerformanceConfig.HANDLER_CHECK_TIME)) {
         // 需要打印
+        xLog.e(TAG, "````````````````````````````````");
         xLog.e(TAG, methodStackInfo.toJson());
+        xLog.e(TAG, "--------------------------------");
       }
       // 移除信息
       methodTraceMap.remove(msgKey);

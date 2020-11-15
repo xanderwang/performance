@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
 
   fun testHandler(v: View) {
     h.post {
-      Thread.sleep(300)
+      Thread.sleep(500)
     }
   }
 

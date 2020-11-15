@@ -9,11 +9,11 @@ class MyApplication : Application() {
     super.attachBaseContext(base)
     pTool.init(pTool.Builder()
         .globalTag("demo")
-        .checkANR(true, 100)
+        .checkANR(true, 500)
         .checkThread(true)
         .checkFps(true)
         .checkIPC(false)
-        .checkHandler(false, 500)
+        .checkHandler(true, 100)
         .build()
     )
   }
