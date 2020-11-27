@@ -1,5 +1,7 @@
 rootProject.name='performace'
+includeBuild("plugin")
 include ':app'
 include ':tool'
 include ':tool-noop'
 include ':lib-epic'
+//include ':plugin'

@@ -3,7 +3,7 @@
 apply from: 'config.gradle'
 
 buildscript {
-  ext.kotlin_version = '1.4.10'
+  ext.kotlin_version = '1.4.20'
 
   ext.lib_version = "0.1.2"
 
@@ -18,18 +18,15 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.6.2'
+    classpath 'com.android.tools.build:gradle:3.6.4'
 
     // NOTE: Do not place your application dependencies here; they belong
     // in the individual module build.gradle files
     classpath 'com.novoda:bintray-release:0.9.2'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath "com.xander.performance:plugin:1.0"
   }
-
 }
-
-//tasks.getByPath(":tool-noop:javadocRelease").enabled = false
-//tasks.getByPath(":tool:javadocRelease").enabled = false
 
 allprojects {
 

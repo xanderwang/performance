@@ -2,6 +2,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
+apply plugin: 'com.xander.performance.plugin'
+
 android {
   def _android = rootProject.ext.android
   compileSdkVersion _android['compileSdkVersion']

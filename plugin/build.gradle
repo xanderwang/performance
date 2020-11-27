@@ -1,0 +1,50 @@
+buildscript {
+  repositories {
+    jcenter()
+    google()
+  }
+  dependencies {
+    // 因为使用的 Kotlin 需要需要添加 Kotlin 插件
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10"
+  }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'java-gradle-plugin'
+
+repositories {
+  // 需要添加 jcenter 否则会提示找不到 gradlePlugin
+  jcenter()
+  google()
+}
+
+dependencies {
+  implementation gradleApi()
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.20"
+  implementation 'com.xander.plugin.asm:plugin-library:1.1.1'
+}
+
+compileKotlin {
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
+}
+
+compileTestKotlin {
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
+}
+
+gradlePlugin {
+  plugins {
+    version {
+      // 在 app 模块需要通过 id 引用这个插件
+      id = 'com.xander.performance.plugin'
+      version = 1.0
+      group = 'com.xander.performance'
+      // 实现这个插件的类的路径
+      implementationClass = 'com.xander.performance.plugin.PerformancePlugin'
+    }
+  }
+}
