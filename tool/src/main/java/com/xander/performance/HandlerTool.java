@@ -29,7 +29,7 @@ public class HandlerTool {
   static void start() {
     TAG = pTool.TAG + "_HandlerTool";
     xLog.e(TAG, "start");
-    hookWithEpic();
+    //hookWithEpic();
   }
 
   private static void hookWithEpic() {
@@ -45,13 +45,13 @@ public class HandlerTool {
           Message.class,
           new HandlerDispatchMessageHook()
       );
-      /*DexposedBridge.findAndHookMethod(
+      DexposedBridge.findAndHookMethod(
           Handler.class,
           "sendMessageAtTime",
           Message.class,
           long.class,
           new HandlerSendMessageHook()
-      );*/
+      );
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -96,6 +96,7 @@ public class HandlerTool {
       }
       Boolean bResult = (Boolean) result;
       if (bResult) {
+        String msgKey = Integer.toHexString(param.args[0].hashCode());
         MethodStackInfo methodStackInfo = new MethodStackInfo();
         // 保存调用栈
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
@@ -104,12 +105,12 @@ public class HandlerTool {
             true,
             this.getClass().getName()
         );
-
-        methodTraceMap.put(Integer.toHexString(param.args[0].hashCode()), methodStackInfo);
+        methodTraceMap.put(msgKey, methodStackInfo);
         Method isInUse = Message.class.getDeclaredMethod("isInUse");
         isInUse.setAccessible(true);
         if ((Boolean) isInUse.invoke(param.args[0])) {
-          xLog.e(TAG,"HandlerSendMessageHook msg is in use!!!");
+          xLog.e(TAG,"HandlerSendMessageHook msg is in use!!! msg key:" + msgKey);
+          xLog.e(TAG,"HandlerSendMessageHook msg is in use!!! msg send trace:" + methodStackInfo.sendMsgStackTrace);
           Field flags = Message.class.getDeclaredField("flags");
           flags.setAccessible(true);
           flags.setInt(param.args[0], 0);
@@ -117,7 +118,7 @@ public class HandlerTool {
             StackTraceUtils.print(
                 TAG,
                 stackTrace,
-                "msg is in use",
+                "msg is in use when sendMessageAtTime",
                 true,
                 this.getClass().getName()
             );
@@ -132,8 +133,15 @@ public class HandlerTool {
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       //super.afterHookedMethod(param);
       Message msg = (Message) param.getResult();
+      String msgKey = Integer.toHexString(msg.hashCode());
       Field flag = Message.class.getDeclaredField("flags");
       flag.setAccessible(true);
+      String traceStr = StackTraceUtils.string(
+          Thread.currentThread().getStackTrace(),
+          true,
+          this.getClass().getName()
+      );
+      xLog.e(TAG, "after obtain msg, obtain trace" + traceStr);
       if (flag.getInt(msg) != 0) {
         xLog.e(TAG, "!!!!error for msg flags:" + flag.getInt(msg));
         flag.setInt(msg, 0);

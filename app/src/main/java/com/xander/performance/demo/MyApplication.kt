@@ -13,7 +13,7 @@ class MyApplication : Application() {
         .checkThread(true)
         .checkFps(true)
         .checkIPC(false)
-        .checkHandler(true, 100)
+        .checkHandler(false, 100)
         .build()
     )
   }

@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
 
   fun testThread(v: View) {
     thread(name = "test-thread", start = true) {
-      Log.d("pTool ThreadTool", Thread.currentThread().name)
+      Log.d(TAG, Thread.currentThread().name)
       Thread.sleep(3000)
     }
   }
@@ -31,34 +31,34 @@ class MainActivity : AppCompatActivity() {
 
   fun testThreadPool(v: View) {
     Log.e(TAG, "testThreadPool")
-//    threadPool.submit {
-//      Log.d(TAG,"testThreadPool")
-//    }
+    // threadPool.submit {
+    //   Log.d(TAG, "testThreadPool")
+    // }
     Executors.newSingleThreadExecutor().execute {
       Log.d(TAG, "execute!!!")
     }
 
-//    Executors.newFixedThreadPool(3, Executors.defaultThreadFactory()).execute {
-//      Log.d(TAG, "execute!!!")
-//    }
+    // Executors.newFixedThreadPool(3, Executors.defaultThreadFactory()).execute {
+    //   Log.d(TAG, "execute!!!")
+    // }
   }
 
   fun testANR(v: View) {
     Thread.sleep(4000)
   }
 
+  fun testIPC(v: View) {
+    val ams: ActivityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+    ams.runningAppProcesses.forEach {
+      Log.d(TAG, it.processName)
+    }
+  }
+
   fun testFps(v: View) {
     Thread.sleep(200)
   }
 
-  fun testIPC(v: View) {
-    val ams: ActivityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
-    ams.runningAppProcesses.forEach {
-      Log.d("testIPC", it.processName)
-    }
-  }
-
-  private val h by lazy { Handler(Looper.getMainLooper())}
+  private val h by lazy { Handler(Looper.getMainLooper()) }
 
   fun testHandler(v: View) {
     h.post {
