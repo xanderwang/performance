@@ -44,7 +44,6 @@ public class MainThreadTool {
   static class CheckMainThread extends Thread {
 
     MainThreadRunnable uiRunnable = new MainThreadRunnable();
-    @SuppressLint("HandlerLeak")
     Handler mainThreadHandler = new Handler(Looper.getMainLooper()) {
       @Override
       public void handleMessage(@NonNull Message msg) {

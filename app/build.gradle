@@ -2,7 +2,15 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
-apply plugin: 'com.xander.performance.plugin'
+if (rootProject.ext.use_plugin) {
+  apply plugin: 'com.xander.performance.plugin'
+  performanceConfig {
+    log false
+    classLog false
+    methodLog false
+    skipJar true
+  }
+}
 
 android {
   def _android = rootProject.ext.android
@@ -39,13 +47,6 @@ android {
       keyPassword 'performance'
     }
   }
-}
-
-performanceConfig {
-  log true
-  classLog false
-  methodLog false
-  skipJar false
 }
 
 dependencies {

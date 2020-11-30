@@ -60,10 +60,14 @@ class MainActivity : AppCompatActivity() {
 
   private val h by lazy { Handler(Looper.getMainLooper()) }
 
+  private var testH = Handler()
+
   fun testHandler(v: View) {
+    Log.d(TAG, "testHandler")
     h.post {
-      Thread.sleep(500)
+      Thread.sleep(200)
     }
+    testH = Handler()
   }
 
   companion object {

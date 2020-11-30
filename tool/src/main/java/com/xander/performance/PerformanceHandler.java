@@ -33,6 +33,13 @@ public class PerformanceHandler extends Handler {
           this.getClass().getName()
       );
       msgStackInfoMap.put(msgKey, msgStackInfo);
+      StackTraceUtils.print(
+          TAG,
+          Thread.currentThread().getStackTrace(),
+          "SEND MSG",
+          true,
+          this.getClass().getName()
+      );
     }
     return result;
   }
