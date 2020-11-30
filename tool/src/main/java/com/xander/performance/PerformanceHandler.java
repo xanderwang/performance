@@ -5,8 +5,11 @@ import static com.xander.performance.PerformanceConfig.HANDLER_CHECK_TIME;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+
 import androidx.annotation.NonNull;
+
 import java.util.HashMap;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,9 +19,13 @@ import org.json.JSONObject;
  */
 public class PerformanceHandler extends Handler {
 
-  private static final String TAG = pTool.TAG + "PerformanceHandler";
+  private static String TAG = pTool.TAG + "_PerformanceHandler";
 
   private static HashMap<String, MsgStackInfo> msgStackInfoMap = new HashMap<>();
+
+  static void resetTag(String tag) {
+    TAG = tag + "_PerformanceHandler";
+  }
 
   @Override
   public boolean sendMessageAtTime(@NonNull Message msg, long uptimeMillis) {
@@ -26,6 +33,7 @@ public class PerformanceHandler extends Handler {
     boolean result = super.sendMessageAtTime(msg, uptimeMillis);
     if (result) {
       String msgKey = Integer.toHexString(msg.hashCode());
+      // xLog.e(TAG, "sendMessageAtTime msgKey:" + msgKey);
       MsgStackInfo msgStackInfo = new MsgStackInfo();
       msgStackInfo.sendMsgStackTrace = StackTraceUtils.string(
           Thread.currentThread().getStackTrace(),
@@ -33,46 +41,46 @@ public class PerformanceHandler extends Handler {
           this.getClass().getName()
       );
       msgStackInfoMap.put(msgKey, msgStackInfo);
-      StackTraceUtils.print(
-          TAG,
-          Thread.currentThread().getStackTrace(),
-          "SEND MSG",
-          true,
-          this.getClass().getName()
-      );
+      // StackTraceUtils.print(
+      //     TAG,
+      //     Thread.currentThread().getStackTrace(),
+      //     "SEND MSG",
+      //     true,
+      //     this.getClass().getName()
+      // );
     }
     return result;
   }
 
   @Override
   public void dispatchMessage(@NonNull Message msg) {
+    String msgKey = Integer.toHexString(msg.hashCode());
+    // xLog.e(TAG, "dispatchMessage msgKey:" + msgKey);
     long startTime = SystemClock.elapsedRealtime();
     super.dispatchMessage(msg);
     long costTime = SystemClock.elapsedRealtime() - startTime;
-    String msgKey = Integer.toHexString(msg.hashCode());
     if (costTime > HANDLER_CHECK_TIME && msgStackInfoMap.containsKey(msgKey)) {
+      MsgStackInfo msgStackInfo = msgStackInfoMap.get(msgKey);
+      msgStackInfo.costTime = costTime;
       // 打印
-      xLog.e(TAG, msgStackInfoMap.get(msgKey).sendMsgStackTrace);
+      xLog.e(TAG, msgStackInfo.toJson());
     }
+    msgStackInfoMap.remove(msgKey);
   }
 
 
   static class MsgStackInfo {
 
-    long startTime = 0;
-
     long costTime = 0;
 
     String sendMsgStackTrace;
 
-    String disPatchMsgStackTrace;
 
     String toJson() {
       JSONObject jsonObject = new JSONObject();
       try {
         jsonObject.put("costTime", costTime);
         jsonObject.put("sendMsgStackTrace", sendMsgStackTrace);
-        jsonObject.put("disPatchMsgStackTrace", disPatchMsgStackTrace);
       } catch (JSONException e) {
         e.printStackTrace();
       }

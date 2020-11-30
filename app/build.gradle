@@ -8,7 +8,7 @@ if (rootProject.ext.use_plugin) {
     log false
     classLog false
     methodLog false
-    skipJar true
+    skipJar false
   }
 }
 

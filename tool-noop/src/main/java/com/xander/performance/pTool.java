@@ -4,11 +4,11 @@ public class pTool {
 
   public static class Builder {
 
-    public Builder checkANR(boolean check) {
+    public Builder checkUIThread(boolean check) {
       return this;
     }
 
-    public Builder checkANR(boolean check, long time) {
+    public Builder checkUIThread(boolean check, long time) {
       return this;
     }
 
@@ -24,8 +24,7 @@ public class pTool {
       return this;
     }
 
-    @Deprecated
-    public Builder checkHandler(boolean check, long time) {
+    public Builder checkHandlerCostTime(long maxCostTime) {
       return this;
     }
 

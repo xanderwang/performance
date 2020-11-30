@@ -27,8 +27,11 @@ public class DumpTool {
     linkedHashSet.remove(dumpListener);
   }
 
+  static void resetTag(String tag) {
+    TAG = tag + "_DumpTool";
+  }
+
   public static void init(String serviceName) {
-    TAG = pTool.TAG + "_DumpTool";
     xLog.e(TAG, "init");
     try {
       if (VERSION.SDK_INT < 28) {

@@ -22,12 +22,16 @@ import org.json.JSONObject;
  *
  * sendMessageAtTime 的时候，可以保存当前的
  */
+@Deprecated
 public class HandlerTool {
 
   private static String TAG = pTool.TAG + "_HandlerTool";
 
+  static void resetTag(String tag) {
+    TAG = tag + "_HandlerTool";
+  }
+
   static void start() {
-    TAG = pTool.TAG + "_HandlerTool";
     xLog.e(TAG, "start");
     //hookWithEpic();
   }

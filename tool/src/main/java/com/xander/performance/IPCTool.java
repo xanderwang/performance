@@ -13,8 +13,11 @@ public class IPCTool {
 
   private static String TAG = pTool.TAG + "_IPCTool";
 
+  static void resetTag(String tag) {
+    TAG = tag + "_IPCTool";
+  }
+
   static void start() {
-    TAG = pTool.TAG + "_IPCTool";
     xLog.e(TAG, "start");
     hookWithEpic();
   }

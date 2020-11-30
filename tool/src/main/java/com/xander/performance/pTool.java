@@ -12,11 +12,11 @@ public class pTool {
     /**
      * 是否开启检测 ANR
      */
-    boolean mCheckANR = true;
+    boolean mCheckUI = true;
     /**
      * ANR 的触发时间
      */
-    long mAnrCheckTime = 5000;
+    long mCheckUIThreadTime = 300;
     /**
      * 检测线程的 start 方法调用栈
      */
@@ -26,21 +26,22 @@ public class pTool {
      */
     boolean mCheckFPS = true;
 
+    /**
+     * 是否需要检测 ipc， 也就是进程间通讯
+     */
     boolean mCheckIPC = false;
-
-    boolean mCheckHandler = false;
 
     long mHandlerCheckTime = 0;
 
-    String globalTag = "pTool";
+    String globalTag = TAG;
 
-    public Builder checkANR(boolean check) {
-      return checkANR(check, 5000);
+    public Builder checkUIThread(boolean check) {
+      return checkUIThread(check, 5000);
     }
 
-    public Builder checkANR(boolean check, long time) {
-      mCheckANR = check;
-      mAnrCheckTime = time;
+    public Builder checkUIThread(boolean check, long time) {
+      mCheckUI = check;
+      mCheckUIThreadTime = time;
       return this;
     }
 
@@ -59,10 +60,8 @@ public class pTool {
       return this;
     }
 
-    @Deprecated
-    public Builder checkHandler(boolean check, long time) {
-      mCheckHandler = check;
-      mHandlerCheckTime = time;
+    public Builder checkHandlerCostTime(long maxCostTime) {
+      mHandlerCheckTime = maxCostTime;
       return this;
     }
 
@@ -83,11 +82,19 @@ public class pTool {
       builder = new Builder();
     }
     TAG = builder.globalTag;
+    DumpTool.resetTag(TAG);
+    FPSTool.resetTag(TAG);
+    HandlerTool.resetTag(TAG);
+    IPCTool.resetTag(TAG);
+    MainThreadTool.resetTag(TAG);
+    PerformanceHandler.resetTag(TAG);
+    ThreadTool.resetTag(TAG);
+
     if (builder.mCheckThread) {
       ThreadTool.init();
     }
-    if (builder.mCheckANR) {
-      PerformanceConfig.ANR_CHECK_TIME = builder.mAnrCheckTime;
+    if (builder.mCheckUI) {
+      PerformanceConfig.CHECK_UI_THREAD_TIME = builder.mCheckUIThreadTime;
       MainThreadTool.start();
     }
     if (builder.mCheckFPS) {
@@ -96,10 +103,7 @@ public class pTool {
     if (builder.mCheckIPC) {
       IPCTool.start();
     }
-    if (builder.mCheckHandler) {
-      PerformanceConfig.HANDLER_CHECK_TIME = builder.mHandlerCheckTime;
-      HandlerTool.start();
-    }
+    PerformanceConfig.HANDLER_CHECK_TIME = builder.mHandlerCheckTime;
   }
 
 }

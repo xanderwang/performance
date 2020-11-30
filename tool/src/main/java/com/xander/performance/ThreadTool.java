@@ -29,6 +29,10 @@ public class ThreadTool {
 
   private static String TAG = pTool.TAG + "_ThreadTool";
 
+  static void resetTag(String tag) {
+    TAG = tag + "_ThreadTool";
+  }
+
   static class ThreadInfo {
 
     String key;
@@ -74,7 +78,6 @@ public class ThreadTool {
 
 
   static void init() {
-    TAG = pTool.TAG + "_ThreadTool";
     xLog.e(TAG, "init");
     hookWithEpic();
     //hookWithSandHook(); // sandhook 不是很好用，先注释

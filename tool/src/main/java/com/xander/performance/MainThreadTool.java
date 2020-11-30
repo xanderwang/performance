@@ -18,8 +18,11 @@ public class MainThreadTool {
 
   private static volatile CheckMainThread checkMainThread;
 
+  static void resetTag(String tag) {
+    TAG = tag + "_MainThreadTool";
+  }
+
   static void start() {
-    TAG = pTool.TAG + "_MainThreadTool";
     xLog.e(TAG, "start");
     // 不严谨，后续需要优化。
     if (null != checkMainThread) {
@@ -62,13 +65,13 @@ public class MainThreadTool {
     public void run() {
       while (true) {
         try {
-          Thread.sleep(PerformanceConfig.ANR_CHECK_TIME);
+          Thread.sleep(PerformanceConfig.CHECK_UI_THREAD_TIME);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
         //xLog.e(TAG, "---------- start check main thread ----------");
         if (!uiRunnable.done) {
-          StackTraceUtils.print(TAG, Looper.getMainLooper().getThread().getStackTrace(), "ANR");
+          StackTraceUtils.print(TAG, Looper.getMainLooper().getThread().getStackTrace(), "UI Thread");
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();

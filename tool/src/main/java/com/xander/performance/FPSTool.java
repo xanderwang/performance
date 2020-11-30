@@ -26,8 +26,11 @@ public class FPSTool {
 
   private static long FPS_INTERVAL_TIME = 1000;
 
+  static void resetTag(String tag) {
+    TAG = tag + "_FPSTool";
+  }
+
   static void start() {
-    TAG = pTool.TAG + "_FPSTool";
     xLog.e(TAG, "start");
     handler = new Handler(Looper.getMainLooper());
     handler.post(frameRunnable);
