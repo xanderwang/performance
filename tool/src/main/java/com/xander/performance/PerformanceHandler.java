@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 
-import androidx.annotation.NonNull;
 
 import java.util.HashMap;
 
@@ -28,7 +27,7 @@ public class PerformanceHandler extends Handler {
   }
 
   @Override
-  public boolean sendMessageAtTime(@NonNull Message msg, long uptimeMillis) {
+  public boolean sendMessageAtTime(Message msg, long uptimeMillis) {
     // 记录下来调用栈
     boolean result = super.sendMessageAtTime(msg, uptimeMillis);
     if (result) {
@@ -53,7 +52,7 @@ public class PerformanceHandler extends Handler {
   }
 
   @Override
-  public void dispatchMessage(@NonNull Message msg) {
+  public void dispatchMessage(Message msg) {
     String msgKey = Integer.toHexString(msg.hashCode());
     // xLog.e(TAG, "dispatchMessage msgKey:" + msgKey);
     long startTime = SystemClock.elapsedRealtime();

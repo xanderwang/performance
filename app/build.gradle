@@ -52,7 +52,7 @@ android {
 dependencies {
   implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-  testImplementation 'junit:junit:4.12'
+  testImplementation 'junit:junit:4.13.1'
   androidTestImplementation 'androidx.test.ext:junit:1.1.2'
   androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
@@ -61,9 +61,9 @@ dependencies {
   implementation _dependencies['appcompat']
   implementation _dependencies['constraintlayout']
 
-  implementation project(path: ':tool')
+  //implementation project(path: ':tool')
   //implementation project(path: ':tool-noop')
-  //implementation _dependencies['performance_tool']
+  implementation _dependencies['performance_tool']
   //implementation _dependencies['performance_tool_noop']
 
   //implementation _dependencies['hooklib']
@@ -71,7 +71,7 @@ dependencies {
   //implementation _dependencies['nativehook']
 
   implementation _dependencies['core-ktx']
-  implementation "${_dependencies['kotlin-stdlib-jdk7']}:$kotlin_version"
+  implementation _dependencies['kotlin-stdlib-jdk']
   implementation _dependencies['kotlinx-coroutines-core']
   implementation _dependencies['kotlinx-coroutines-android']
 }

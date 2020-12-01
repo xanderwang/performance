@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+//apply plugin: 'kotlin-android'
+//apply plugin: 'kotlin-android-extensions'
 
 apply plugin: 'com.novoda.bintray-release'
 
@@ -29,7 +29,7 @@ android {
 dependencies {
   api fileTree(dir: 'libs', include: ['*.jar'])
 
-  testImplementation 'junit:junit:4.12'
+  testImplementation 'junit:junit:4.13.1'
   androidTestImplementation 'androidx.test.ext:junit:1.1.2'
   androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
@@ -38,8 +38,8 @@ dependencies {
   // need for android 11
   //api _dependencies['nativehook']
 
-  api _dependencies['core-ktx']
-  api "${_dependencies['kotlin-stdlib-jdk7']}:$kotlin_version"
+  //api _dependencies['core-ktx']
+  //api _dependencies['kotlin-stdlib-jdk']
   //api _dependencies['kotlinx-coroutines-core']
   //api _dependencies['kotlinx-coroutines-android']
 

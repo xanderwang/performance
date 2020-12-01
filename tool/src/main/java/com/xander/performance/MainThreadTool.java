@@ -1,11 +1,8 @@
 package com.xander.performance;
 
-import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-
-import androidx.annotation.NonNull;
 
 /**
  * @author xander
@@ -49,10 +46,10 @@ public class MainThreadTool {
     MainThreadRunnable uiRunnable = new MainThreadRunnable();
     Handler mainThreadHandler = new Handler(Looper.getMainLooper()) {
       @Override
-      public void handleMessage(@NonNull Message msg) {
+      public void handleMessage(Message msg) {
         super.handleMessage(msg);
-        if( msg.obj instanceof MainThreadRunnable ) {
-          ((MainThreadRunnable)msg.obj).run();
+        if (msg.obj instanceof MainThreadRunnable) {
+          ((MainThreadRunnable) msg.obj).run();
         }
       }
     };
@@ -71,7 +68,8 @@ public class MainThreadTool {
         }
         //xLog.e(TAG, "---------- start check main thread ----------");
         if (!uiRunnable.done) {
-          StackTraceUtils.print(TAG, Looper.getMainLooper().getThread().getStackTrace(), "UI Thread");
+          StackTraceUtils
+              .print(TAG, Looper.getMainLooper().getThread().getStackTrace(), "UI Thread");
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();
@@ -83,9 +81,7 @@ public class MainThreadTool {
   }
 
   /**
-   * main thread 里面执行的 runnable ，执行完标记值为 true ， 否则为 false ，
-   * 通过后台线程持续检测标记值可以知道 main thread
-   * 是否有阻塞。
+   * main thread 里面执行的 runnable ，执行完标记值为 true ， 否则为 false ， 通过后台线程持续检测标记值可以知道 main thread 是否有阻塞。
    */
   static class MainThreadRunnable implements Runnable {
 

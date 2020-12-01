@@ -5,8 +5,6 @@ import android.os.Binder;
 import android.os.Build.VERSION;
 import android.os.IBinder;
 import android.os.IInterface;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import java.io.FileDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -55,14 +53,14 @@ public class DumpTool {
   public static class DumpBinder extends Binder implements IInterface {
 
     @Override
-    public void dump(@NonNull FileDescriptor fd, @Nullable String[] args) {
+    public void dump(FileDescriptor fd, String[] args) {
       super.dump(fd, args);
       xLog.e(TAG, "dump");
       dump(args);
     }
 
     @Override
-    public void dumpAsync(@NonNull FileDescriptor fd, @Nullable String[] args) {
+    public void dumpAsync(FileDescriptor fd, String[] args) {
       super.dumpAsync(fd, args);
       xLog.e(TAG, "dumpAsync");
       dump(args);

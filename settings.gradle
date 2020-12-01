@@ -1,10 +1,12 @@
-rootProject.name='performace'
-//if( rootProject.ext.use_plugin ) {
-//  includeBuild("plugin")
-//}
-includeBuild("plugin")
+println("-" * 100)
+def composingMode = true
+rootProject.name = 'performace'
+if (composingMode) {
+  includeBuild("plugin")
+} else {
+  include ':plugin'
+}
+include ':lib-epic'
 include ':app'
 include ':tool'
 include ':tool-noop'
-include ':lib-epic'
-//include ':plugin'

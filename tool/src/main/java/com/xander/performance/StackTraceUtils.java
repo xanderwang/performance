@@ -11,7 +11,7 @@ package com.xander.performance;
  */
 class StackTraceUtils {
 
-  static String STACK_TRACE_FORMAT = "|\t%s.%s():%s";
+  static String STACK_TRACE_FORMAT = "|\t%s.%s(%s:%s)";
 
   static String[] filterPackageSet;
 
@@ -125,6 +125,7 @@ class StackTraceUtils {
             STACK_TRACE_FORMAT,
             element.getClassName(),
             element.getMethodName(),
+            element.getFileName(),
             element.getLineNumber()
         );
         xLog.e(tag, token);
@@ -133,8 +134,11 @@ class StackTraceUtils {
         stringBuilder.append(element.getClassName())
             .append('.')
             .append(element.getMethodName())
-            .append("():")
-            .append(element.getLineNumber());
+            .append('(')
+            .append(element.getFileName())
+            .append(':')
+            .append(element.getLineNumber())
+            .append(')');
         if (i + 1 < stackTraceElements.length) {
           stringBuilder.append(" <- ");
         }
