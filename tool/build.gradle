@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 //apply plugin: 'kotlin-android'
 //apply plugin: 'kotlin-android-extensions'
-
+apply plugin: "maven"
 apply plugin: 'com.novoda.bintray-release'
 
 android {
@@ -61,6 +61,14 @@ def _group = 'com.xander.performance'
 def _artifactId = 'p-tool'
 def _version = rootProject.ext.lib_version
 
+uploadArchives {
+  repositories.mavenDeployer {
+    repository(url: uri("${rootProject.ext.local_repo_path}"))
+    pom.groupId = _group
+    pom.artifactId = _artifactId
+    pom.version = "$_version"
+  }
+}
 
 publish {
   // 各个字段的含义见 https://github.com/novoda/bintray-release/wiki/Configuration-of-the-publish-closure

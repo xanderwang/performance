@@ -1,10 +1,17 @@
+rootProject.name = 'performance'
 println("-" * 100)
-def composingMode = true
-rootProject.name = 'performace'
+def propertiesFilePath = "${rootProject.getProjectDir()}${File.separator}gradle.properties"
+println("properties file path:${propertiesFilePath}")
+Properties properties = new Properties()
+properties.load(file(propertiesFilePath).newDataInputStream())
+def composingMode = properties.getProperty("mode.composing", "true").toBoolean()
+println("composing mode:${composingMode}")
 if (composingMode) {
-  includeBuild("plugin")
+  println("includeBuild('local-plugin')")
+  includeBuild('local-plugin')
 } else {
-  include ':plugin'
+  println("include ':performance-plugin'")
+  include ':performance-plugin'
 }
 include ':lib-epic'
 include ':app'

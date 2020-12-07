@@ -1,0 +1,58 @@
+apply plugin: 'kotlin'
+apply plugin: 'java-gradle-plugin'
+apply plugin: "maven"
+apply plugin: 'com.novoda.bintray-release'
+
+dependencies {
+  implementation gradleApi()
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${rootProject.ext.kotlin_version}"
+  implementation 'com.xander.plugin.asm:plugin-library:1.1.4'
+}
+
+compileKotlin {
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
+}
+
+compileTestKotlin {
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
+}
+
+// git项目的地址
+def _siteUrl = 'https://github.com/XanderWang/performance'
+// git的路径
+def _gitUrl = 'https://github.com/XanderWang/performance.git'
+// group
+def _group = 'com.xander.performance'
+def _artifactId = 'performance'
+def _version = rootProject.ext.lib_version
+
+uploadArchives {
+  repositories.mavenDeployer {
+    repository(url: uri("${rootProject.ext.local_repo_path}"))
+    pom.groupId = _group
+    pom.artifactId = _artifactId
+    pom.version = "$_version"
+  }
+}
+
+publish {
+  // 各个字段的含义见 https://github.com/novoda/bintray-release/wiki/Configuration-of-the-publish-closure
+  Properties properties = new Properties()
+  properties.load(rootProject.file('local.properties').newDataInputStream())
+  def user = properties.getProperty('BINTRAY_USER', 'xanderwang')
+  def key = properties.getProperty('BINTRAY_KEY', 'xxx')
+  userOrg = user
+  repoName = 'maven'
+  groupId = _group
+  artifactId = _artifactId
+  publishVersion = _version
+  dryRun = false
+  desc = 'a gradle plugin for android , it can check app performance'
+  website = _siteUrl
+  bintrayUser = user
+  bintrayKey = key
+}

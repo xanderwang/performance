@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 if (rootProject.ext.use_plugin) {
-  apply plugin: 'com.xander.performance.plugin'
+  apply plugin: "${rootProject.ext.plugin_apply_name}"
   performanceConfig {
     log false
     classLog false
