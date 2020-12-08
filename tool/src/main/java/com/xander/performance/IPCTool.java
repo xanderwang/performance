@@ -1,6 +1,7 @@
 package com.xander.performance;
 
 import android.os.Parcel;
+
 import de.robv.android.xposed.DexposedBridge;
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -42,13 +43,12 @@ public class IPCTool {
 
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      StackTraceUtils.print(
-          TAG,
-          Thread.currentThread().getStackTrace(),
-          "IPC",
-          true,
-          this.getClass().getName()
-      );
+      // StackTraceUtils.print(TAG, "IPC");
+      Issues ipcIssues = new Issues();
+      ipcIssues.setType(Issues.TYPE_IPC);
+      ipcIssues.setMsg("find ipc issues");
+      ipcIssues.setData(StackTraceUtils.list());
+      ipcIssues.print();
       super.beforeHookedMethod(param);
     }
   }

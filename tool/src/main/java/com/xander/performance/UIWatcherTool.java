@@ -9,52 +9,54 @@ import android.os.Message;
  * <p>
  * 通过向 main thread 里面放一个指定的 runnable 然后定时去查看是否被运行过来检测是否有 ANR
  */
-public class MainThreadTool {
+public class UIWatcherTool {
 
-  private static String TAG = pTool.TAG + "_MainThreadTool";
+  private static String TAG = pTool.TAG + "_UIWatcherTool";
 
-  private static volatile CheckMainThread checkMainThread;
+  private static volatile UIWatcherThread UIWatcherThread;
 
   static void resetTag(String tag) {
-    TAG = tag + "_MainThreadTool";
+    TAG = tag + "_UIWatcherTool";
   }
 
   static void start() {
     xLog.e(TAG, "start");
     // 不严谨，后续需要优化。
-    if (null != checkMainThread) {
+    if (null != UIWatcherThread) {
       return;
     }
     // 后台检测线程
-    checkMainThread = new CheckMainThread("check-main-thread");
-    checkMainThread.start();
+    UIWatcherThread = new UIWatcherThread("ui-watcher-thread");
+    UIWatcherThread.start();
   }
 
+  @Deprecated
   static void stop() {
-    if (null != checkMainThread && !checkMainThread.isInterrupted()) {
-      checkMainThread.interrupt();
+    if (null != UIWatcherThread && !UIWatcherThread.isInterrupted()) {
+      UIWatcherThread.interrupt();
     }
-    checkMainThread = null;
+    UIWatcherThread = null;
   }
 
 
   /**
    * 检测 main thread 的 Thread ,在后台指定的时间
    */
-  static class CheckMainThread extends Thread {
+  static class UIWatcherThread extends Thread {
 
-    MainThreadRunnable uiRunnable = new MainThreadRunnable();
+    UIWatcherRunnable uiRunnable = new UIWatcherRunnable();
+
     Handler mainThreadHandler = new Handler(Looper.getMainLooper()) {
       @Override
       public void handleMessage(Message msg) {
         super.handleMessage(msg);
-        if (msg.obj instanceof MainThreadRunnable) {
-          ((MainThreadRunnable) msg.obj).run();
+        if (msg.obj instanceof UIWatcherRunnable) {
+          ((UIWatcherRunnable) msg.obj).run();
         }
       }
     };
 
-    public CheckMainThread(String name) {
+    public UIWatcherThread(String name) {
       super(name);
     }
 
@@ -68,8 +70,15 @@ public class MainThreadTool {
         }
         //xLog.e(TAG, "---------- start check main thread ----------");
         if (!uiRunnable.done) {
-          StackTraceUtils
-              .print(TAG, Looper.getMainLooper().getThread().getStackTrace(), "UI Thread");
+          // StackTraceUtils.print(TAG, Looper.getMainLooper().getThread().getStackTrace(), "UI Thread");
+          Issues uiIssues = new Issues();
+          uiIssues.setType(Issues.TYPE_ANR);
+          uiIssues.setMsg("find ui thread");
+          uiIssues.setData(StackTraceUtils.list(
+              Looper.getMainLooper().getThread().getStackTrace(),
+              false,
+              ""
+          ));
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();
@@ -81,9 +90,10 @@ public class MainThreadTool {
   }
 
   /**
-   * main thread 里面执行的 runnable ，执行完标记值为 true ， 否则为 false ， 通过后台线程持续检测标记值可以知道 main thread 是否有阻塞。
+   * main thread 里面执行的 runnable ，执行完标记值为 true ，
+   * 否则为 false ， 通过后台线程持续检测标记值可以知道 main thread 是否有阻塞。
    */
-  static class MainThreadRunnable implements Runnable {
+  static class UIWatcherRunnable implements Runnable {
 
     boolean done = false;
 

@@ -84,9 +84,8 @@ public class pTool {
     TAG = builder.globalTag;
     DumpTool.resetTag(TAG);
     FPSTool.resetTag(TAG);
-    HandlerTool.resetTag(TAG);
     IPCTool.resetTag(TAG);
-    MainThreadTool.resetTag(TAG);
+    UIWatcherTool.resetTag(TAG);
     PerformanceHandler.resetTag(TAG);
     ThreadTool.resetTag(TAG);
 
@@ -95,7 +94,7 @@ public class pTool {
     }
     if (builder.mCheckUI) {
       PerformanceConfig.CHECK_UI_THREAD_TIME = builder.mCheckUIThreadTime;
-      MainThreadTool.start();
+      UIWatcherTool.start();
     }
     if (builder.mCheckFPS) {
       FPSTool.start();

@@ -49,6 +49,9 @@ dependencies {
 
   api _dependencies['free_reflection']
 
+  api _dependencies['core-ktx']
+  api _dependencies['kotlin-stdlib-jdk']
+
 }
 
 
