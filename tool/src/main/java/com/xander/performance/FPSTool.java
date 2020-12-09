@@ -55,7 +55,7 @@ public class FPSTool {
       if (time == 0) {
         // 第一次开始监控，跳过
       } else {
-        xLog.e(TAG, "APP FPS:" + (1000.f * count / (curTime - time)));
+        xLog.w(TAG, "APP FPS:" + (1000.f * count / (curTime - time)));
       }
       count = 0;
       time = curTime;

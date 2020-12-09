@@ -1,5 +1,8 @@
 package com.xander.performance;
 
+import android.util.SparseArray;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,69 +14,79 @@ public class Issues {
   /**
    * 检测 ANR
    */
-  public static final int TYPE_ANR = 0;
+  public static final int TYPE_ANR     = 0;
   /**
    * 检测 FPS
    */
-  public static final int TYPE_FPS = 1;
+  public static final int TYPE_FPS     = 1;
   /**
    * 检测 IPC，进程间通讯
    */
-  public static final int TYPE_IPC = 2;
+  public static final int TYPE_IPC     = 2;
   /**
    * 检测线程的创建
    */
-  public static final int TYPE_THREAD = 3;
+  public static final int TYPE_THREAD  = 3;
   /**
    * 检测主线程耗时任务
    */
   public static final int TYPE_HANDLER = 4;
 
+  protected static SparseArray<List<Issues>> issuesMap = new SparseArray<>(8);
+
   /**
    * 类型
    */
-  private int type = -1;
+  protected int    type = -1;
   /**
    * 消息
    */
-  private String msg = "";
-
-  private Object data;
-
-  public Issues() {
-  }
+  protected String msg  = "";
+  /**
+   * 数据
+   */
+  protected Object data;
 
   public Issues(int type, String msg, Object data) {
     this.type = type;
     this.msg = msg;
     this.data = data;
+    insertToList();
   }
 
   public int getType() {
     return type;
   }
 
-  public void setType(int type) {
-    this.type = type;
-  }
-
   public String getMsg() {
     return msg;
-  }
-
-  public void setMsg(String msg) {
-    this.msg = msg;
   }
 
   public Object getData() {
     return data;
   }
 
-  public void setData(Object data) {
-    this.data = data;
+  protected void insertToList() {
+    List<Issues> issuesArray = issuesMap.get(type);
+    if (null == issuesArray || issuesArray.size() >= 30) {
+      synchronized (Issues.class) {
+        if (null == issuesArray || issuesArray.size() >= 30) {
+          // 双重确认后，才可以继续
+          if (null != issuesArray) {
+            // todo 保存到文件 待后续实现
+            // issuesArray = null;
+          }
+          if (null == issuesArray) {
+            issuesArray = new ArrayList<>(32);
+            issuesMap.put(type, issuesArray);
+          }
+        }
+      }
+    }
+    issuesArray.add(this);
   }
 
-  private String typeToString() {
+  protected String typeToString() {
     String str = null;
     switch (type) {
       case TYPE_ANR:
@@ -98,28 +111,42 @@ public class Issues {
   }
 
   public void print() {
-    String tag = pTool.TAG + "_Issues";
-    xLog.w(tag, "start --------------------------------------------------------");
     StringBuilder sb = new StringBuilder();
-    sb.append("type:").append(typeToString());
-    xLog.w(tag, sb.toString());
+    String tag = sb.append(pTool.TAG).append("_Issues").toString();
+    log(tag, "start --------------------------------------------------------");
     sb.setLength(0);
-    sb.append("msg:").append(msg);
-    xLog.w(tag, sb.toString());
+    sb.append("type: ").append(typeToString());
+    log(tag, sb.toString());
     sb.setLength(0);
+    sb.append("msg: ").append(msg);
+    log(tag, sb.toString());
+    sb.setLength(0);
+    printOther(tag, sb);
     if (null == data) {
-      xLog.w(tag, "end ----------------------------------------------------------");
+      log(tag, "end ----------------------------------------------------------");
       return;
     }
+    sb.setLength(0);
     if (data instanceof List) {
-      List<Object> dataList = (List<Object>) data;
-      for (int i = 0, len = dataList.size(); i < len; i++) {
-        sb.setLength(0);
-        Object item = dataList.get(i);
-        sb.append('\t').append(item);
-        xLog.w(tag, sb.toString());
-      }
+      printData(tag, sb, (List) data);
     }
-    xLog.w(tag, "end ----------------------------------------------------------");
+    log(tag, "end ----------------------------------------------------------");
+  }
+
+  protected void printOther(String tag, StringBuilder sb) {
+
+  }
+
+  protected void printData(String tag, StringBuilder sb, List dataList) {
+    for (int i = 0, len = dataList.size(); i < len; i++) {
+      sb.setLength(0);
+      Object item = dataList.get(i);
+      sb.append('\t').append(item);
+      log(tag, sb.toString());
+    }
+  }
+
+  protected void log(String tag, String msg) {
+    xLog.w(tag, msg);
   }
 }

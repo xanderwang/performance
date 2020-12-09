@@ -43,11 +43,7 @@ public class IPCTool {
 
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      // StackTraceUtils.print(TAG, "IPC");
-      Issues ipcIssues = new Issues();
-      ipcIssues.setType(Issues.TYPE_IPC);
-      ipcIssues.setMsg("find ipc issues");
-      ipcIssues.setData(StackTraceUtils.list());
+      Issues ipcIssues = new Issues(Issues.TYPE_IPC, "IPC", StackTraceUtils.list());
       ipcIssues.print();
       super.beforeHookedMethod(param);
     }

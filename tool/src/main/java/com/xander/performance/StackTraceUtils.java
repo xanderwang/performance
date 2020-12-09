@@ -16,154 +16,13 @@ import java.util.Set;
  */
 class StackTraceUtils {
 
-  static String STACK_TRACE_FORMAT = "|\t%s.%s(%s:%s)";
-
-  static String[] filterPackageSet;
-
   static Set<String> ignorePackageSet = new HashSet<>();
 
   static {
-    ignorePackageSet.add(me.weishu.epic.BuildConfig.class.getPackage().getName());
-    ignorePackageSet.add(de.robv.android.xposed.DexposedBridge.class.getPackage().getName());
-    filterPackageSet = new String[]{
-        //"com.swift.sandhook",
-        me.weishu.epic.BuildConfig.class.getPackage().getName(),
-        de.robv.android.xposed.DexposedBridge.class.getPackage().getName()};
-  }
-
-  /**
-   * @param tag                log 的 TAG
-   * @param stackTraceElements 调用栈
-   * @param traceName          trace 名称
-   */
-  static void print(String tag, StackTraceElement[] stackTraceElements, String traceName) {
-    print(tag, stackTraceElements, traceName, false, "");
-  }
-
-  /**
-   * @param tag                log 的 TAG
-   * @param stackTraceElements 调用栈
-   * @param traceName          trace 名称
-   * @param filterClassName    是否需要从指定的类名开始
-   * @param className          指定的类名
-   */
-  static void print(String tag, StackTraceElement[] stackTraceElements, String traceName, boolean filterClassName,
-      String className) {
-    print(tag, stackTraceElements, traceName, filterPackageSet, filterClassName, className);
-  }
-
-  /**
-   * @param tag                log 的 TAG
-   * @param stackTraceElements 调用栈
-   * @param traceName          trace 名称
-   * @param filterPackageSet   需要过滤的包名的 set
-   * @param filterClassName    是否需要从指定的类名开始
-   * @param className          指定的类名
-   */
-  static void print(String tag, StackTraceElement[] stackTraceElements, String traceName, String[] filterPackageSet,
-      boolean filterClassName, String className) {
-    xLog.e(tag, "|==================  " + traceName + "  ==================");
-    if (null == stackTraceElements || stackTraceElements.length == 0) {
-      xLog.e(tag, "| Thread StackTraceElements is null !!!");
-    } else {
-      formatStackTrace(stackTraceElements, filterPackageSet, filterClassName, className, tag, true, false);
-    }
-    xLog.e(tag, "|---------------------------------------------------------");
-  }
-
-  static String string(StackTraceElement[] stackTraceElements) {
-    return string(stackTraceElements, filterPackageSet, false, "");
-  }
-
-  static String string(StackTraceElement[] stackTraceElements, boolean filterClassName, String className) {
-    return string(stackTraceElements, filterPackageSet, filterClassName, className);
-  }
-
-  static String string(StackTraceElement[] stackTraceElements, String[] filterPackageSet, boolean filterClassName,
-      String className) {
-    return formatStackTrace(stackTraceElements, filterPackageSet, filterClassName, className,
-        pTool.TAG + "_stack_string", false, true
-    );
-  }
-
-  private static String formatStackTrace(StackTraceElement[] stackTraceElements, String[] filterPackageSet,
-      boolean filterClassName, String className, String tag, boolean printMode, boolean stringMode) {
     StringBuilder stringBuilder = new StringBuilder();
-    boolean hasFindClass = !filterClassName;
-    for (int i = 0; i < stackTraceElements.length; i++) {
-      StackTraceElement element = stackTraceElements[i];
-      String eClassName = element.getClassName();
-      if (filterClassName) {
-        if (!hasFindClass && !eClassName.equals(className)) {
-          continue;
-        }
-        if (!hasFindClass) {
-          hasFindClass = true;
-          continue;
-        }
-      }
-      boolean needContinue = false;
-      if (null != filterPackageSet) {
-        for (int j = 0; j < filterPackageSet.length; j++) {
-          if (eClassName.contains(filterPackageSet[j])) {
-            needContinue = true;
-            break;
-          }
-        }
-        if (needContinue) {
-          continue;
-        }
-      }
-      if (printMode) {
-        String token =
-            String.format(STACK_TRACE_FORMAT, element.getClassName(), element.getMethodName(), element.getFileName(),
-                element.getLineNumber()
-            );
-        xLog.e(tag, token);
-      }
-      if (stringMode) {
-        stringBuilder.append(element.getClassName())
-            .append('.')
-            .append(element.getMethodName())
-            .append('(')
-            .append(element.getFileName())
-            .append(':')
-            .append(element.getLineNumber())
-            .append(')');
-        if (i + 1 < stackTraceElements.length) {
-          stringBuilder.append(" <- ");
-        }
-      }
-    }
-    return stringBuilder.toString();
-  }
-
-  public static void print(String tag, String type) {
-    print(tag, type, Thread.currentThread().getStackTrace(), true, StackTraceUtils.class.getName(), true,
-        ignorePackageSet
-    );
-  }
-
-  public static void print(String tag, String type, boolean filterPoint, boolean filterPackage) {
-    print(tag, type, Thread.currentThread().getStackTrace(), filterPoint, StackTraceUtils.class.getName(),
-        filterPackage, ignorePackageSet
-    );
-  }
-
-  public static void print(String tag, String type, boolean filterPoint, boolean filterPackage,
-      Set<String> ignorePackageSet) {
-    StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-    print(tag, type, stackTraceElements, filterPoint, StackTraceUtils.class.getName(), filterPackage, ignorePackageSet);
-  }
-
-
-  public static void print(String tag, String type, StackTraceElement[] stackTraceElements, boolean filterPoint,
-      String pointClassName, boolean filterPackage, Set<String> ignorePackageSet) {
-    List<String> list = list(stackTraceElements, filterPoint, pointClassName, filterPackage, ignorePackageSet);
-    for (int i = 0, len = list.size(); i < len; i++) {
-      xLog.w(tag, list.get(i));
-    }
-    xLog.w(tag, type + " end ============================================");
+    ignorePackageSet.add(filterPackageName(stringBuilder, com.xander.performance.StackTraceUtils.class.getName()));
+    ignorePackageSet.add(filterPackageName(stringBuilder, me.weishu.epic.BuildConfig.class.getName()));
+    ignorePackageSet.add(filterPackageName(stringBuilder, de.robv.android.xposed.DexposedBridge.class.getName()));
   }
 
   public static List<String> list() {
@@ -193,9 +52,7 @@ class StackTraceUtils {
         hasFindPointClass = true;
         continue;
       }
-      String parentClassOrSelf = element.getClassName().split("$")[0];
-      int packageEndIndex = parentClassOrSelf.lastIndexOf('.');
-      String packageName = parentClassOrSelf.substring(0, packageEndIndex);
+      String packageName = filterPackageName(stringBuilder, element.getClassName());
       if (filterPackage && ignorePackageSet.contains(packageName)) {
         // ignorePackageSet 表示忽略的包名，有些包名是框架库里面的方法调用，可以忽略掉
         // 因为不影响开发者
@@ -206,10 +63,30 @@ class StackTraceUtils {
     return list;
   }
 
+  private static String filterPackageName(String className) {
+    return filterPackageName(new StringBuilder(), className);
+  }
+
+  private static String filterPackageName(StringBuilder stringBuilder, String className) {
+    // 取前面 3 段作为包名，提高后续查询效率
+    stringBuilder.setLength(0);
+    int count = 0;
+    for (int m = 0, n = className.length(); m < n; m++) {
+      char c = className.charAt(m);
+      if (c == '.') {
+        count++;
+      }
+      if (count == 3) {
+        break;
+      }
+      stringBuilder.append(c);
+    }
+    return stringBuilder.toString();
+  }
+
   private static String stringStackTraceElement(StackTraceElement element, StringBuilder stringBuilder) {
     stringBuilder.delete(0, stringBuilder.length());
-    stringBuilder.append('\t')
-        .append(element.getClassName())
+    stringBuilder.append(element.getClassName())
         .append('.')
         .append(element.getMethodName())
         .append('(')

@@ -68,17 +68,13 @@ public class UIWatcherTool {
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
-        //xLog.e(TAG, "---------- start check main thread ----------");
         if (!uiRunnable.done) {
-          // StackTraceUtils.print(TAG, Looper.getMainLooper().getThread().getStackTrace(), "UI Thread");
-          Issues uiIssues = new Issues();
-          uiIssues.setType(Issues.TYPE_ANR);
-          uiIssues.setMsg("find ui thread");
-          uiIssues.setData(StackTraceUtils.list(
-              Looper.getMainLooper().getThread().getStackTrace(),
-              false,
-              ""
-          ));
+          Issues uiIssues = new Issues(
+              Issues.TYPE_ANR,
+              "UI WATCHER",
+              StackTraceUtils.list(Looper.getMainLooper().getThread().getStackTrace(), false, "")
+          );
+          uiIssues.print();
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();
