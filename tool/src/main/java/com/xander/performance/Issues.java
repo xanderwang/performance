@@ -28,7 +28,7 @@ public class Issues {
    */
   public static final int TYPE_THREAD  = 3;
   /**
-   * 检测主线程耗时任务
+   * 检测主线程耗时任务，和 ANR 的检测有些区别
    */
   public static final int TYPE_HANDLER = 4;
 

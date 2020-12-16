@@ -58,13 +58,19 @@ class MainActivity : AppCompatActivity() {
     Thread.sleep(200)
   }
 
-  private val h by lazy {
+  private val lazyHandler by lazy {
     Handler(Looper.getMainLooper())
   }
 
+  private val handler = Handler()
+
   fun testHandler(v: View) {
     Log.d(TAG, "testHandler")
-    h.post {
+    lazyHandler.post {
+      Log.d(TAG, "do lazyHandler post msg !!!")
+      Thread.sleep(1000)
+    }
+    handler.post {
       Log.d(TAG, "do handler post msg !!!")
       Thread.sleep(1000)
     }

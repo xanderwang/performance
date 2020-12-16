@@ -45,10 +45,10 @@ class PerformanceWeaver : BaseWeaverFactory() {
 class PerformanceClassVisitor(cv: ClassVisitor, iWeaverFactory: IWeaverFactory) : BaseClassVisitor(cv, iWeaverFactory) {
 
   override fun visit(version: Int, access: Int, name: String?, signature: String?, superName: String?, interfaces: Array<out String>?) {
-    println("PerformanceClassVisitor name:$name")
+    // println("PerformanceClassVisitor name:$name")
     var superName = superName
     if ("android/os/Handler" == superName && name != "com/xander/performance/PerformanceHandler") {
-      println("PerformanceClassVisitor superName:$superName")
+      println("PerformanceClassVisitor name:$name superName:$superName")
       superName = "com/xander/performance/PerformanceHandler"
     }
     super.visit(version, access, name, signature, superName, interfaces)
