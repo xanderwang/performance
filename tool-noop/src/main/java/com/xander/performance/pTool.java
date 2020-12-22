@@ -1,5 +1,7 @@
 package com.xander.performance;
 
+import android.content.Context;
+
 public class pTool {
 
   public static class Builder {
@@ -29,6 +31,10 @@ public class pTool {
     }
 
     public Builder globalTag(String tag) {
+      return this;
+    }
+
+    public Builder appContext(Context context) {
       return this;
     }
 

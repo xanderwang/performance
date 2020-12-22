@@ -14,6 +14,7 @@ class MyApplication : Application() {
         .checkFps(true)
         .checkIPC(true)
         .checkHandlerCostTime(200)
+        .appContext(this)
         .build()
     )
   }

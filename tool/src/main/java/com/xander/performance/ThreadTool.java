@@ -43,10 +43,12 @@ public class ThreadTool {
 
     @Override
     protected void printOther(String tag, StringBuilder sb) {
-      log(tag, "create trace:");
-      printData(tag, sb, createIssues);
-      log(tag, "start trace:");
-      printData(tag, sb, startIssues);
+      // log(tag, "create trace:");
+      sb.append("create trace:\n");
+      printList(tag, sb, createIssues);
+      // log(tag, "start trace:");
+      sb.append("start trace:\n");
+      printList(tag, sb, startIssues);
     }
   }
 
@@ -62,7 +64,7 @@ public class ThreadTool {
     @Override
     protected void printOther(String tag, StringBuilder sb) {
       log(tag, "create trace:");
-      printData(tag, sb, createIssues);
+      printList(tag, sb, createIssues);
     }
 
     void removeThreadInfo(ThreadIssues threadIssues) {

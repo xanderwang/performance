@@ -1,5 +1,7 @@
 package com.xander.performance;
 
+import android.content.Context;
+
 public class pTool {
 
   static String TAG = "pTool";
@@ -30,6 +32,8 @@ public class pTool {
      * 是否需要检测 ipc， 也就是进程间通讯
      */
     boolean mCheckIPC = false;
+
+    Context appContext = null;
 
     long mHandlerCheckTime = 0;
 
@@ -70,6 +74,11 @@ public class pTool {
       return this;
     }
 
+    public Builder appContext(Context context) {
+      appContext = context;
+      return this;
+    }
+
     public Builder build() {
       return this;
     }
@@ -82,13 +91,13 @@ public class pTool {
       builder = new Builder();
     }
     TAG = builder.globalTag;
+    Issues.init(builder.appContext);
     DumpTool.resetTag(TAG);
     FPSTool.resetTag(TAG);
     IPCTool.resetTag(TAG);
     UIWatcherTool.resetTag(TAG);
     PerformanceHandler.resetTag(TAG);
     ThreadTool.resetTag(TAG);
-
     if (builder.mCheckThread) {
       ThreadTool.init();
     }

@@ -60,7 +60,8 @@ public class PerformanceHandler extends Handler {
 
     @Override
     protected void printOther(String tag, StringBuilder sb) {
-      log(tag, sb.append("cost: ").append(costTime).append(" ms").toString());
+      sb.append("cost: ").append(costTime).append(" ms").append('\n');
+      // log(tag, sb.toString());
     }
   }
 
