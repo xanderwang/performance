@@ -69,12 +69,12 @@ public class UIWatcherTool {
           e.printStackTrace();
         }
         if (!uiRunnable.done) {
-          Issues uiIssues = new Issues(
-              Issues.TYPE_ANR,
+          Issue uiIssue = new Issue(
+              Issue.TYPE_ANR,
               "UI WATCHER",
               StackTraceUtils.list(Looper.getMainLooper().getThread().getStackTrace(), false, "")
           );
-          uiIssues.print();
+          uiIssue.print();
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();

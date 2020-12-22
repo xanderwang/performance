@@ -20,9 +20,18 @@ class StackTraceUtils {
 
   static {
     StringBuilder stringBuilder = new StringBuilder();
-    ignorePackageSet.add(filterPackageName(stringBuilder, com.xander.performance.StackTraceUtils.class.getName()));
-    ignorePackageSet.add(filterPackageName(stringBuilder, me.weishu.epic.BuildConfig.class.getName()));
-    ignorePackageSet.add(filterPackageName(stringBuilder, de.robv.android.xposed.DexposedBridge.class.getName()));
+    ignorePackageSet.add(filterPackageName(
+        stringBuilder,
+        com.xander.performance.StackTraceUtils.class.getName()
+    ));
+    ignorePackageSet.add(filterPackageName(
+        stringBuilder,
+        me.weishu.epic.BuildConfig.class.getName()
+    ));
+    ignorePackageSet.add(filterPackageName(
+        stringBuilder,
+        de.robv.android.xposed.DexposedBridge.class.getName()
+    ));
   }
 
   public static List<String> list() {
@@ -30,12 +39,13 @@ class StackTraceUtils {
     return list(stackTraceElements, true, StackTraceUtils.class.getName(), true, ignorePackageSet);
   }
 
-  public static List<String> list(StackTraceElement[] stackTraceElements, boolean filterPoint, String pointClassName) {
+  public static List<String> list(StackTraceElement[] stackTraceElements, boolean filterPoint,
+      String pointClassName) {
     return list(stackTraceElements, filterPoint, pointClassName, true, ignorePackageSet);
   }
 
-  public static List<String> list(StackTraceElement[] stackTraceElements, boolean filterPoint, String pointClassName,
-      boolean filterPackage, Set<String> ignorePackageSet) {
+  public static List<String> list(StackTraceElement[] stackTraceElements, boolean filterPoint,
+      String pointClassName, boolean filterPackage, Set<String> ignorePackageSet) {
     List<String> list = new ArrayList<>(stackTraceElements.length);
     StringBuilder stringBuilder = new StringBuilder();
     boolean hasFindPointClass = !filterPoint;
@@ -84,7 +94,8 @@ class StackTraceUtils {
     return stringBuilder.toString();
   }
 
-  private static String stringStackTraceElement(StackTraceElement element, StringBuilder stringBuilder) {
+  private static String stringStackTraceElement(StackTraceElement element,
+      StringBuilder stringBuilder) {
     stringBuilder.delete(0, stringBuilder.length());
     stringBuilder.append(element.getClassName())
         .append('.')

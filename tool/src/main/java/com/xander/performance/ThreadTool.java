@@ -31,50 +31,48 @@ public class ThreadTool {
 
   private static String TAG = pTool.TAG + "_ThreadTool";
 
-  static class ThreadIssues extends Issues {
+  static class ThreadIssue extends Issue {
     String key;
     String threadPoolInfoKey;
     List<String> createIssues;
     List<String> startIssues;
 
-    public ThreadIssues(String msg) {
-      super(Issues.TYPE_THREAD, msg, null);
+    public ThreadIssue(String msg) {
+      super(Issue.TYPE_THREAD, msg, null);
     }
 
     @Override
-    protected void printOther(String tag, StringBuilder sb) {
-      // log(tag, "create trace:");
+    protected void printOther(StringBuilder sb) {
       sb.append("create trace:\n");
-      printList(tag, sb, createIssues);
-      // log(tag, "start trace:");
+      printList(sb, createIssues);
       sb.append("start trace:\n");
-      printList(tag, sb, startIssues);
+      printList(sb, startIssues);
     }
   }
 
-  static class ThreadPoolIssues extends Issues {
+  static class ThreadPoolIssue extends Issue {
     String key;
-    List<String>       createIssues;
-    List<ThreadIssues> childThreadsInfo = new ArrayList<>();
+    List<String> createIssues;
+    List<ThreadIssue> childThreadsInfo = new ArrayList<>();
 
-    public ThreadPoolIssues( String msg) {
-      super(Issues.TYPE_THREAD, msg, null);
+    public ThreadPoolIssue(String msg) {
+      super(Issue.TYPE_THREAD, msg, null);
     }
 
     @Override
-    protected void printOther(String tag, StringBuilder sb) {
-      log(tag, "create trace:");
-      printList(tag, sb, createIssues);
+    protected void printOther(StringBuilder sb) {
+      sb.append("create trace:\n");
+      printList(sb, createIssues);
     }
 
-    void removeThreadInfo(ThreadIssues threadIssues) {
-      synchronized (ThreadPoolIssues.class) {
+    void removeThreadInfo(ThreadIssue threadIssues) {
+      synchronized (ThreadPoolIssue.class) {
         childThreadsInfo.remove(threadIssues);
       }
     }
 
-    void addThreadInfo(ThreadIssues threadIssues) {
-      synchronized (ThreadPoolIssues.class) {
+    void addThreadInfo(ThreadIssue threadIssues) {
+      synchronized (ThreadPoolIssue.class) {
         childThreadsInfo.add(threadIssues);
       }
     }
@@ -87,12 +85,12 @@ public class ThreadTool {
   /**
    * thread 的信息，包括线程池里面创建的，可以通过 ThreadInfo.threadPoolInfoKey 字段判断是否为线程池创建
    */
-  static Map<String, ThreadIssues> threadInfoMap = new HashMap<>();
+  static Map<String, ThreadIssue> threadInfoMap = new HashMap<>();
 
   /**
    * 线程池信息
    */
-  static Map<String, ThreadPoolIssues> threadPoolInfoMap = new HashMap<>();
+  static Map<String, ThreadPoolIssue> threadPoolInfoMap = new HashMap<>();
 
   /**
    * worker 和 thread pool 的关联，用于绑定 thread 和 thread pool 的关联
@@ -100,7 +98,7 @@ public class ThreadTool {
   static Map<String, String> workerThreadPoolMap = new HashMap<>(32);
 
   @Deprecated
-  static Map<String, ThreadPoolIssues> runnableThreadPoolMap = new HashMap<>(32);
+  static Map<String, ThreadPoolIssue> runnableThreadPoolMap = new HashMap<>(32);
 
   static void resetTag(String tag) {
     TAG = tag + "_ThreadTool";
@@ -127,7 +125,8 @@ public class ThreadTool {
       // java.util.concurrent.ThreadPoolExecutor$Worker 是一个内部类，
       // 所以构造方法第一参数就是 ThreadPoolExecutor, 所以构造方法可以将 worker 和 线程池绑定
       // 同时，run 方法执行完，表示线程池里面的一个线程执行完。可以考虑在里面做一些清理工作
-      DexposedBridge.hookAllConstructors(Class.forName("java.util.concurrent.ThreadPoolExecutor$Worker"),
+      DexposedBridge.hookAllConstructors(
+          Class.forName("java.util.concurrent.ThreadPoolExecutor$Worker"),
           new WorkerConstructorHook()
       );
 
@@ -152,7 +151,7 @@ public class ThreadTool {
         return;
       }
       // 开始记录信息
-      ThreadPoolIssues threadPoolIssues = new ThreadPoolIssues("THREAD POOL CREATE");
+      ThreadPoolIssue threadPoolIssues = new ThreadPoolIssue("THREAD POOL CREATE");
       threadPoolIssues.key = threadPoolInfoKey;
       threadPoolIssues.createIssues = StackTraceUtils.list();
       threadPoolInfoMap.put(threadPoolInfoKey, threadPoolIssues);
@@ -177,9 +176,7 @@ public class ThreadTool {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       // xLog.e(TAG, "Thread constructor: " + Arrays.toString(param.args));
-      StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-
-      ThreadIssues threadIssues = new ThreadIssues("THREAD CREATE");
+      ThreadIssue threadIssues = new ThreadIssue("THREAD CREATE");
       String threadKey = Integer.toHexString(param.thisObject.hashCode());
       threadIssues.key = threadKey;
       threadIssues.createIssues = StackTraceUtils.list();
@@ -198,7 +195,7 @@ public class ThreadTool {
       if (workerThreadPoolMap.containsKey(workerKey)) {
         // 需要和 thread pool 绑定
         String threadPoolKey = workerThreadPoolMap.get(workerKey);
-        ThreadPoolIssues threadPoolIssues = threadPoolInfoMap.get(threadPoolKey);
+        ThreadPoolIssue threadPoolIssues = threadPoolInfoMap.get(threadPoolKey);
         threadIssues.threadPoolInfoKey = threadPoolKey;
         threadPoolIssues.addThreadInfo(threadIssues);
         // 建立 thread 和 thread pool 的关联后，断开 worker 和 thread pool 的关联
@@ -219,7 +216,7 @@ public class ThreadTool {
       //super.beforeHookedMethod(param);
       //xLog.e(TAG, "ThreadStartHook:" + Arrays.toString(param.args));
       String threadKey = Integer.toHexString(param.thisObject.hashCode());
-      ThreadIssues threadIssues = threadInfoMap.get(threadKey);
+      ThreadIssue threadIssues = threadInfoMap.get(threadKey);
       if (null == threadIssues) {
         xLog.e(TAG, "can not find thread info !!!!!!");
         return;
@@ -239,7 +236,7 @@ public class ThreadTool {
       super.afterHookedMethod(param);
       // 线程 run 方法走完，线程即将被销毁，去除 thread info 相关的记录
       String threadKey = Integer.toHexString(param.thisObject.hashCode());
-      ThreadIssues threadIssues = threadInfoMap.get(threadKey);
+      ThreadIssue threadIssues = threadInfoMap.get(threadKey);
       if (null == threadIssues) {
         xLog.e(TAG, "can not find thread info !!!!!!");
         return;
@@ -248,7 +245,7 @@ public class ThreadTool {
       if (TextUtils.isEmpty(threadIssues.threadPoolInfoKey)) {
         return;
       }
-      ThreadPoolIssues threadPoolIssues = threadPoolInfoMap.get(threadIssues.threadPoolInfoKey);
+      ThreadPoolIssue threadPoolIssues = threadPoolInfoMap.get(threadIssues.threadPoolInfoKey);
       if (null == threadPoolIssues) {
         xLog.e(TAG, "can not find thread pool info !!!!!!");
         return;

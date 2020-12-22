@@ -16,7 +16,7 @@ public class PerformanceHandler extends Handler {
 
   private static String TAG = pTool.TAG + "_PerformanceHandler";
 
-  private static HashMap<String, HandlerIssues> msgIssuesMap = new HashMap<>();
+  private static HashMap<String, HandlerIssue> msgIssuesMap = new HashMap<>();
 
   static void resetTag(String tag) {
     TAG = tag + "_PerformanceHandler";
@@ -29,7 +29,10 @@ public class PerformanceHandler extends Handler {
     if (result) {
       String msgKey = Integer.toHexString(msg.hashCode());
       // xLog.e(TAG, "sendMessageAtTime msgKey:" + msgKey);
-      HandlerIssues msgIssues = new HandlerIssues("HANDLER DISPATCH MESSAGE", StackTraceUtils.list());
+      HandlerIssue msgIssues = new HandlerIssue(
+          "HANDLER DISPATCH MESSAGE",
+          StackTraceUtils.list()
+      );
       msgIssuesMap.put(msgKey, msgIssues);
     }
     return result;
@@ -43,25 +46,24 @@ public class PerformanceHandler extends Handler {
     super.dispatchMessage(msg);
     long costTime = SystemClock.elapsedRealtime() - startTime;
     if (costTime > HANDLER_CHECK_TIME && msgIssuesMap.containsKey(msgKey)) {
-      HandlerIssues msgIssues = msgIssuesMap.get(msgKey);
+      HandlerIssue msgIssues = msgIssuesMap.get(msgKey);
       msgIssues.costTime = costTime;
       msgIssues.print();
     }
     msgIssuesMap.remove(msgKey);
   }
 
-  static class HandlerIssues extends Issues {
+  static class HandlerIssue extends Issue {
 
     protected long costTime;
 
-    public HandlerIssues(String msg, Object data) {
-      super(Issues.TYPE_HANDLER, msg, data);
+    public HandlerIssue(String msg, Object data) {
+      super(Issue.TYPE_HANDLER, msg, data);
     }
 
     @Override
-    protected void printOther(String tag, StringBuilder sb) {
+    protected void printOther(StringBuilder sb) {
       sb.append("cost: ").append(costTime).append(" ms").append('\n');
-      // log(tag, sb.toString());
     }
   }
 

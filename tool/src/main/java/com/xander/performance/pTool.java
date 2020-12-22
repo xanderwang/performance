@@ -91,7 +91,7 @@ public class pTool {
       builder = new Builder();
     }
     TAG = builder.globalTag;
-    Issues.init(builder.appContext);
+    Issue.init(builder.appContext);
     DumpTool.resetTag(TAG);
     FPSTool.resetTag(TAG);
     IPCTool.resetTag(TAG);

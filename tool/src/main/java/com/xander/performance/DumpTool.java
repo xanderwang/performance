@@ -5,6 +5,7 @@ import android.os.Binder;
 import android.os.Build.VERSION;
 import android.os.IBinder;
 import android.os.IInterface;
+
 import java.io.FileDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,7 +43,8 @@ public class DumpTool {
   }
 
   private static void addService(String serviceName)
-      throws NoSuchMethodException, ClassNotFoundException, InvocationTargetException, IllegalAccessException {
+      throws NoSuchMethodException, ClassNotFoundException, InvocationTargetException,
+      IllegalAccessException {
     @SuppressLint("PrivateApi") Class<?> smClass = Class.forName("android.os.ServiceManager");
     Method addServiceMethod = smClass.getMethod("addService", String.class, IBinder.class);
     addServiceMethod.setAccessible(true);
