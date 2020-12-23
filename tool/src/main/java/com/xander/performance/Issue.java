@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,6 +50,8 @@ public class Issue {
 
   private static ExecutorService saveService = null;
 
+  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
   /**
    * 类型
    */
@@ -56,6 +60,10 @@ public class Issue {
    * 消息
    */
   protected String msg = "";
+  /**
+   * 发生的时间
+   */
+  protected String createTime = "";
   /**
    * 数据
    */
@@ -68,8 +76,8 @@ public class Issue {
   public Issue(int type, String msg, Object data) {
     this.type = type;
     this.msg = msg;
+    createTime = dateFormat.format(new Date());
     this.data = data;
-    // insertToList();
   }
 
   public int getType() {
@@ -116,6 +124,7 @@ public class Issue {
       sb.append("\n=================================================\n");
       sb.append("type: ").append(typeToString()).append('\n');
       sb.append("msg: ").append(msg).append('\n');
+      sb.append("create time: ").append(createTime).append('\n');
       buildOtherString(sb);
       if (data instanceof List) {
         sb.append("data:\n");
@@ -183,7 +192,7 @@ public class Issue {
       }
       buffer.put(issue.dataBuffer);
       int dataPosition = buffer.position();
-      xLog.e(TAG, "SaveIssueTask buffer at:" + dataPosition);
+      // xLog.e(TAG, "SaveIssueTask buffer at:" + dataPosition);
       gLineBytes = String.format("%09d", dataPosition).getBytes();
       buffer.position(0);
       buffer.put(gLineBytes);
@@ -231,9 +240,9 @@ public class Issue {
     if (gLogFile.exists()) {
       gLogFile.delete();
     }
-    xLog.e(TAG, "createLogFileAndBuffer issues save in:" + gLogFile.getAbsolutePath());
     try {
       gLogFile.createNewFile();
+      xLog.e(TAG, "create log file :" + gLogFile.getAbsolutePath());
       gRandomAccessFile = new RandomAccessFile(gLogFile.getAbsolutePath(), "rw");
       gBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
       // 写入 line
@@ -269,10 +278,10 @@ public class Issue {
         }
       }
     }
+    xLog.e(TAG, "initMappedByteBuffer lastLogFile:" + lastLogFile);
     for (int i = 0, len = needZipLogFiles.size(); i < len; i++) {
       zipLogFile(needZipLogFiles.get(i));
     }
-    xLog.e(TAG, "initMappedByteBuffer lastLogFile:" + lastLogFile);
     if (null != lastLogFile) {
       // 处理 last log file 为全局的 log file
       try {
@@ -319,16 +328,16 @@ public class Issue {
     try {
       FileOutputStream fos = new FileOutputStream(zipLogFile);
       ZipOutputStream zop = new ZipOutputStream(fos);
-      FileInputStream fis = new FileInputStream(logFile);
+      FileInputStream fip = new FileInputStream(logFile);
       ZipEntry zipEntry = new ZipEntry(zipLogFileName);
       zop.putNextEntry(zipEntry);
       byte[] bytes = new byte[1024];
       int length;
-      while ((length = fis.read(bytes)) >= 0) {
+      while ((length = fip.read(bytes)) >= 0) {
         zop.write(bytes, 0, length);
       }
+      fip.close();
       zop.close();
-      fis.close();
       fos.close();
     } catch (IOException e) {
       e.printStackTrace();

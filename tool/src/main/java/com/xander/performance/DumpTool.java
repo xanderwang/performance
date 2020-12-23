@@ -1,6 +1,5 @@
 package com.xander.performance;
 
-import android.annotation.SuppressLint;
 import android.os.Binder;
 import android.os.Build.VERSION;
 import android.os.IBinder;
@@ -30,7 +29,7 @@ public class DumpTool {
     TAG = tag + "_DumpTool";
   }
 
-  public static void init(String serviceName) {
+  static void init(String serviceName) {
     xLog.e(TAG, "init");
     try {
       if (VERSION.SDK_INT < 28) {
@@ -45,14 +44,14 @@ public class DumpTool {
   private static void addService(String serviceName)
       throws NoSuchMethodException, ClassNotFoundException, InvocationTargetException,
       IllegalAccessException {
-    @SuppressLint("PrivateApi") Class<?> smClass = Class.forName("android.os.ServiceManager");
-    Method addServiceMethod = smClass.getMethod("addService", String.class, IBinder.class);
+    Class<?> smClass = Class.forName("android.os.ServiceManager");
+    Method addServiceMethod = smClass.getDeclaredMethod("addService", String.class, IBinder.class);
     addServiceMethod.setAccessible(true);
-    addServiceMethod.invoke((Object) null, serviceName, (new DumpBinder()));
+    addServiceMethod.invoke(null, serviceName, new DumpBinder());
   }
 
 
-  public static class DumpBinder extends Binder implements IInterface {
+  static class DumpBinder extends Binder implements IInterface {
 
     @Override
     public void dump(FileDescriptor fd, String[] args) {
