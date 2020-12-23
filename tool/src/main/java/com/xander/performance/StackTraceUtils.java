@@ -46,6 +46,8 @@ class StackTraceUtils {
 
   public static List<String> list(StackTraceElement[] stackTraceElements, boolean filterPoint,
       String pointClassName, boolean filterPackage, Set<String> ignorePackageSet) {
+    filterPoint = false;
+    filterPackage = false;
     List<String> list = new ArrayList<>(stackTraceElements.length);
     StringBuilder stringBuilder = new StringBuilder();
     boolean hasFindPointClass = !filterPoint;

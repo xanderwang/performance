@@ -85,19 +85,19 @@ public class pTool {
 
   }
 
-
   public static void init(Builder builder) {
     if (builder == null) {
       builder = new Builder();
     }
     TAG = builder.globalTag;
-    Issue.init(builder.appContext);
+    ThreadTool.resetTag(TAG);
     DumpTool.resetTag(TAG);
     FPSTool.resetTag(TAG);
     IPCTool.resetTag(TAG);
     UIWatcherTool.resetTag(TAG);
     PerformanceHandler.resetTag(TAG);
-    ThreadTool.resetTag(TAG);
+    Issue.resetTag(TAG);
+    Issue.init(builder.appContext);
     if (builder.mCheckThread) {
       ThreadTool.init();
     }

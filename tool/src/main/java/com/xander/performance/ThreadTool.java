@@ -42,11 +42,11 @@ public class ThreadTool {
     }
 
     @Override
-    protected void printOther(StringBuilder sb) {
+    protected void buildOtherString(StringBuilder sb) {
       sb.append("create trace:\n");
-      printList(sb, createIssues);
+      buildListString(sb, createIssues);
       sb.append("start trace:\n");
-      printList(sb, startIssues);
+      buildListString(sb, startIssues);
     }
   }
 
@@ -60,9 +60,9 @@ public class ThreadTool {
     }
 
     @Override
-    protected void printOther(StringBuilder sb) {
+    protected void buildOtherString(StringBuilder sb) {
       sb.append("create trace:\n");
-      printList(sb, createIssues);
+      buildListString(sb, createIssues);
     }
 
     void removeThreadInfo(ThreadIssue threadIssues) {
@@ -116,7 +116,7 @@ public class ThreadTool {
       ThreadPoolExecutorConstructorHook constructorHook = new ThreadPoolExecutorConstructorHook();
       Constructor[] constructors = ThreadPoolExecutor.class.getDeclaredConstructors();
       for (int i = 0; i < constructors.length; i++) {
-        if (constructors[i].getParameterTypes().length > 6) {
+        if (constructors[i].getParameterTypes().length != 6) {
           continue;
         }
         DexposedBridge.hookMethod(constructors[i], constructorHook);
@@ -135,7 +135,7 @@ public class ThreadTool {
 
       DexposedBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
 
-      DexposedBridge.findAndHookMethod(Thread.class, "run", new ThreadRunHook());
+      // DexposedBridge.findAndHookMethod(Thread.class, "run", new ThreadRunHook());
 
     } catch (Exception e) {
       e.printStackTrace();

@@ -3,10 +3,10 @@ package com.xander.performance;
 import android.content.Context;
 import android.os.Environment;
 import android.os.SystemClock;
-import android.util.Log;
-import android.util.SparseArray;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * @author Xander Wang Created on 2020/12/8.
@@ -22,8 +24,7 @@ import java.util.concurrent.Executors;
  */
 public class Issue {
 
-  private static final String TAG = "_Issues";
-  private static String tag = "_Issues";
+  private static String TAG = "_Issue";
   /**
    * 检测 ANR
    */
@@ -45,10 +46,7 @@ public class Issue {
    */
   public static final int TYPE_HANDLER = 4;
 
-  private static ExecutorService saveService = Executors.newSingleThreadExecutor();
-
-  public static int MAX_ISSUE_COUNT = 30;
-  public static int ISSUE_COUNT = 32;
+  private static ExecutorService saveService = null;
 
   /**
    * 类型
@@ -110,48 +108,62 @@ public class Issue {
     return str;
   }
 
-  private void printIssues() {
-    log(tag, "start --------------------------------------------------------");
+  private void buildIssueString() {
+    log(TAG, "start --------------------------------------------------------");
     String dataString = null;
     if (null == dataBuffer) {
       StringBuilder sb = new StringBuilder();
       sb.append("\n=================================================\n");
       sb.append("type: ").append(typeToString()).append('\n');
       sb.append("msg: ").append(msg).append('\n');
+      buildOtherString(sb);
       if (data instanceof List) {
         sb.append("data:\n");
-        printList(sb, (List) data);
+        buildListString(sb, (List) data);
       } else if (null != data) {
         sb.append("data: ").append(data).append('\n');
       }
-      printOther(sb);
       dataString = sb.toString();
       dataBuffer = dataString.getBytes();
       data = null; // 释放，节省内存
-      log(tag, dataString);
+      log(TAG, dataString);
     }
-    log(tag, "end ----------------------------------------------------------");
+    log(TAG, "end ----------------------------------------------------------");
   }
 
-  protected void printOther(StringBuilder sb) {
+  protected void buildOtherString(StringBuilder sb) {
 
   }
 
-  protected void printList(StringBuilder sb, List dataList) {
+  protected void buildListString(StringBuilder sb, List dataList) {
     for (int i = 0, len = dataList.size(); i < len; i++) {
       Object item = dataList.get(i);
       sb.append('\t').append(item).append('\n');
     }
   }
 
-  public void print() {
-    printIssues();
-    saveService.execute(new SaveIssueTask(this));
-  }
-
-
   protected void log(String tag, String msg) {
     xLog.w(tag, msg);
+  }
+
+  public void print() {
+    buildIssueString();
+    saveIssue(this);
+  }
+
+  static void saveIssue(Issue issue) {
+    executorService().execute(new SaveIssueTask(issue));
+  }
+
+  static ExecutorService executorService() {
+    if (saveService == null) {
+      synchronized (Issue.class) {
+        if (saveService == null) {
+          saveService = Executors.newSingleThreadExecutor();
+        }
+      }
+    }
+    return saveService;
   }
 
   static class SaveIssueTask implements Runnable {
@@ -166,66 +178,176 @@ public class Issue {
     public void run() {
       MappedByteBuffer buffer = gMappedByteBuffer();
       if (buffer.remaining() < issue.dataBuffer.length) {
-        byte[] space = new byte[buffer.remaining()];
-        buffer.put(space);
-        zipLogFile();
-        createMappedByteBuffer();
+        createLogFileAndBuffer();
         buffer = gMappedByteBuffer();
       }
       buffer.put(issue.dataBuffer);
+      int dataPosition = buffer.position();
+      xLog.e(TAG, "SaveIssueTask buffer at:" + dataPosition);
+      gLineBytes = String.format("%09d", dataPosition).getBytes();
+      buffer.position(0);
+      buffer.put(gLineBytes);
+      buffer.position(dataPosition);
       issue.dataBuffer = null;
     }
   }
 
-  protected static final int BUFFER_SIZE = 1 * 1024 * 1024;
-
-  private static MappedByteBuffer buffer;
+  private static final int BUFFER_SIZE = 1024 * 1024;
+  private static File gLogFile;
+  private static RandomAccessFile gRandomAccessFile;
+  private static MappedByteBuffer gBuffer;
+  private static byte[] gLineBytes = "000000000".getBytes();
+  // log 文件的第一行固定为文件最后字节的位置
+  private static int gLineBytesLength = gLineBytes.length;
 
   protected static MappedByteBuffer gMappedByteBuffer() {
-    if (null == buffer) {
-      createMappedByteBuffer();
+    if (null == gBuffer) {
+      initMappedByteBuffer();
     }
-    return buffer;
+    return gBuffer;
   }
 
-  protected static void createMappedByteBuffer() {
-    // 先遍历保存文件目录，是否有没有写完的 log 文件，
-    // 如果有，就载入，
-    // 如果没有，就新建
-    if (null != buffer) {
-      buffer.flip();
-      buffer = null;
+  protected static void createLogFileAndBuffer() {
+    xLog.e(TAG, "createLogFileAndBuffer gBuffer:" + gBuffer);
+    if (null != gBuffer) {
+      gBuffer.flip();
+      gBuffer = null;
     }
-    String fileName = "issues_" + SystemClock.uptimeMillis() + ".log";
-    File issueFile = new File(ISSUES_ROOT_DIR, fileName);
-    if (issueFile.exists()) {
-      issueFile.delete();
+    if (null != gRandomAccessFile) {
+      try {
+        gRandomAccessFile.close();
+      } catch (IOException e) {
+        xLog.e(TAG, "gRandomAccessFile IOException", e);
+        e.printStackTrace();
+      }
+      gRandomAccessFile = null;
     }
-    Log.e(tag, "issues save in:" + issueFile.getAbsolutePath());
-    RandomAccessFile accessFile = null;
+    if (null != gLogFile) {
+      zipLogFile(gLogFile);
+      gLogFile = null;
+    }
+    String fileName = "issues_" + SystemClock.elapsedRealtimeNanos() + ".log";
+    gLogFile = new File(ISSUES_ROOT_DIR, fileName);
+    if (gLogFile.exists()) {
+      gLogFile.delete();
+    }
+    xLog.e(TAG, "createLogFileAndBuffer issues save in:" + gLogFile.getAbsolutePath());
     try {
-      issueFile.createNewFile();
-      accessFile = new RandomAccessFile(issueFile.getAbsolutePath(), "rw");
-      buffer = accessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
-      accessFile.close();
+      gLogFile.createNewFile();
+      gRandomAccessFile = new RandomAccessFile(gLogFile.getAbsolutePath(), "rw");
+      gBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+      // 写入 line
+      gLineBytes = String.format("%09d", gLineBytesLength).getBytes();
+      gBuffer.put(gLineBytes);
     } catch (IOException e) {
-      Log.e(pTool.TAG + "_issues", "IOException", e);
+      xLog.e(TAG, "gRandomAccessFile IOException", e);
     }
   }
 
-  protected static void zipLogFile() {
-
+  protected static void initMappedByteBuffer() {
+    // 遍历保存文件夹，按照创建时间排序，
+    // 只处理 log 文件，然后最后一个 log 文件是上一次创建的，并初始化全局的 log file
+    // 其他的 log 文件做压缩处理
+    if (saveService == null) {
+      saveService = Executors.newSingleThreadExecutor();
+    }
+    File[] files = ISSUES_ROOT_DIR.listFiles();
+    List<File> needZipLogFiles = new ArrayList<>();
+    File lastLogFile = null;
+    for (int i = 0; i < files.length; i++) {
+      File file = files[i];
+      if (file.getName().endsWith(".log")) {
+        if (lastLogFile == null) {
+          lastLogFile = file;
+          continue;
+        }
+        if (lastLogFile.lastModified() < file.lastModified()) {
+          needZipLogFiles.add(lastLogFile);
+          lastLogFile = file;
+        } else {
+          needZipLogFiles.add(file);
+        }
+      }
+    }
+    for (int i = 0, len = needZipLogFiles.size(); i < len; i++) {
+      zipLogFile(needZipLogFiles.get(i));
+    }
+    xLog.e(TAG, "initMappedByteBuffer lastLogFile:" + lastLogFile);
+    if (null != lastLogFile) {
+      // 处理 last log file 为全局的 log file
+      try {
+        gLogFile = lastLogFile;
+        gRandomAccessFile = new RandomAccessFile(lastLogFile.getAbsolutePath(), "rw");
+        gBuffer = gRandomAccessFile.getChannel()
+            .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+        gBuffer.get(gLineBytes);
+        int lastPosition = Integer.parseInt(new String(gLineBytes));
+        xLog.e(TAG, "initMappedByteBuffer lastPosition:" + lastPosition);
+        if (lastPosition >= BUFFER_SIZE) {
+          createLogFileAndBuffer();
+        } else {
+          gBuffer.position(lastPosition);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    } else {
+      createLogFileAndBuffer();
+    }
   }
 
+  protected static void zipLogFile(final File logFile) {
+    // 压缩 log 文件，成功后删除原始 log 文件
+    xLog.e(TAG, "zipLogFile:" + logFile);
+    executorService().execute(new Runnable() {
+      @Override
+      public void run() {
+        doZipLogFile(logFile);
+      }
+    });
+  }
+
+  static void doZipLogFile(File logFile) {
+    File dir = logFile.getParentFile();
+    String zipLogFileName = logFile.getName().replace(".log", ".zip");
+    File zipLogFile = new File(dir, zipLogFileName);
+    if (zipLogFile.exists()) {
+      // 清理已经压缩过但是没有删除的 log 文件
+      logFile.delete();
+      return;
+    }
+    try {
+      FileOutputStream fos = new FileOutputStream(zipLogFile);
+      ZipOutputStream zop = new ZipOutputStream(fos);
+      FileInputStream fis = new FileInputStream(logFile);
+      ZipEntry zipEntry = new ZipEntry(zipLogFileName);
+      zop.putNextEntry(zipEntry);
+      byte[] bytes = new byte[1024];
+      int length;
+      while ((length = fis.read(bytes)) >= 0) {
+        zop.write(bytes, 0, length);
+      }
+      zop.close();
+      fis.close();
+      fos.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      logFile.delete();
+    }
+  }
 
   protected static String ISSUES_ROOT_DIR_NAME = "issues";
   protected static File ISSUES_ROOT_DIR;
 
+  static void resetTag(String tag) {
+    TAG = tag + "_Issue";
+  }
+
   protected static void init(Context context) {
-    tag = pTool.TAG + TAG;
     ISSUES_ROOT_DIR = new File(appSaveFileRootDir(context), ISSUES_ROOT_DIR_NAME);
     ISSUES_ROOT_DIR.mkdirs();
-    xLog.e(tag, "issues save in:" + ISSUES_ROOT_DIR.getAbsolutePath());
+    xLog.e(TAG, "issues save in:" + ISSUES_ROOT_DIR.getAbsolutePath());
   }
 
   private static File appSaveFileRootDir(Context context) {

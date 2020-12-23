@@ -48,9 +48,10 @@ class MainActivity : AppCompatActivity() {
   }
 
   fun testIPC(v: View) {
+    Log.d(TAG, "testIPC")
     val ams: ActivityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
     ams.runningAppProcesses.forEach {
-      Log.d(TAG, it.processName)
+      Log.d(TAG, "runningAppProcesses: ${it.processName}")
     }
   }
 

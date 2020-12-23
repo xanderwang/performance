@@ -30,7 +30,7 @@ public class PerformanceHandler extends Handler {
       String msgKey = Integer.toHexString(msg.hashCode());
       // xLog.e(TAG, "sendMessageAtTime msgKey:" + msgKey);
       HandlerIssue msgIssues = new HandlerIssue(
-          "HANDLER DISPATCH MESSAGE",
+          "HANDLER SEND MESSAGE",
           StackTraceUtils.list()
       );
       msgIssuesMap.put(msgKey, msgIssues);
@@ -62,7 +62,7 @@ public class PerformanceHandler extends Handler {
     }
 
     @Override
-    protected void printOther(StringBuilder sb) {
+    protected void buildOtherString(StringBuilder sb) {
       sb.append("cost: ").append(costTime).append(" ms").append('\n');
     }
   }
