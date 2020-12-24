@@ -32,9 +32,9 @@ public class DumpTool {
   static void init(String serviceName) {
     xLog.e(TAG, "init");
     try {
-      if (VERSION.SDK_INT < 28) {
+      // if (VERSION.SDK_INT < 28) {
         addService(serviceName);
-      }
+      // }
     } catch (Exception e) {
       xLog.e(TAG, "=====================================================================");
       xLog.w(TAG, "DumpTool init error:", e);

@@ -117,7 +117,6 @@ public class Issue {
   }
 
   private void buildIssueString() {
-    log(TAG, "start --------------------------------------------------------");
     String dataString = null;
     if (null == dataBuffer) {
       StringBuilder sb = new StringBuilder();
@@ -136,8 +135,9 @@ public class Issue {
       dataBuffer = dataString.getBytes();
       data = null; // 释放，节省内存
       log(TAG, dataString);
+    } else {
+      log(TAG, new String(dataBuffer));
     }
-    log(TAG, "end ----------------------------------------------------------");
   }
 
   protected void buildOtherString(StringBuilder sb) {
@@ -193,7 +193,7 @@ public class Issue {
       buffer.put(issue.dataBuffer);
       int dataPosition = buffer.position();
       // xLog.e(TAG, "SaveIssueTask buffer at:" + dataPosition);
-      gLineBytes = String.format("%09d", dataPosition).getBytes();
+      gLineBytes = String.format(LINE_FORMAT, dataPosition).getBytes();
       buffer.position(0);
       buffer.put(gLineBytes);
       buffer.position(dataPosition);
@@ -201,13 +201,15 @@ public class Issue {
     }
   }
 
-  private static final int BUFFER_SIZE = 1024 * 1024;
+  private static final int MAX_BUFFER_SIZE = 100 * 1024 * 1024;
+  private static int BUFFER_SIZE = 1024 * 1024;
   private static File gLogFile;
   private static RandomAccessFile gRandomAccessFile;
   private static MappedByteBuffer gBuffer;
-  private static byte[] gLineBytes = "000000000".getBytes();
+  private static byte[] gLineBytes = String.valueOf(MAX_BUFFER_SIZE).getBytes();
   // log 文件的第一行固定为文件最后字节的位置
-  private static int gLineBytesLength = gLineBytes.length;
+  private static final int gLineBytesLength = gLineBytes.length;
+  private static final String LINE_FORMAT = "%-" + gLineBytesLength + "d";
 
   protected static MappedByteBuffer gMappedByteBuffer() {
     if (null == gBuffer) {
@@ -246,7 +248,7 @@ public class Issue {
       gRandomAccessFile = new RandomAccessFile(gLogFile.getAbsolutePath(), "rw");
       gBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
       // 写入 line
-      gLineBytes = String.format("%09d", gLineBytesLength).getBytes();
+      gLineBytes = String.format(LINE_FORMAT, 0).getBytes();
       gBuffer.put(gLineBytes);
     } catch (IOException e) {
       xLog.e(TAG, "gRandomAccessFile IOException", e);
@@ -290,7 +292,7 @@ public class Issue {
         gBuffer = gRandomAccessFile.getChannel()
             .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
         gBuffer.get(gLineBytes);
-        int lastPosition = Integer.parseInt(new String(gLineBytes));
+        int lastPosition = Integer.parseInt(new String(gLineBytes).trim());
         xLog.e(TAG, "initMappedByteBuffer lastPosition:" + lastPosition);
         if (lastPosition >= BUFFER_SIZE) {
           createLogFileAndBuffer();
@@ -326,19 +328,22 @@ public class Issue {
       return;
     }
     try {
+      xLog.e(TAG, "doZipLogFile src:" + logFile.getAbsolutePath());
+      xLog.e(TAG, "doZipLogFile dst:" + zipLogFile.getAbsolutePath());
       FileOutputStream fos = new FileOutputStream(zipLogFile);
       ZipOutputStream zop = new ZipOutputStream(fos);
-      FileInputStream fip = new FileInputStream(logFile);
-      ZipEntry zipEntry = new ZipEntry(zipLogFileName);
+      ZipEntry zipEntry = new ZipEntry(logFile.getName());
       zop.putNextEntry(zipEntry);
-      byte[] bytes = new byte[1024];
+      byte[] bytes = new byte[1024 * 10];
       int length;
+      FileInputStream fip = new FileInputStream(logFile);
       while ((length = fip.read(bytes)) >= 0) {
         zop.write(bytes, 0, length);
       }
-      fip.close();
+      zop.closeEntry();
       zop.close();
       fos.close();
+      fip.close();
     } catch (IOException e) {
       e.printStackTrace();
     } finally {

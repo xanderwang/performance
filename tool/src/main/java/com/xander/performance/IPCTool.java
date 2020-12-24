@@ -1,6 +1,7 @@
 package com.xander.performance;
 
 import android.os.Binder;
+import android.os.Parcel;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -25,7 +26,7 @@ public class IPCTool {
 
   static void start() {
     xLog.e(TAG, "start");
-    setTransactListener(null);
+    // setTransactListener(null);
     hookWithEpic();
   }
 
@@ -86,24 +87,32 @@ public class IPCTool {
   private static void hookWithEpic() {
     try {
       // 这个 hook 会报错，很奇怪
-      // DexposedBridge.findAndHookMethod(
-      //     Class.forName("android.os.BinderProxy"),
-      //     "transact",
-      //     int.class,
-      //     Parcel.class,
-      //     Parcel.class,
-      //     int.class,
-      //     new BinderTransactProxyHook()
-      // );
       DexposedBridge.findAndHookMethod(
           Class.forName("android.os.BinderProxy"),
-          "setTransactListener",
-          Class.forName("android.os.Binder$ProxyTransactListener"),
-          new SetTransactListenerHook()
+          "transact",
+          int.class,
+          Parcel.class,
+          Parcel.class,
+          int.class,
+          new BinderTransactProxyHook()
       );
+      // DexposedBridge.findAndHookMethod(
+      //     Class.forName("android.os.BinderProxy"),
+      //     "setTransactListener",
+      //     Class.forName("android.os.Binder$ProxyTransactListener"),
+      //     new SetTransactListenerHook()
+      // );
+      // CheckParcelHook checkParcelHook = new CheckParcelHook();
+      // Method[] methods = Binder.class.getDeclaredMethods();
+      // for (int i = 0; i < methods.length; i++) {
+      //   if ("checkParcel".equals(methods[i].getName())) {
+      //     xLog.e(TAG, "find:" + methods[i]);
+      //     DexposedBridge.hookMethod(methods[i], checkParcelHook);
+      //   }
+      // }
       xLog.e(TAG, "hookWithEpic");
     } catch (Exception e) {
-      e.printStackTrace();
+      xLog.e(TAG, "hookWithEpic", e);
     }
   }
 
@@ -111,6 +120,16 @@ public class IPCTool {
 
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
+      ipcIssue.print();
+      super.beforeHookedMethod(param);
+    }
+  }
+
+  static class CheckParcelHook extends XC_MethodHook {
+    @Override
+    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      xLog.e(TAG, "CheckParcelHook:" + param);
       Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
       ipcIssue.print();
       super.beforeHookedMethod(param);
