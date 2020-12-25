@@ -35,7 +35,7 @@ class StackTraceUtils {
   }
 
   public static List<String> list() {
-    StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+    StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
     return list(stackTraceElements, true, StackTraceUtils.class.getName(), true, ignorePackageSet);
   }
 

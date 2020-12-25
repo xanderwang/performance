@@ -10,8 +10,8 @@
     android:id="@+id/test_thread"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginTop="16dp"
     android:layout_marginStart="16dp"
+    android:layout_marginTop="16dp"
     android:onClick="testThread"
     android:text="@string/test_thread"
     app:layout_constraintStart_toStartOf="parent"
@@ -47,6 +47,7 @@
     app:layout_constraintStart_toEndOf="@+id/test_ipc"
     app:layout_constraintTop_toTopOf="@+id/test_ipc"
     tools:ignore="MissingConstraints" />
+
   <Button
     android:id="@+id/test_ipc"
     android:layout_width="wrap_content"
@@ -66,6 +67,15 @@
     app:layout_constraintStart_toStartOf="@+id/test_anr"
     app:layout_constraintTop_toBottomOf="@+id/test_ipc"
     tools:ignore="MissingConstraints" />
+
+  <Button
+    android:id="@+id/test_bind_service"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:onClick="testBindService"
+    android:text="Bind service"
+    app:layout_constraintStart_toEndOf="@+id/test_handler"
+    app:layout_constraintTop_toBottomOf="@+id/test_ipc" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

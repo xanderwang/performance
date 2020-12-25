@@ -1,8 +1,13 @@
 package com.xander.performance.demo
 
 import android.app.ActivityManager
+import android.app.Service
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.view.View
@@ -75,6 +80,29 @@ class MainActivity : AppCompatActivity() {
       Log.d(TAG, "do handler post msg !!!")
       Thread.sleep(1000)
     }
+  }
+
+  var c: IDemoService? = null
+
+  val conn: ServiceConnection = object : ServiceConnection {
+    override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+      Log.e("xxx", "onServiceConnected:$service")
+      Log.e("xxx", "onServiceConnected", IllegalAccessException())
+      c = IDemoService.Stub.asInterface(service)
+    }
+
+    override fun onServiceDisconnected(name: ComponentName?) {
+    }
+
+
+  }
+
+  fun testBindService(v: View) {
+    c?.let {
+      unbindService(conn)
+    }
+    val i = Intent(this, DemoService::class.java)
+    bindService(i, conn, Service.BIND_AUTO_CREATE)
   }
 
   companion object {

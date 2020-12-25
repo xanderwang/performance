@@ -20,6 +20,8 @@ public class IPCTool {
 
   private static String TAG = pTool.TAG + "_IPCTool";
 
+  private static TransactListenerHandler gTransactListenerHandler = null;
+
   static void resetTag(String tag) {
     TAG = tag + "_IPCTool";
   }
@@ -30,13 +32,80 @@ public class IPCTool {
     hookWithEpic();
   }
 
-  private static TransactListenerHandler gTransactListenerHandler = new TransactListenerHandler();
+
+  private static void hookWithEpic() {
+    try {
+      // 这个 hook 会报错，很奇怪
+      // DexposedBridge.findAndHookMethod(
+      //     Class.forName("android.os.BinderProxy"),
+      //     "transact",
+      //     int.class,
+      //     Parcel.class,
+      //     Parcel.class,
+      //     int.class,
+      //     new BinderTransactProxyHook()
+      // );
+      // 除了每次调用 android.os.BinderProxy.transact 方法，
+      // Parcel.writeInterfaceToken 方法也会被调用，暂时用这个方法来判断是否有 IPC 调用
+      DexposedBridge.findAndHookMethod(
+          Parcel.class,
+          "writeInterfaceToken",
+          String.class,
+          new WriteInterfaceTokenHook()
+      );
+      xLog.e(TAG, "hookWithEpic");
+    } catch (Exception e) {
+      xLog.e(TAG, "hookWithEpic", e);
+    }
+  }
+
+  static class BinderTransactProxyHook extends XC_MethodHook {
+    @Override
+    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
+      ipcIssue.print();
+      super.beforeHookedMethod(param);
+    }
+  }
+
+  static class WriteInterfaceTokenHook extends XC_MethodHook {
+    @Override
+    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      super.beforeHookedMethod(param);
+      // xLog.e(TAG, "WriteInterfaceTokenHook:" + param.args[0]);
+      // xLog.e(TAG, "WriteInterfaceTokenHook:", new Throwable());
+      IPCIssue ipcIssue = new IPCIssue(param.args[0], "IPC", StackTraceUtils.list());
+      ipcIssue.print();
+    }
+  }
+
+  private static void hookTransactListener() {
+    setTransactListener(null);
+    try {
+      DexposedBridge.findAndHookMethod(
+          Class.forName("android.os.BinderProxy"),
+          "setTransactListener",
+          Class.forName("android.os.Binder$ProxyTransactListener"),
+          new SetTransactListenerHook()
+      );
+      xLog.e(TAG, "hookTransactListener");
+    } catch (Exception e) {
+      xLog.e(TAG, "hookTransactListener", e);
+    }
+  }
 
   /**
-   * hook transact 方法总是碰到各种问题，所以换一种方式
+   * hook transact 方法总是碰到各种问题，所以换一种方式，但是这个只有 Android 10 以上的版本
    */
   private static void setTransactListener(Object target) {
     try {
+      if (null == gTransactListenerHandler) {
+        synchronized (IPCTool.class) {
+          if (null == gTransactListenerHandler) {
+            gTransactListenerHandler = new TransactListenerHandler();
+          }
+        }
+      }
       Class binderProxy = Class.forName("android.os.BinderProxy");
       Class transactListener = Class.forName("android.os.Binder$ProxyTransactListener");
       Method setMethod = binderProxy.getDeclaredMethod("setTransactListener", transactListener);
@@ -83,64 +152,26 @@ public class IPCTool {
     }
   }
 
-
-  private static void hookWithEpic() {
-    try {
-      // 这个 hook 会报错，很奇怪
-      DexposedBridge.findAndHookMethod(
-          Class.forName("android.os.BinderProxy"),
-          "transact",
-          int.class,
-          Parcel.class,
-          Parcel.class,
-          int.class,
-          new BinderTransactProxyHook()
-      );
-      // DexposedBridge.findAndHookMethod(
-      //     Class.forName("android.os.BinderProxy"),
-      //     "setTransactListener",
-      //     Class.forName("android.os.Binder$ProxyTransactListener"),
-      //     new SetTransactListenerHook()
-      // );
-      // CheckParcelHook checkParcelHook = new CheckParcelHook();
-      // Method[] methods = Binder.class.getDeclaredMethods();
-      // for (int i = 0; i < methods.length; i++) {
-      //   if ("checkParcel".equals(methods[i].getName())) {
-      //     xLog.e(TAG, "find:" + methods[i]);
-      //     DexposedBridge.hookMethod(methods[i], checkParcelHook);
-      //   }
-      // }
-      xLog.e(TAG, "hookWithEpic");
-    } catch (Exception e) {
-      xLog.e(TAG, "hookWithEpic", e);
-    }
-  }
-
-  static class BinderTransactProxyHook extends XC_MethodHook {
-
-    @Override
-    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
-      ipcIssue.print();
-      super.beforeHookedMethod(param);
-    }
-  }
-
-  static class CheckParcelHook extends XC_MethodHook {
-    @Override
-    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-      xLog.e(TAG, "CheckParcelHook:" + param);
-      Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
-      ipcIssue.print();
-      super.beforeHookedMethod(param);
-    }
-  }
-
   static class SetTransactListenerHook extends XC_MethodHook {
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       super.afterHookedMethod(param);
       setTransactListener(param.args[0]);
+    }
+  }
+
+  static class IPCIssue extends Issue {
+
+    Object ipcInterface;
+
+    public IPCIssue(Object ipcInterface, String msg, Object data) {
+      super(Issue.TYPE_IPC, msg, data);
+      this.ipcInterface = ipcInterface;
+    }
+
+    @Override
+    protected void buildOtherString(StringBuilder sb) {
+      sb.append("ipc interface: ").append(ipcInterface).append('\n');
     }
   }
 
