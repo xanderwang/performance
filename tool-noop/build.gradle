@@ -39,7 +39,7 @@ def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
 def _group = 'com.xander.performance'
 def _artifactId = 'p-tool-noop'
-def _version = rootProject.ext.lib_version
+def _version = rootProject.ext.lib_publish_version
 
 uploadArchives {
   repositories.mavenDeployer {
