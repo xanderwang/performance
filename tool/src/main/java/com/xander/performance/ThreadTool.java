@@ -97,9 +97,6 @@ public class ThreadTool {
    */
   static Map<String, String> workerThreadPoolMap = new HashMap<>(32);
 
-  @Deprecated
-  static Map<String, ThreadPoolIssue> runnableThreadPoolMap = new HashMap<>(32);
-
   static void resetTag(String tag) {
     TAG = tag + "_ThreadTool";
   }
@@ -114,13 +111,18 @@ public class ThreadTool {
     try {
       // hook 7 个参数的构造方法好像会报错，故 hook 指定参数数目的构造方法
       ThreadPoolExecutorConstructorHook constructorHook = new ThreadPoolExecutorConstructorHook();
-      Constructor[] constructors = ThreadPoolExecutor.class.getDeclaredConstructors();
+      Constructor<?>[] constructors = ThreadPoolExecutor.class.getDeclaredConstructors();
       for (int i = 0; i < constructors.length; i++) {
         if (constructors[i].getParameterTypes().length != 6) {
           continue;
         }
         DexposedBridge.hookMethod(constructors[i], constructorHook);
       }
+
+      // 根据构造方法里面的 runnable 是否为 Worker 可知是否为线程池创建的线程。
+      DexposedBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
+      DexposedBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
+      // DexposedBridge.findAndHookMethod(Thread.class, "run", new ThreadRunHook());
 
       // java.util.concurrent.ThreadPoolExecutor$Worker 是一个内部类，
       // 所以构造方法第一参数就是 ThreadPoolExecutor, 所以构造方法可以将 worker 和 线程池绑定
@@ -130,13 +132,6 @@ public class ThreadTool {
           new WorkerConstructorHook()
       );
 
-      // 根据构造方法里面的 runnable 是否为 Worker 可知是否为线程池创建的线程。
-      DexposedBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
-
-      DexposedBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
-
-      // DexposedBridge.findAndHookMethod(Thread.class, "run", new ThreadRunHook());
-
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -145,7 +140,7 @@ public class ThreadTool {
   static class ThreadPoolExecutorConstructorHook extends XC_MethodHook {
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-      xLog.e(TAG, "Thread pool constructor: " + Arrays.toString(param.args));
+      // xLog.e(TAG, "Thread pool constructor: " + Arrays.toString(param.args));
       String threadPoolInfoKey = Integer.toHexString(param.thisObject.hashCode());
       if (threadPoolInfoMap.containsKey(threadPoolInfoKey)) {
         return;
@@ -218,7 +213,7 @@ public class ThreadTool {
       String threadKey = Integer.toHexString(param.thisObject.hashCode());
       ThreadIssue threadIssues = threadInfoMap.get(threadKey);
       if (null == threadIssues) {
-        xLog.e(TAG, "can not find thread info !!!!!!");
+        xLog.e(TAG, "can not find thread info when thread start !!!!!!");
         return;
       }
       if (TextUtils.isEmpty(threadIssues.threadPoolInfoKey)) {
@@ -238,7 +233,7 @@ public class ThreadTool {
       String threadKey = Integer.toHexString(param.thisObject.hashCode());
       ThreadIssue threadIssues = threadInfoMap.get(threadKey);
       if (null == threadIssues) {
-        xLog.e(TAG, "can not find thread info !!!!!!");
+        xLog.e(TAG, "can not find thread info when thread run !!!!!!");
         return;
       }
       threadInfoMap.remove(threadKey);
@@ -256,8 +251,6 @@ public class ThreadTool {
       }
     }
   }
-
-
 
   /*public static void hookWithSandHook() {
     //first set debuggable

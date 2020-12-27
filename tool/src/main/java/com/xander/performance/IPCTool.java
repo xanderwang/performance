@@ -20,7 +20,6 @@ public class IPCTool {
 
   private static String TAG = pTool.TAG + "_IPCTool";
 
-  private static TransactListenerHandler gTransactListenerHandler = null;
 
   static void resetTag(String tag) {
     TAG = tag + "_IPCTool";
@@ -28,10 +27,9 @@ public class IPCTool {
 
   static void start() {
     xLog.e(TAG, "start");
-    // setTransactListener(null);
     hookWithEpic();
+    hookTransactListener();
   }
-
 
   private static void hookWithEpic() {
     try {
@@ -47,8 +45,7 @@ public class IPCTool {
       // );
       // 除了每次调用 android.os.BinderProxy.transact 方法，
       // Parcel.writeInterfaceToken 方法也会被调用，暂时用这个方法来判断是否有 IPC 调用
-      DexposedBridge.findAndHookMethod(
-          Parcel.class,
+      DexposedBridge.findAndHookMethod(Parcel.class,
           "writeInterfaceToken",
           String.class,
           new WriteInterfaceTokenHook()
@@ -79,11 +76,12 @@ public class IPCTool {
     }
   }
 
+  private static TransactListenerHandler gTransactListenerHandler = null;
+
   private static void hookTransactListener() {
     setTransactListener(null);
     try {
-      DexposedBridge.findAndHookMethod(
-          Class.forName("android.os.BinderProxy"),
+      DexposedBridge.findAndHookMethod(Class.forName("android.os.BinderProxy"),
           "setTransactListener",
           Class.forName("android.os.Binder$ProxyTransactListener"),
           new SetTransactListenerHook()
@@ -111,8 +109,7 @@ public class IPCTool {
       Method setMethod = binderProxy.getDeclaredMethod("setTransactListener", transactListener);
       setMethod.setAccessible(true);
       gTransactListenerHandler.setTarget(target);
-      Object proxyInstance = Proxy.newProxyInstance(
-          Binder.class.getClassLoader(),
+      Object proxyInstance = Proxy.newProxyInstance(Binder.class.getClassLoader(),
           new Class[]{transactListener},
           gTransactListenerHandler
       );

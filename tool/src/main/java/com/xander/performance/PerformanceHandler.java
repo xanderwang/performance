@@ -29,10 +29,7 @@ public class PerformanceHandler extends Handler {
     if (result) {
       String msgKey = Integer.toHexString(msg.hashCode());
       // xLog.e(TAG, "sendMessageAtTime msgKey:" + msgKey);
-      HandlerIssue msgIssues = new HandlerIssue(
-          "HANDLER SEND MESSAGE",
-          StackTraceUtils.list()
-      );
+      HandlerIssue msgIssues = new HandlerIssue("HANDLER SEND MESSAGE", StackTraceUtils.list());
       msgIssuesMap.put(msgKey, msgIssues);
     }
     return result;
@@ -63,7 +60,7 @@ public class PerformanceHandler extends Handler {
 
     @Override
     protected void buildOtherString(StringBuilder sb) {
-      sb.append("cost: ").append(costTime).append(" ms").append('\n');
+      sb.append("cost time: ").append(costTime).append(" ms").append('\n');
     }
   }
 

@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
@@ -50,7 +51,7 @@ public class Issue {
 
   private static ExecutorService saveService = null;
 
-  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 
   /**
    * 类型
@@ -69,9 +70,9 @@ public class Issue {
    */
   protected Object data;
   /**
-   * byte 数据，用来保持
+   * byte 数据，用来缓存数据的 string 数组
    */
-  protected byte[] dataBuffer;
+  protected byte[] dataBytes;
 
   public Issue(int type, String msg, Object data) {
     this.type = type;
@@ -118,7 +119,7 @@ public class Issue {
 
   private void buildIssueString() {
     String dataString = null;
-    if (null == dataBuffer) {
+    if (null == dataBytes) {
       StringBuilder sb = new StringBuilder();
       sb.append("\n=================================================\n");
       sb.append("type: ").append(typeToString()).append('\n');
@@ -126,17 +127,17 @@ public class Issue {
       sb.append("create time: ").append(createTime).append('\n');
       buildOtherString(sb);
       if (data instanceof List) {
-        sb.append("data:\n");
+        sb.append("trace:\n");
         buildListString(sb, (List) data);
       } else if (null != data) {
         sb.append("data: ").append(data).append('\n');
       }
       dataString = sb.toString();
-      dataBuffer = dataString.getBytes();
+      dataBytes = dataString.getBytes();
       data = null; // 释放，节省内存
       log(TAG, dataString);
     } else {
-      log(TAG, new String(dataBuffer));
+      log(TAG, new String(dataBytes));
     }
   }
 
@@ -144,7 +145,7 @@ public class Issue {
 
   }
 
-  protected void buildListString(StringBuilder sb, List dataList) {
+  protected void buildListString(StringBuilder sb, List<?> dataList) {
     for (int i = 0, len = dataList.size(); i < len; i++) {
       Object item = dataList.get(i);
       sb.append('\t').append(item).append('\n');
@@ -186,50 +187,49 @@ public class Issue {
     @Override
     public void run() {
       MappedByteBuffer buffer = gMappedByteBuffer();
-      if (buffer.remaining() < issue.dataBuffer.length) {
+      if (buffer.remaining() < issue.dataBytes.length) {
         createLogFileAndBuffer();
         buffer = gMappedByteBuffer();
       }
-      buffer.put(issue.dataBuffer);
+      buffer.put(issue.dataBytes);
       int dataPosition = buffer.position();
       // xLog.e(TAG, "SaveIssueTask buffer at:" + dataPosition);
-      gLineBytes = String.format(LINE_FORMAT, dataPosition).getBytes();
+      gLineBytes = String.format(Locale.US, LINE_FORMAT, dataPosition).getBytes();
       buffer.position(0);
       buffer.put(gLineBytes);
       buffer.position(dataPosition);
-      issue.dataBuffer = null;
+      issue.dataBytes = null;
     }
   }
 
   private static final int MAX_BUFFER_SIZE = 100 * 1024 * 1024;
-  private static int BUFFER_SIZE = 1024 * 1024;
+  private static final int BUFFER_SIZE = 1024 * 1024;
   private static File gLogFile;
   private static RandomAccessFile gRandomAccessFile;
-  private static MappedByteBuffer gBuffer;
+  private static MappedByteBuffer gMappedByteBuffer;
   private static byte[] gLineBytes = String.valueOf(MAX_BUFFER_SIZE).getBytes();
   // log 文件的第一行固定为文件最后字节的位置
   private static final int gLineBytesLength = gLineBytes.length;
   private static final String LINE_FORMAT = "%-" + gLineBytesLength + "d";
 
   protected static MappedByteBuffer gMappedByteBuffer() {
-    if (null == gBuffer) {
+    if (null == gMappedByteBuffer) {
       initMappedByteBuffer();
     }
-    return gBuffer;
+    return gMappedByteBuffer;
   }
 
   protected static void createLogFileAndBuffer() {
-    xLog.e(TAG, "createLogFileAndBuffer gBuffer:" + gBuffer);
-    if (null != gBuffer) {
-      gBuffer.flip();
-      gBuffer = null;
+    xLog.e(TAG, "createLogFileAndBuffer gBuffer:" + gMappedByteBuffer);
+    if (null != gMappedByteBuffer) {
+      gMappedByteBuffer.force();
+      gMappedByteBuffer = null;
     }
     if (null != gRandomAccessFile) {
       try {
         gRandomAccessFile.close();
       } catch (IOException e) {
         xLog.e(TAG, "gRandomAccessFile IOException", e);
-        e.printStackTrace();
       }
       gRandomAccessFile = null;
     }
@@ -246,10 +246,10 @@ public class Issue {
       gLogFile.createNewFile();
       xLog.e(TAG, "create log file :" + gLogFile.getAbsolutePath());
       gRandomAccessFile = new RandomAccessFile(gLogFile.getAbsolutePath(), "rw");
-      gBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+      gMappedByteBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
       // 写入 line
-      gLineBytes = String.format(LINE_FORMAT, 0).getBytes();
-      gBuffer.put(gLineBytes);
+      gLineBytes = String.format(Locale.US, LINE_FORMAT, 0).getBytes();
+      gMappedByteBuffer.put(gLineBytes);
     } catch (IOException e) {
       xLog.e(TAG, "gRandomAccessFile IOException", e);
     }
@@ -263,7 +263,11 @@ public class Issue {
       saveService = Executors.newSingleThreadExecutor();
     }
     File[] files = ISSUES_ROOT_DIR.listFiles();
-    List<File> needZipLogFiles = new ArrayList<>();
+    if (null == files) {
+      createLogFileAndBuffer();
+      return;
+    }
+    List<File> waitToZipLogFiles = new ArrayList<>();
     File lastLogFile = null;
     for (int i = 0; i < files.length; i++) {
       File file = files[i];
@@ -273,34 +277,33 @@ public class Issue {
           continue;
         }
         if (lastLogFile.lastModified() < file.lastModified()) {
-          needZipLogFiles.add(lastLogFile);
+          waitToZipLogFiles.add(lastLogFile);
           lastLogFile = file;
         } else {
-          needZipLogFiles.add(file);
+          waitToZipLogFiles.add(file);
         }
       }
     }
     xLog.e(TAG, "initMappedByteBuffer lastLogFile:" + lastLogFile);
-    for (int i = 0, len = needZipLogFiles.size(); i < len; i++) {
-      zipLogFile(needZipLogFiles.get(i));
+    for (int i = 0, len = waitToZipLogFiles.size(); i < len; i++) {
+      zipLogFile(waitToZipLogFiles.get(i));
     }
     if (null != lastLogFile) {
       // 处理 last log file 为全局的 log file
       try {
         gLogFile = lastLogFile;
         gRandomAccessFile = new RandomAccessFile(lastLogFile.getAbsolutePath(), "rw");
-        gBuffer = gRandomAccessFile.getChannel()
-            .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
-        gBuffer.get(gLineBytes);
+        gMappedByteBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+        gMappedByteBuffer.get(gLineBytes);
         int lastPosition = Integer.parseInt(new String(gLineBytes).trim());
         xLog.e(TAG, "initMappedByteBuffer lastPosition:" + lastPosition);
         if (lastPosition >= BUFFER_SIZE) {
           createLogFileAndBuffer();
         } else {
-          gBuffer.position(lastPosition);
+          gMappedByteBuffer.position(lastPosition);
         }
       } catch (IOException e) {
-        e.printStackTrace();
+        xLog.e(TAG, "initMappedByteBuffer", e);
       }
     } else {
       createLogFileAndBuffer();
@@ -319,9 +322,9 @@ public class Issue {
   }
 
   static void doZipLogFile(File logFile) {
-    File dir = logFile.getParentFile();
+    File zipLogFileDir = logFile.getParentFile();
     String zipLogFileName = logFile.getName().replace(".log", ".zip");
-    File zipLogFile = new File(dir, zipLogFileName);
+    File zipLogFile = new File(zipLogFileDir, zipLogFileName);
     if (zipLogFile.exists()) {
       // 清理已经压缩过但是没有删除的 log 文件
       logFile.delete();
@@ -334,7 +337,7 @@ public class Issue {
       ZipOutputStream zop = new ZipOutputStream(fos);
       ZipEntry zipEntry = new ZipEntry(logFile.getName());
       zop.putNextEntry(zipEntry);
-      byte[] bytes = new byte[1024 * 10];
+      byte[] bytes = new byte[1024 * 50];
       int length;
       FileInputStream fip = new FileInputStream(logFile);
       while ((length = fip.read(bytes)) >= 0) {

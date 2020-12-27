@@ -47,13 +47,6 @@ public class UIWatcherTool {
     UIWatcherRunnable uiRunnable = new UIWatcherRunnable();
 
     Handler mainThreadHandler = new Handler(Looper.getMainLooper()) {
-      @Override
-      public void handleMessage(Message msg) {
-        super.handleMessage(msg);
-        if (msg.obj instanceof UIWatcherRunnable) {
-          ((UIWatcherRunnable) msg.obj).run();
-        }
-      }
     };
 
     public UIWatcherThread(String name) {
@@ -78,9 +71,7 @@ public class UIWatcherTool {
         }
         // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
         uiRunnable.reset();
-        Message msg = new Message();
-        msg.obj = uiRunnable;
-        mainThreadHandler.sendMessage(msg);
+        mainThreadHandler.post(uiRunnable);
       }
     }
   }

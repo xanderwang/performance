@@ -1,7 +1,6 @@
 package com.xander.performance;
 
 import android.os.Binder;
-import android.os.Build.VERSION;
 import android.os.IBinder;
 import android.os.IInterface;
 
@@ -15,14 +14,14 @@ public class DumpTool {
 
   private static String TAG = pTool.TAG + "_DumpTool";
 
-  private static LinkedHashSet<DumpListener> linkedHashSet = new LinkedHashSet<>();
+  private static LinkedHashSet<DumpSysListener> dumpListeners = new LinkedHashSet<>();
 
-  public static void addDumpListener(DumpListener dumpListener) {
-    linkedHashSet.add(dumpListener);
+  public static void addDumpListener(DumpSysListener dumpListener) {
+    dumpListeners.add(dumpListener);
   }
 
-  public static void removeDumpListener(DumpListener dumpListener) {
-    linkedHashSet.remove(dumpListener);
+  public static void removeDumpListener(DumpSysListener dumpListener) {
+    dumpListeners.remove(dumpListener);
   }
 
   static void resetTag(String tag) {
@@ -32,26 +31,22 @@ public class DumpTool {
   static void init(String serviceName) {
     xLog.e(TAG, "init");
     try {
-      // if (VERSION.SDK_INT < 28) {
-        addService(serviceName);
-      // }
+      addService(serviceName);
     } catch (Exception e) {
-      xLog.e(TAG, "=====================================================================");
       xLog.w(TAG, "DumpTool init error:", e);
     }
   }
 
   private static void addService(String serviceName)
-      throws NoSuchMethodException, ClassNotFoundException, InvocationTargetException,
-      IllegalAccessException {
+      throws NoSuchMethodException, ClassNotFoundException, InvocationTargetException, IllegalAccessException {
     Class<?> smClass = Class.forName("android.os.ServiceManager");
     Method addServiceMethod = smClass.getDeclaredMethod("addService", String.class, IBinder.class);
     addServiceMethod.setAccessible(true);
-    addServiceMethod.invoke(null, serviceName, new DumpBinder());
+    addServiceMethod.invoke(null, serviceName, new DumpSysBinder());
   }
 
 
-  static class DumpBinder extends Binder implements IInterface {
+  static class DumpSysBinder extends Binder implements IInterface {
 
     @Override
     public void dump(FileDescriptor fd, String[] args) {
@@ -70,7 +65,7 @@ public class DumpTool {
     private void dump(String[] args) {
       // 需要注意
       xLog.e(TAG, Arrays.toString(args));
-      for (DumpListener listener : DumpTool.linkedHashSet) {
+      for (DumpSysListener listener : DumpTool.dumpListeners) {
         if (listener.dump(args)) {
           break;
         }
@@ -83,7 +78,7 @@ public class DumpTool {
     }
   }
 
-  public interface DumpListener {
+  public interface DumpSysListener {
 
     boolean dump(String[] args);
   }
