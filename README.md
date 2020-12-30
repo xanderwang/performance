@@ -7,11 +7,11 @@
 - [x] 线程和线程池的监控
 - [x] IPC(进程间通讯)
 - [x] 主线程耗时任务检测
+- [x] 实时通过 logcat 打印问题
+- [x] 高效保存检测信息到本地
 
 同时还计划实现以下功能
 
-- [x] 实时通过 logcat 打印问题
-- [ ] 高效保存检测信息到本地
 - [ ] 提供上报到指定服务器接口
 
 # 接入指南
@@ -23,7 +23,7 @@ buildscript {
 
   dependencies {
 
-    classpath "com.xander.performance.plugin:performance:0.1.3"
+    classpath "com.xander.performance.plugin:performance:0.1.5"
 
   }
 
@@ -37,8 +37,8 @@ apply plugin: "com.xander.performance.performance"
 
 dependencies {
 
-  debugImplementation "com.xander.performance:p-tool:0.1.4"
-  releaseImplementation "com.xander.performance:p-tool-noop:0.1.4"
+  debugImplementation "com.xander.performance:p-tool:0.1.5"
+  releaseImplementation "com.xander.performance:p-tool-noop:0.1.5"
 }
 ```
 
