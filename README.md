@@ -14,6 +14,56 @@
 - [ ] 高效保存检测信息到本地
 - [ ] 提供上报到指定服务器接口
 
+# 接入指南
+
+1 Project 根目录下的 build.gradle 文件下添加如下内容
+
+```groovy
+buildscript {
+
+  dependencies {
+
+    classpath "com.xander.performance.plugin:performance:0.1.3"
+
+  }
+
+}
+```
+
+2 在 APP 工程目录下面的 build.gradle 添加如下内容
+
+```groovy
+apply plugin: "com.xander.performance.performance"
+
+dependencies {
+
+  debugImplementation "com.xander.performance:p-tool:0.1.4"
+  releaseImplementation "com.xander.performance:p-tool-noop:0.1.4"
+}
+```
+
+3 APP 工程的 Application 类新增类似如下初始化代码
+
+```java
+
+    private void initPerformanceTool(Context context) {
+        pTool.init(
+            new pTool.Builder()
+                .globalTag("pTool") // 全局 log 日志 tag ，可以快速过滤日志
+                .checkUIThread(true, 500) // 检查 ui 线程, 超过指定时间未响应，会被认为 ui 线程 delay
+                .checkThread(false) // 检查线程和线程池的创建
+                .checkFps(true) // 检查 Fps
+                .checkIPC(false) // 检查 IPC 调用
+                .checkHandlerCostTime(100) // 检查 Handler 处理 message 的时间, 超过时间指定时间，会被捕获并打印
+                .appContext(context)
+                .build()
+        );
+    }
+
+```
+
+# 原理介绍
+
 ## 检测 ANR 的原理
 
 主要参考了 ANR-WatchDog 的思路，利用一个线程，先向主线程投放一个 msg 。
