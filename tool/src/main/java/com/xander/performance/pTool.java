@@ -1,6 +1,9 @@
 package com.xander.performance;
 
 import android.content.Context;
+import android.util.Log;
+
+import com.taobao.android.dexposed.utility.Logger;
 
 public class pTool {
 
@@ -8,9 +11,9 @@ public class pTool {
 
   public static class Builder {
     /**
-     * 是否开启 debug 模式，这种模式下会打印相对多的 log
+     * logLevel ，设置可以打印的 log 等级
      */
-    boolean debug = false;
+    int logLevel = Log.DEBUG;
     /**
      * 是否开启检测 ANR
      */
@@ -79,6 +82,11 @@ public class pTool {
       return this;
     }
 
+    public Builder logLevel(int level) {
+      logLevel = level;
+      return this;
+    }
+
     public Builder build() {
       return this;
     }
@@ -89,6 +97,8 @@ public class pTool {
     if (builder == null) {
       builder = new Builder();
     }
+    xLog.setLogLevel(builder.logLevel);
+    Logger.setLogLevel(builder.logLevel);
     TAG = builder.globalTag;
     ThreadTool.resetTag(TAG);
     DumpTool.resetTag(TAG);

@@ -45,7 +45,16 @@ def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
 def _group = 'me.weishu.epic'
 def _artifactId = 'epic-xander'
-def _version = '1.0.0'
+def _version = '1.11.1'
+
+uploadArchives {
+  repositories.mavenDeployer {
+    repository(url: uri("${rootProject.ext.local_repo_path}"))
+    pom.groupId = _group
+    pom.artifactId = _artifactId
+    pom.version = "$_version"
+  }
+}
 
 publish {
   // 各个字段的含义见 https://github.com/novoda/bintray-release/wiki/Configuration-of-the-publish-closure

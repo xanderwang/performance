@@ -38,6 +38,10 @@ public class pTool {
       return this;
     }
 
+    public Builder logLevel(int level) {
+      return this;
+    }
+
     public Builder build() {
       return this;
     }

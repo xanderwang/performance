@@ -55,7 +55,13 @@ public class FPSTool {
       if (time == 0) {
         // 第一次开始监控，跳过
       } else {
-        xLog.w(TAG, "APP FPS:" + ((int) ((1000.f * count / (curTime - time)) + 0.5)));
+        int fps = (int) (1000.f * count / (curTime - time) + 0.5f);
+        String fpsStr = String.format("APP FPS is: %-3sHz", fps);
+        if (fps <= 50) {
+          xLog.e(TAG, fpsStr);
+        } else {
+          xLog.w(TAG, fpsStr);
+        }
       }
       count = 0;
       time = curTime;

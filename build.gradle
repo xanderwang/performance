@@ -77,6 +77,7 @@ allprojects {
       // 远程的 lib 依赖变成本地的依赖
       if (use_local_lib) {
         substitute module('com.xander.performance:p-tool') with project(':tool')
+        substitute module('me.weishu.epic:epic-xander') with project(':lib-epic')
       }
       // Substitute one module dependency for another
       // 修改某个依赖的版本
