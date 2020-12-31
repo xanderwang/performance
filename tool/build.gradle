@@ -27,34 +27,25 @@ android {
 }
 
 dependencies {
-  api fileTree(dir: 'libs', include: ['*.jar'])
+
+  implementation fileTree(dir: 'libs', include: ['*.jar'])
 
   testImplementation 'junit:junit:4.13.1'
   androidTestImplementation 'androidx.test.ext:junit:1.1.2'
   androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
   def _dependencies = rootProject.ext.dependencies
-  //api _dependencies['hooklib']
-  // need for android 11
-  //api _dependencies['nativehook']
-
-  //api _dependencies['core-ktx']
-  //api _dependencies['kotlin-stdlib-jdk']
-  //api _dependencies['kotlinx-coroutines-core']
-  //api _dependencies['kotlinx-coroutines-android']
-
   def user_epic = false
   if (user_epic) {
-    api _dependencies['epic']
+    implementation _dependencies['epic']
     // api project(path: ':lib-epic')
   } else {
-    api _dependencies['epic-xander']
+    implementation _dependencies['epic-xander']
   }
+  implementation _dependencies['free_reflection']
 
-  api _dependencies['free_reflection']
-
-  api _dependencies['core-ktx']
-  api _dependencies['kotlin-stdlib-jdk']
+  // implementation _dependencies['core-ktx']
+  // implementation _dependencies['kotlin-stdlib-jdk']
 
 }
 

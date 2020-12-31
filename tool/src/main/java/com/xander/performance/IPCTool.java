@@ -1,6 +1,7 @@
 package com.xander.performance;
 
 import android.os.Binder;
+import android.os.Build;
 import android.os.Parcel;
 
 import java.lang.reflect.Field;
@@ -27,8 +28,11 @@ public class IPCTool {
 
   static void start() {
     xLog.e(TAG, "start");
-    hookWithEpic();
-    hookTransactListener();
+    if (Build.VERSION.SDK_INT >= 29) {
+      hookTransactListener();
+    } else {
+      hookWithEpic();
+    }
   }
 
   private static void hookWithEpic() {
@@ -69,7 +73,7 @@ public class IPCTool {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
-      // xLog.e(TAG, "WriteInterfaceTokenHook:" + param.args[0]);
+      xLog.e(TAG, "WriteInterfaceTokenHook:" + param.args[0]);
       // xLog.e(TAG, "WriteInterfaceTokenHook:", new Throwable());
       IPCIssue ipcIssue = new IPCIssue(param.args[0], "IPC", StackTraceUtils.list());
       ipcIssue.print();

@@ -3,6 +3,7 @@ package com.xander.performance;
 import android.content.Context;
 import android.os.Environment;
 import android.os.SystemClock;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -295,7 +296,17 @@ public class Issue {
         gRandomAccessFile = new RandomAccessFile(lastLogFile.getAbsolutePath(), "rw");
         gMappedByteBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
         gMappedByteBuffer.get(gLineBytes);
-        int lastPosition = Integer.parseInt(new String(gLineBytes).trim());
+        String gLineString = new String(gLineBytes).trim();
+        int lastPosition = gLineBytesLength;
+        if(!TextUtils.isEmpty(gLineString)) {
+          // 新创建出来文件就立刻 crash 了，导致之前没有写入任何内容
+          // 写入 line
+          gLineBytes = String.format(Locale.US, LINE_FORMAT, 0).getBytes();
+          gMappedByteBuffer.put(gLineBytes);
+          lastPosition = gMappedByteBuffer().position();
+        } else {
+          lastPosition = Integer.parseInt(new String(gLineBytes).trim());
+        }
         xLog.e(TAG, "initMappedByteBuffer lastPosition:" + lastPosition);
         if (lastPosition >= BUFFER_SIZE) {
           createLogFileAndBuffer();
@@ -304,6 +315,7 @@ public class Issue {
         }
       } catch (IOException e) {
         xLog.e(TAG, "initMappedByteBuffer", e);
+        createLogFileAndBuffer();
       }
     } else {
       createLogFileAndBuffer();
