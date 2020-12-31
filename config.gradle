@@ -1,10 +1,10 @@
 ext {
 
   android = [
-      'compileSdkVersion': 30,
+      'compileSdkVersion': 29,
       'buildToolsVersion': "29.0.2",
       'minSdkVersion'    : 21,
-      'targetSdkVersion' : 30
+      'targetSdkVersion' : 29
   ]
 
   dependencies = [
@@ -22,6 +22,6 @@ ext {
       'free_reflection'           : 'me.weishu:free_reflection:3.0.1',
       "xposed"                    : "de.robv.android.xposed:api:82",
       "exposed-xposedapi"         : "me.weishu.exposed:exposed-xposedapi:0.4.5",
-      "epic-xander"               : "me.weishu.epic:epic-xander:1.11.1",
+      "epic-xander"               : "me.weishu.epic:epic-xander:1.8.0-c",
   ]
 }

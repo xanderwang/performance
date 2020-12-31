@@ -185,7 +185,7 @@ public class Entry64 {
         } else {
 
             receiver = EpicNative.getObject(self, x1);
-            //Logger.i(TAG, "this :" + receiver);
+            Logger.i(TAG, "this receiver:" + Integer.toHexString(receiver.hashCode()));
 
             do {
                 if (numberOfArgs == 0) break;
@@ -203,6 +203,7 @@ public class Entry64 {
                 if (numberOfArgs == 6) break;
 
                 for (int i = 6; i < numberOfArgs; i++) {
+                    Logger.i(TAG, "wrapArgument index:" + i);
                     byte[] argsInStack = EpicNative.get(sp + i * 8 + 16, 8);
                     arguments[i] = wrapArgument(typeOfArgs[i], self, argsInStack);
                 }

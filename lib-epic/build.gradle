@@ -45,7 +45,7 @@ def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
 def _group = 'me.weishu.epic'
 def _artifactId = 'epic-xander'
-def _version = '1.11.1'
+def _version = '1.8.0-c'
 
 uploadArchives {
   repositories.mavenDeployer {
