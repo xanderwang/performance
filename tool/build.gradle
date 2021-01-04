@@ -35,7 +35,7 @@ dependencies {
   androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
   def _dependencies = rootProject.ext.dependencies
-  def user_epic = false
+  def user_epic = true
   if (user_epic) {
     implementation _dependencies['epic']
     // api project(path: ':lib-epic')

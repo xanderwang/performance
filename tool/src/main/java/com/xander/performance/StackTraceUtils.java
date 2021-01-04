@@ -34,6 +34,13 @@ class StackTraceUtils {
     ));
   }
 
+  public static void print(String tag) {
+    List<String> listArray = list();
+    for (String s : listArray) {
+      xLog.d(tag, s);
+    }
+  }
+
   public static List<String> list() {
     StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
     return list(stackTraceElements, true, StackTraceUtils.class.getName(), true, ignorePackageSet);

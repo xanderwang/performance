@@ -24,7 +24,7 @@ buildscript {
   ext.plugin_apply_name = "com.xander.performance.${mode_composing ? "plugin" : "performance"}"
 
   ext.use_plugin = mode_composing ? true : local_plugin_exit
-  //ext.use_plugin = false
+  ext.use_plugin = false
   println("use plugin:${use_plugin}")
   if (use_plugin) {
     println("plugin classpath:${plugin_classpath}")

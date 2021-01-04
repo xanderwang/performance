@@ -2,7 +2,6 @@ package com.xander.performance;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 
 /**
  * @author xander
@@ -57,7 +56,7 @@ public class UIWatcherTool {
     public void run() {
       while (true) {
         try {
-          Thread.sleep(PerformanceConfig.CHECK_UI_THREAD_TIME);
+          Thread.sleep(PerformanceConfig.WATCH_UI_INTERVAL_TIME);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }

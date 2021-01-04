@@ -6,7 +6,7 @@ import android.os.SystemClock;
 
 import java.util.HashMap;
 
-import static com.xander.performance.PerformanceConfig.HANDLER_CHECK_TIME;
+import static com.xander.performance.PerformanceConfig.MAX_HANDLER_DISPATCH_MSG_TIME;
 
 /**
  * @author Xander Wang Created on 2020/11/24.
@@ -42,7 +42,7 @@ public class PerformanceHandler extends Handler {
     long startTime = SystemClock.elapsedRealtime();
     super.dispatchMessage(msg);
     long costTime = SystemClock.elapsedRealtime() - startTime;
-    if (costTime > HANDLER_CHECK_TIME && msgIssuesMap.containsKey(msgKey)) {
+    if (costTime > MAX_HANDLER_DISPATCH_MSG_TIME && msgIssuesMap.containsKey(msgKey)) {
       HandlerIssue msgIssues = msgIssuesMap.get(msgKey);
       msgIssues.costTime = costTime;
       msgIssues.print();

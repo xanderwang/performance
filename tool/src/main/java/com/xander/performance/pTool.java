@@ -3,8 +3,6 @@ package com.xander.performance;
 import android.content.Context;
 import android.util.Log;
 
-import com.taobao.android.dexposed.utility.Logger;
-
 public class pTool {
 
   static String TAG = "pTool";
@@ -15,40 +13,47 @@ public class pTool {
      */
     int logLevel = Log.DEBUG;
     /**
-     * 是否开启检测 ANR
+     * 是否开启检测 UI 线程
      */
-    boolean mCheckUI = true;
+    boolean mCheckUI = false;
     /**
-     * ANR 的触发时间
+     * UI 线程的检测触发时间间隔
      */
-    long mCheckUIThreadTime = 300;
+    long mCheckUIIntervalTime = 300;
     /**
      * 检测线程的 start 方法调用栈
      */
-    boolean mCheckThread = true;
+    boolean mCheckThread = false;
     /**
      * 是否检测 fps
      */
-    boolean mCheckFPS = true;
-
+    boolean mCheckFPS = false;
     /**
      * 是否需要检测 ipc， 也就是进程间通讯
      */
     boolean mCheckIPC = false;
-
+    /**
+     * 上下文，用于获取保存文件夹路径
+     */
     Context appContext = null;
-
-    long mHandlerCheckTime = 0;
+    /**
+     * 是否 check handler
+     */
+    boolean mCheckHandler = false;
+    /**
+     * Handler dispatch msg 时间
+     */
+    long mMaxHandlerDispatchMsgTime = 0;
 
     String globalTag = TAG;
 
-    public Builder checkUIThread(boolean check) {
-      return checkUIThread(check, 5000);
+    public Builder checkUI(boolean check) {
+      return checkUI(check, 5000);
     }
 
-    public Builder checkUIThread(boolean check, long time) {
+    public Builder checkUI(boolean check, long time) {
       mCheckUI = check;
-      mCheckUIThreadTime = time;
+      mCheckUIIntervalTime = time;
       return this;
     }
 
@@ -67,8 +72,15 @@ public class pTool {
       return this;
     }
 
-    public Builder checkHandlerCostTime(long maxCostTime) {
-      mHandlerCheckTime = maxCostTime;
+    public Builder checkHandler(boolean check, long maxDispatchTime) {
+      mCheckHandler = check;
+      mMaxHandlerDispatchMsgTime = maxDispatchTime;
+      return this;
+    }
+
+    public Builder checkHandler(long maxDispatchTime) {
+      mCheckHandler = true;
+      mMaxHandlerDispatchMsgTime = maxDispatchTime;
       return this;
     }
 
@@ -98,12 +110,13 @@ public class pTool {
       builder = new Builder();
     }
     xLog.setLogLevel(builder.logLevel);
-    Logger.setLogLevel(builder.logLevel);
+    // Logger.setLogLevel(builder.logLevel);
     TAG = builder.globalTag;
     ThreadTool.resetTag(TAG);
     DumpTool.resetTag(TAG);
     FPSTool.resetTag(TAG);
     IPCTool.resetTag(TAG);
+    HandlerTool.resetTag(TAG);
     UIWatcherTool.resetTag(TAG);
     PerformanceHandler.resetTag(TAG);
     Issue.resetTag(TAG);
@@ -112,7 +125,7 @@ public class pTool {
       ThreadTool.init();
     }
     if (builder.mCheckUI) {
-      PerformanceConfig.CHECK_UI_THREAD_TIME = builder.mCheckUIThreadTime;
+      PerformanceConfig.WATCH_UI_INTERVAL_TIME = builder.mCheckUIIntervalTime;
       UIWatcherTool.start();
     }
     if (builder.mCheckFPS) {
@@ -121,7 +134,10 @@ public class pTool {
     if (builder.mCheckIPC) {
       IPCTool.start();
     }
-    PerformanceConfig.HANDLER_CHECK_TIME = builder.mHandlerCheckTime;
+    if (builder.mCheckHandler) {
+      PerformanceConfig.MAX_HANDLER_DISPATCH_MSG_TIME = builder.mMaxHandlerDispatchMsgTime;
+      HandlerTool.start();
+    }
   }
 
 }

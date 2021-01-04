@@ -28,11 +28,12 @@ public class IPCTool {
 
   static void start() {
     xLog.e(TAG, "start");
-    if (Build.VERSION.SDK_INT >= 29) {
-      hookTransactListener();
-    } else {
-      hookWithEpic();
-    }
+    // if (Build.VERSION.SDK_INT >= 29) {
+    //   hookTransactListener();
+    // } else {
+    //   hookWithEpic();
+    // }
+    hookWithEpic();
   }
 
   private static void hookWithEpic() {
