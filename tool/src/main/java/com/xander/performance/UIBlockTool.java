@@ -17,81 +17,80 @@ import de.robv.android.xposed.XC_MethodHook;
  * <p>
  * 打印处俩 cpu 和内存的相关状态
  */
-public class UIWatcherTool {
+public class UIBlockTool {
 
-  private static String TAG = pTool.TAG + "_UIWatcherTool";
+  private static String TAG = pTool.TAG + "_UIBlockTool";
 
   static void resetTag(String tag) {
-    TAG = tag + "_UIWatcherTool";
+    TAG = tag + "_UIBlockTool";
   }
 
   static void start() {
     xLog.e(TAG, "start");
     hookDecorViewDispatchKeyEvent();
-    hookLooperPrint();
-    startWatchThread();
+    initMainLooperPrinter();
+    startDumpInfoThread();
   }
 
-  private static void startWatchThread() {
-    watcherThread.start();
+  private static void startDumpInfoThread() {
+    dumpInfoThread.start();
   }
 
-  private static void hookLooperPrint() {
-    Looper.getMainLooper().setMessageLogging(new WatcherPrinter());
+  private static void initMainLooperPrinter() {
+    Looper.getMainLooper().setMessageLogging(new WatcherMainLooperPrinter());
   }
 
-  private static void tryDumpMainThread() {
-    if (null == watchThreadHandler) {
+  private static void startDumpInfo() {
+    if (null == dumpInfoHandler) {
       return;
     }
-    watchThreadHandler.removeCallbacks(dumpMainThreadRunnable);
-    watchThreadHandler.postDelayed(
-        dumpMainThreadRunnable,
-        PerformanceConfig.WATCH_UI_INTERVAL_TIME
-    );
+    dumpInfoHandler.removeCallbacks(dumpMainThreadRunnable);
+    dumpInfoHandler.postDelayed(dumpMainThreadRunnable, PerformanceConfig.UI_BLOCK_INTERVAL_TIME);
   }
 
-  private static void clearDumpMainThread() {
-    if (null == watchThreadHandler) {
+  private static void clearDumpInfo() {
+    if (null == dumpInfoHandler) {
       return;
     }
-    watchThreadHandler.removeCallbacks(dumpMainThreadRunnable);
+    dumpInfoHandler.removeCallbacks(dumpMainThreadRunnable);
   }
 
-  private static WatcherThread watcherThread = new WatcherThread("WatcherThread");
-  private static Handler watchThreadHandler;
+  private static DumpInfoThread dumpInfoThread = new DumpInfoThread("DumpInfoThread");
+  private static Handler dumpInfoHandler;
   private static DumpInfoRunnable dumpMainThreadRunnable = new DumpInfoRunnable();
 
-  private static class WatcherPrinter implements Printer {
+  private static class WatcherMainLooperPrinter implements Printer {
     @Override
     public void println(String x) {
       if (x != null && x.startsWith(">>>>>")) {
-        tryDumpMainThread();
+        startDumpInfo();
       } else if (x != null && x.startsWith("<<<<<")) {
-        clearDumpMainThread();
+        clearDumpInfo();
       }
     }
   }
 
-  private static class WatcherThread extends Thread {
-    WatcherThread(String name) {
+  private static class DumpInfoThread extends Thread {
+    DumpInfoThread(String name) {
       super(name);
     }
 
     @Override
     public void run() {
       Looper.prepare();
-      watchThreadHandler = new Handler(Looper.myLooper());
+      dumpInfoHandler = new Handler(Looper.myLooper());
       Looper.loop();
       super.run();
     }
   }
 
+  /**
+   * dump 信息，目前主要 dump 主现场调用栈
+   */
   private static class DumpInfoRunnable implements Runnable {
     @Override
     public void run() {
-      Issue uiIssue = new Issue(
-          Issue.TYPE_UI_BLOCK,
+      Issue uiIssue = new Issue(Issue.TYPE_UI_BLOCK,
           "UI BLOCK",
           StackTraceUtils.list(Looper.getMainLooper().getThread().getStackTrace(), false, "")
       );
@@ -99,11 +98,17 @@ public class UIWatcherTool {
     }
   }
 
+  /**
+   * 如果是 TV 设备，用遥控或者键盘操作的话，不会走到 Handler 的 dispatchMessage 方法
+   * <p>
+   * 而是会走 InputManager 里面的方法，最终调用 DecorView 的DispatchKeyEvent 方法
+   * <p>
+   * 这里通过 hook 来切入这个 KeyEvent 事件
+   */
   private static void hookDecorViewDispatchKeyEvent() {
     try {
       Class decorViewClass = Class.forName("com.android.internal.policy.DecorView");
-      DexposedBridge.findAndHookMethod(
-          decorViewClass,
+      DexposedBridge.findAndHookMethod(decorViewClass,
           "dispatchKeyEvent",
           KeyEvent.class,
           new DecorViewDispatchKeyEventHook()
@@ -118,13 +123,13 @@ public class UIWatcherTool {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
-      tryDumpMainThread();
+      startDumpInfo();
     }
 
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       super.afterHookedMethod(param);
-      clearDumpMainThread();
+      clearDumpInfo();
     }
   }
 

@@ -17,9 +17,9 @@ public class pTool {
      */
     boolean mCheckUI = false;
     /**
-     * UI 线程的检测触发时间间隔
+     * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
      */
-    long mCheckUIIntervalTime = 100;
+    long mUIBlockIntervalTime = PerformanceConfig.UI_BLOCK_INTERVAL_TIME;
     /**
      * 检测线程的 start 方法调用栈
      */
@@ -40,12 +40,12 @@ public class pTool {
     String globalTag = TAG;
 
     public Builder checkUI(boolean check) {
-      return checkUI(check, 5000);
+      return checkUI(check, PerformanceConfig.UI_BLOCK_INTERVAL_TIME);
     }
 
-    public Builder checkUI(boolean check, long time) {
+    public Builder checkUI(boolean check, long blockIntervalTime) {
       mCheckUI = check;
-      mCheckUIIntervalTime = time;
+      mUIBlockIntervalTime = blockIntervalTime;
       return this;
     }
 
@@ -97,7 +97,7 @@ public class pTool {
     FPSTool.resetTag(TAG);
     IPCTool.resetTag(TAG);
     HandlerTool.resetTag(TAG);
-    UIWatcherTool.resetTag(TAG);
+    UIBlockTool.resetTag(TAG);
     PerformanceHandler.resetTag(TAG);
     Issue.resetTag(TAG);
     Issue.init(builder.appContext);
@@ -105,8 +105,8 @@ public class pTool {
       ThreadTool.init();
     }
     if (builder.mCheckUI) {
-      PerformanceConfig.WATCH_UI_INTERVAL_TIME = builder.mCheckUIIntervalTime;
-      UIWatcherTool.start();
+      PerformanceConfig.UI_BLOCK_INTERVAL_TIME = builder.mUIBlockIntervalTime;
+      UIBlockTool.start();
     }
     if (builder.mCheckFPS) {
       FPSTool.start();

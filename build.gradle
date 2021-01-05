@@ -17,7 +17,7 @@ buildscript {
 
   ext.local_repo_path = rootProject.file("./repos").absolutePath
   println("local repo path:$local_repo_path")
-  ext.local_plugin_exit = file("${local_repo_path}/com/xander/performance/performance/maven-metadata.xml").exists()
+  ext.local_plugin_exit = file("${local_repo_path}/com/xander/performance/performance/${lib_version}").exists()
   ext.plugin_artifact_id = mode_composing ? "local-plugin" : "performance"
   ext.plugin_version = mode_composing ? "1.0" : rootProject.ext.lib_version
   ext.plugin_classpath = "com.xander.performance:${plugin_artifact_id}:${plugin_version}"

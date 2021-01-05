@@ -10,7 +10,7 @@ public class pTool {
       return this;
     }
 
-    public Builder checkUI(boolean check, long time) {
+    public Builder checkUI(boolean check, long blockIntervalTime) {
       return this;
     }
 
