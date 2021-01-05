@@ -19,6 +19,7 @@ import static com.xander.performance.PerformanceConfig.MAX_HANDLER_DISPATCH_MSG_
  * Created on 2021/1/4.
  * @Description //TODO
  */
+@Deprecated
 public class HandlerTool {
   private static String TAG = pTool.TAG + "_HandlerTool";
 
@@ -30,7 +31,7 @@ public class HandlerTool {
 
   static void start() {
     xLog.e(TAG, "start");
-    hookWithEpic();
+    // hookWithEpic();
     hookDebugMethod();
   }
 
@@ -56,11 +57,11 @@ public class HandlerTool {
 
   private static void hookDebugMethod() {
     try {
-      DexposedBridge.findAndHookMethod(
-          Message.class,
-          "markInUse",
-          new MsgMarkInUse()
-      );
+      // DexposedBridge.findAndHookMethod(
+      //     Message.class,
+      //     "markInUse",
+      //     new MsgMarkInUse()
+      // );
       // DexposedBridge.findAndHookMethod(
       //     Message.class,
       //     "recycleUnchecked",
@@ -71,11 +72,11 @@ public class HandlerTool {
       //     "isInUse",
       //     new MsgIsInUse()
       // );
-      DexposedBridge.findAndHookMethod(
-          Message.class,
-          "obtain",
-          new MsgObtain()
-      );
+      // DexposedBridge.findAndHookMethod(
+      //     Message.class,
+      //     "obtain",
+      //     new MsgObtain()
+      // );
       DexposedBridge.findAndHookMethod(
           MessageQueue.class,
           "enqueueMessage",
@@ -94,8 +95,7 @@ public class HandlerTool {
       super.beforeHookedMethod(param);
       // Issue issue = new Issue(Issue.TYPE_HANDLER, "", StackTraceUtils.list());
       // issue.print();
-      // xLog.e(TAG, "beforeHookedMethod");
-
+      xLog.e(TAG, "SendMsgAtTimeHook beforeHookedMethod");
     }
 
     @Override
@@ -104,6 +104,7 @@ public class HandlerTool {
       // HandlerIssue issue = new HandlerIssue("HANDLER", StackTraceUtils.list());
       // Integer msgKey = param.args[0].hashCode();
       // issueHashMap.put(msgKey, issue);
+      xLog.e(TAG, "SendMsgAtTimeHook afterHookedMethod");
     }
   }
 
@@ -111,28 +112,30 @@ public class HandlerTool {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
-      Integer msgKey = param.args[0].hashCode();
-      if (issueHashMap.containsKey(msgKey)) {
-        HandlerIssue issue = issueHashMap.get(msgKey);
-        issue.startTime = SystemClock.elapsedRealtime();
-      } else {
-        // xLog.e(TAG, "DispatchMsgHook", new Throwable());
-      }
+      // Integer msgKey = param.args[0].hashCode();
+      // if (issueHashMap.containsKey(msgKey)) {
+      //   HandlerIssue issue = issueHashMap.get(msgKey);
+      //   issue.startTime = SystemClock.elapsedRealtime();
+      // } else {
+      //   // xLog.e(TAG, "DispatchMsgHook", new Throwable());
+      // }
+      xLog.e(TAG, "DispatchMsgHook beforeHookedMethod");
     }
 
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       super.afterHookedMethod(param);
-      Integer msgKey = param.args[0].hashCode();
-      if (issueHashMap.containsKey(msgKey)) {
-        HandlerIssue issue = issueHashMap.remove(msgKey);
-        issue.costTime = SystemClock.elapsedRealtime() - issue.startTime;
-        if (issue.costTime >= MAX_HANDLER_DISPATCH_MSG_TIME) {
-          issue.print();
-        }
-      } else {
-        // xLog.e(TAG, "DispatchMsgHook", new Throwable());
-      }
+      // Integer msgKey = param.args[0].hashCode();
+      // if (issueHashMap.containsKey(msgKey)) {
+      //   HandlerIssue issue = issueHashMap.remove(msgKey);
+      //   issue.costTime = SystemClock.elapsedRealtime() - issue.startTime;
+      //   if (issue.costTime >= MAX_HANDLER_DISPATCH_MSG_TIME) {
+      //     issue.print();
+      //   }
+      // } else {
+      //   // xLog.e(TAG, "DispatchMsgHook", new Throwable());
+      // }
+      xLog.e(TAG, "DispatchMsgHook afterHookedMethod");
     }
   }
 
@@ -140,10 +143,11 @@ public class HandlerTool {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
-      xLog.e(TAG, "MsgMarkInUse: " + isInUse(param.thisObject));
-      // if (isInUse(param.thisObject)) {
-      //   xLog.e(TAG, "MsgMarkInUse", new Throwable());
-      // }
+      boolean result = isInUse(param.thisObject);
+      xLog.e(TAG, "before MsgMarkInUse: " + param.thisObject + ",result:" +result);
+      if (result) {
+        xLog.e(TAG, "MsgMarkInUse", new Throwable());
+      }
       // StackTraceUtils.print(TAG);
     }
   }
@@ -152,8 +156,9 @@ public class HandlerTool {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
-      xLog.e(TAG, "MsgRecycleUnchecked: " + isInUse(param.thisObject));
-      if (isInUse(param.thisObject)) {
+      boolean result = isInUse(param.thisObject);
+      xLog.e(TAG, "before MsgRecycleUnchecked:" + param.thisObject + ",result:" +result);
+      if (result) {
         xLog.e(TAG, "MsgRecycleUnchecked", new Throwable());
       }
       // StackTraceUtils.print(TAG);
@@ -164,8 +169,9 @@ public class HandlerTool {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
-      xLog.e(TAG, "MsgIsInUse: " + isInUse(param.thisObject));
-      if (isInUse(param.thisObject)) {
+      boolean result = isInUse(param.thisObject);
+      xLog.e(TAG, "MsgIsInUse: " + param.thisObject + ",result:" + result);
+      if (result) {
         xLog.e(TAG, "MsgIsInUse", new Throwable());
       }
       // StackTraceUtils.print(TAG);
@@ -177,8 +183,9 @@ public class HandlerTool {
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       super.afterHookedMethod(param);
-      xLog.e(TAG, "MsgObtain: " + isInUse(param.getResult()));
-      if (isInUse(param.getResult())) {
+      boolean result = isInUse(param.getResultOrThrowable());
+      xLog.e(TAG, "after MsgObtain:" + param.getResultOrThrowable() + ",result:" + result);
+      if (result) {
         xLog.e(TAG, "MsgObtain", new Throwable());
       }
       // StackTraceUtils.print(TAG);
@@ -189,8 +196,9 @@ public class HandlerTool {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
-      xLog.e(TAG, "MessageQueueHook: " + isInUse(param.args[0]));
-      if (isInUse(param.args[0])) {
+      boolean result = isInUse(param.args[0]);
+      xLog.e(TAG, "before MessageQueueHook: " + param.args[0] + ",result:" + result);
+      if (result) {
         xLog.e(TAG, "MessageQueueHook", new Throwable());
         // clearFlag(param.args[0]);
         // param.args[0] = Message.obtain((Message) param.args[0]);

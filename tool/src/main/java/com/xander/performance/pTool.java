@@ -19,7 +19,7 @@ public class pTool {
     /**
      * UI 线程的检测触发时间间隔
      */
-    long mCheckUIIntervalTime = 300;
+    long mCheckUIIntervalTime = 100;
     /**
      * 检测线程的 start 方法调用栈
      */
@@ -36,14 +36,6 @@ public class pTool {
      * 上下文，用于获取保存文件夹路径
      */
     Context appContext = null;
-    /**
-     * 是否 check handler
-     */
-    boolean mCheckHandler = false;
-    /**
-     * Handler dispatch msg 时间
-     */
-    long mMaxHandlerDispatchMsgTime = 0;
 
     String globalTag = TAG;
 
@@ -69,18 +61,6 @@ public class pTool {
 
     public Builder checkIPC(boolean check) {
       mCheckIPC = check;
-      return this;
-    }
-
-    public Builder checkHandler(boolean check, long maxDispatchTime) {
-      mCheckHandler = check;
-      mMaxHandlerDispatchMsgTime = maxDispatchTime;
-      return this;
-    }
-
-    public Builder checkHandler(long maxDispatchTime) {
-      mCheckHandler = true;
-      mMaxHandlerDispatchMsgTime = maxDispatchTime;
       return this;
     }
 
@@ -133,10 +113,6 @@ public class pTool {
     }
     if (builder.mCheckIPC) {
       IPCTool.start();
-    }
-    if (builder.mCheckHandler) {
-      PerformanceConfig.MAX_HANDLER_DISPATCH_MSG_TIME = builder.mMaxHandlerDispatchMsgTime;
-      HandlerTool.start();
     }
   }
 

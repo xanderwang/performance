@@ -6,11 +6,11 @@ public class pTool {
 
   public static class Builder {
 
-    public Builder checkUIThread(boolean check) {
+    public Builder checkUI(boolean check) {
       return this;
     }
 
-    public Builder checkUIThread(boolean check, long time) {
+    public Builder checkUI(boolean check, long time) {
       return this;
     }
 
@@ -23,10 +23,6 @@ public class pTool {
     }
 
     public Builder checkIPC(boolean check) {
-      return this;
-    }
-
-    public Builder checkHandlerCostTime(long maxCostTime) {
       return this;
     }
 

@@ -30,9 +30,9 @@ public class Issue {
 
   private static String TAG = "_Issue";
   /**
-   * 检测 ANR
+   * 检测 UI block
    */
-  public static final int TYPE_ANR = 0;
+  public static final int TYPE_UI_BLOCK = 0;
   /**
    * 检测 FPS
    */
@@ -48,6 +48,7 @@ public class Issue {
   /**
    * 检测主线程耗时任务，和 ANR 的检测有些区别
    */
+  @Deprecated
   public static final int TYPE_HANDLER = 4;
 
   private static ExecutorService saveService = null;
@@ -97,8 +98,8 @@ public class Issue {
   protected String typeToString() {
     String str = null;
     switch (type) {
-      case TYPE_ANR:
-        str = "ANR";
+      case TYPE_UI_BLOCK:
+        str = "UI BLOCK";
         break;
       case TYPE_FPS:
         str = "FPS";
@@ -388,4 +389,11 @@ public class Issue {
     }
     return saveFileDir;
   }
+
+  interface StoreListener {
+    int max();
+    File rootSaveDir();
+    void upLoad(File issueFile);
+  }
+
 }

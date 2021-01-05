@@ -23,19 +23,15 @@ class MainActivity : AppCompatActivity() {
   }
 
   fun testThread(v: View) {
+    Log.e(TAG, "testThread thread name:${Thread.currentThread().name}")
     thread(name = "test-thread", start = true) {
       Log.d(TAG, Thread.currentThread().name)
       Thread.sleep(3000)
     }
   }
 
-  private val threadPool by lazy {
-    Log.e(TAG, "newSingleThreadExecutor")
-    Executors.newSingleThreadExecutor()
-  }
-
   fun testThreadPool(v: View) {
-    Log.e(TAG, "testThreadPool")
+    Log.e(TAG, "testThreadPool thread name:${Thread.currentThread().name}")
     // threadPool.submit {
     //   Log.d(TAG, "testThreadPool")
     // }
@@ -49,11 +45,12 @@ class MainActivity : AppCompatActivity() {
   }
 
   fun testANR(v: View) {
-    Thread.sleep(4000)
+    Log.d(TAG, "testANR thread name:${Thread.currentThread().name}")
+    Thread.sleep(1000)
   }
 
   fun testIPC(v: View) {
-    Log.d(TAG, "testIPC")
+    Log.d(TAG, "testIPC thread name:${Thread.currentThread().name}")
     val ams: ActivityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
     ams.runningAppProcesses.forEach {
       Log.d(TAG, "runningAppProcesses: ${it.processName}")
@@ -61,6 +58,7 @@ class MainActivity : AppCompatActivity() {
   }
 
   fun testFps(v: View) {
+    Log.d(TAG, "testFps thread name:${Thread.currentThread().name}")
     Thread.sleep(200)
   }
 
@@ -71,7 +69,7 @@ class MainActivity : AppCompatActivity() {
   private val handler = Handler()
 
   fun testHandler(v: View) {
-    Log.d(TAG, "testHandler")
+    Log.d(TAG, "testHandler thread name:${Thread.currentThread().name}")
     lazyHandler.post {
       Log.d(TAG, "do lazyHandler post msg !!!")
       Thread.sleep(1000)
@@ -82,32 +80,29 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
-  var c: IDemoService? = null
+  var iDemoService: IDemoService? = null
 
-  val conn: ServiceConnection = object : ServiceConnection {
+  private val serviceConnection: ServiceConnection = object : ServiceConnection {
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-      Log.e("xxx", "onServiceConnected:$service")
-      Log.e("xxx", "onServiceConnected", IllegalAccessException())
-      c = IDemoService.Stub.asInterface(service)
+      Log.e(TAG, "onServiceConnected:$service")
+      Log.e(TAG, "onServiceConnected", IllegalAccessException())
+      iDemoService = IDemoService.Stub.asInterface(service)
     }
 
     override fun onServiceDisconnected(name: ComponentName?) {
     }
-
-
   }
 
   fun testBindService(v: View) {
-    c?.let {
-      unbindService(conn)
+    iDemoService?.let {
+      unbindService(serviceConnection)
     }
     val i = Intent(this, DemoService::class.java)
-    bindService(i, conn, Service.BIND_AUTO_CREATE)
+    bindService(i, serviceConnection, Service.BIND_AUTO_CREATE)
   }
 
   companion object {
     private val TAG by lazy { "demo_" }
   }
-
 
 }

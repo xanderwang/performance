@@ -2,17 +2,24 @@ package com.xander.performance;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Printer;
+import android.view.KeyEvent;
+
+import de.robv.android.xposed.DexposedBridge;
+import de.robv.android.xposed.XC_MethodHook;
 
 /**
  * @author xander
  * <p>
- * 通过向 main thread 里面放一个指定的 runnable 然后定时去查看是否被运行过来检测是否有 ANR
+ * 在触发 ui 线程操作的时候，同时在后台线程启动一个延时的任务，到了时间，延时任务还没有被移除，
+ * <p>
+ * 说明 ui 线程 block 了，此时打印出 ui 线程的状态，如果需要详细的状态，甚至可以
+ * <p>
+ * 打印处俩 cpu 和内存的相关状态
  */
 public class UIWatcherTool {
 
   private static String TAG = pTool.TAG + "_UIWatcherTool";
-
-  private static volatile UIWatcherThread UIWatcherThread;
 
   static void resetTag(String tag) {
     TAG = tag + "_UIWatcherTool";
@@ -20,76 +27,105 @@ public class UIWatcherTool {
 
   static void start() {
     xLog.e(TAG, "start");
-    // 不严谨，后续需要优化。
-    if (null != UIWatcherThread) {
+    hookDecorViewDispatchKeyEvent();
+    hookLooperPrint();
+    startWatchThread();
+  }
+
+  private static void startWatchThread() {
+    watcherThread.start();
+  }
+
+  private static void hookLooperPrint() {
+    Looper.getMainLooper().setMessageLogging(new WatcherPrinter());
+  }
+
+  private static void tryDumpMainThread() {
+    if (null == watchThreadHandler) {
       return;
     }
-    // 后台检测线程
-    UIWatcherThread = new UIWatcherThread("ui-watcher-thread");
-    UIWatcherThread.start();
+    watchThreadHandler.removeCallbacks(dumpMainThreadRunnable);
+    watchThreadHandler.postDelayed(
+        dumpMainThreadRunnable,
+        PerformanceConfig.WATCH_UI_INTERVAL_TIME
+    );
   }
 
-  @Deprecated
-  static void stop() {
-    if (null != UIWatcherThread && !UIWatcherThread.isInterrupted()) {
-      UIWatcherThread.interrupt();
+  private static void clearDumpMainThread() {
+    if (null == watchThreadHandler) {
+      return;
     }
-    UIWatcherThread = null;
+    watchThreadHandler.removeCallbacks(dumpMainThreadRunnable);
   }
 
+  private static WatcherThread watcherThread = new WatcherThread("WatcherThread");
+  private static Handler watchThreadHandler;
+  private static DumpInfoRunnable dumpMainThreadRunnable = new DumpInfoRunnable();
 
-  /**
-   * 检测 main thread 的 Thread ,在后台指定的时间
-   */
-  static class UIWatcherThread extends Thread {
+  private static class WatcherPrinter implements Printer {
+    @Override
+    public void println(String x) {
+      if (x != null && x.startsWith(">>>>>")) {
+        tryDumpMainThread();
+      } else if (x != null && x.startsWith("<<<<<")) {
+        clearDumpMainThread();
+      }
+    }
+  }
 
-    UIWatcherRunnable uiRunnable = new UIWatcherRunnable();
-
-    Handler mainThreadHandler = new Handler(Looper.getMainLooper()) {
-    };
-
-    public UIWatcherThread(String name) {
+  private static class WatcherThread extends Thread {
+    WatcherThread(String name) {
       super(name);
     }
 
     @Override
     public void run() {
-      while (true) {
-        try {
-          Thread.sleep(PerformanceConfig.WATCH_UI_INTERVAL_TIME);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        if (!uiRunnable.done) {
-          Issue uiIssue = new Issue(
-              Issue.TYPE_ANR,
-              "UI WATCHER",
-              StackTraceUtils.list(Looper.getMainLooper().getThread().getStackTrace(), false, "")
-          );
-          uiIssue.print();
-        }
-        // 正常执行完或者打印完线程调用栈，开始下一个计时检测任务。
-        uiRunnable.reset();
-        mainThreadHandler.post(uiRunnable);
-      }
+      Looper.prepare();
+      watchThreadHandler = new Handler(Looper.myLooper());
+      Looper.loop();
+      super.run();
     }
   }
 
-  /**
-   * main thread 里面执行的 runnable ，执行完标记值为 true ，
-   * 否则为 false ， 通过后台线程持续检测标记值可以知道 main thread 是否有阻塞。
-   */
-  static class UIWatcherRunnable implements Runnable {
-
-    boolean done = false;
-
+  private static class DumpInfoRunnable implements Runnable {
     @Override
     public void run() {
-      done = true;
-    }
-
-    void reset() {
-      done = false;
+      Issue uiIssue = new Issue(
+          Issue.TYPE_UI_BLOCK,
+          "UI BLOCK",
+          StackTraceUtils.list(Looper.getMainLooper().getThread().getStackTrace(), false, "")
+      );
+      uiIssue.print();
     }
   }
+
+  private static void hookDecorViewDispatchKeyEvent() {
+    try {
+      Class decorViewClass = Class.forName("com.android.internal.policy.DecorView");
+      DexposedBridge.findAndHookMethod(
+          decorViewClass,
+          "dispatchKeyEvent",
+          KeyEvent.class,
+          new DecorViewDispatchKeyEventHook()
+      );
+    } catch (Exception e) {
+      e.printStackTrace();
+      xLog.e(TAG, "hookDecorViewDispatchKeyEvent", e);
+    }
+  }
+
+  static class DecorViewDispatchKeyEventHook extends XC_MethodHook {
+    @Override
+    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      super.beforeHookedMethod(param);
+      tryDumpMainThread();
+    }
+
+    @Override
+    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+      super.afterHookedMethod(param);
+      clearDumpMainThread();
+    }
+  }
+
 }
