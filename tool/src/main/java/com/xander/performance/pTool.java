@@ -32,9 +32,13 @@ public class pTool {
      * 是否需要检测 ipc， 也就是进程间通讯
      */
     boolean mCheckIPC = false;
+
+    Issue.IssueSupplier issueSupplier = null;
+
     /**
      * 上下文，用于获取保存文件夹路径
      */
+    @Deprecated
     Context appContext = null;
 
     String globalTag = TAG;
@@ -69,8 +73,8 @@ public class pTool {
       return this;
     }
 
-    public Builder appContext(Context context) {
-      appContext = context;
+    public Builder issueSupplier(Issue.IssueSupplier supplier) {
+      issueSupplier = supplier;
       return this;
     }
 
@@ -96,11 +100,10 @@ public class pTool {
     DumpTool.resetTag(TAG);
     FPSTool.resetTag(TAG);
     IPCTool.resetTag(TAG);
-    HandlerTool.resetTag(TAG);
     UIBlockTool.resetTag(TAG);
     PerformanceHandler.resetTag(TAG);
     Issue.resetTag(TAG);
-    Issue.init(builder.appContext);
+    Issue.init(builder.issueSupplier);
     if (builder.mCheckThread) {
       ThreadTool.init();
     }

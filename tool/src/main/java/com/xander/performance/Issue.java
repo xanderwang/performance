@@ -1,6 +1,5 @@
 package com.xander.performance;
 
-import android.content.Context;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -14,6 +13,8 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -53,7 +54,15 @@ public class Issue {
 
   private static ExecutorService saveService = null;
 
-  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+  /**
+   * 虽然 SimpleDateFormat 是线程不安全的，但是这里只在单线程池里面使用，
+   *
+   * 所以这样写没有太大的问题
+   */
+  private static SimpleDateFormat dateFormat = new SimpleDateFormat(
+      "yyyy-MM-dd HH:mm:ss",
+      Locale.US
+  );
 
   /**
    * 类型
@@ -109,9 +118,6 @@ public class Issue {
         break;
       case TYPE_THREAD:
         str = "THREAD";
-        break;
-      case TYPE_HANDLER:
-        str = "HANDLER";
         break;
       default:
         str = "NONE";
@@ -204,12 +210,17 @@ public class Issue {
     }
   }
 
-  private static final int MAX_BUFFER_SIZE = 100 * 1024 * 1024;
+  private static String ISSUES_CACHE_DIR_NAME = "issues";
+  private static File ISSUES_CACHE_DIR;
+  private static IssueSupplier gIssueSupplier;
+
+  private static final int MAX_BUFFER_SIZE = 20 * 1024 * 1024;
+
   private static final int BUFFER_SIZE = 1024 * 1024;
   private static File gLogFile;
   private static RandomAccessFile gRandomAccessFile;
   private static MappedByteBuffer gMappedByteBuffer;
-  private static byte[] gLineBytes = String.valueOf(MAX_BUFFER_SIZE).getBytes();
+  private static byte[] gLineBytes = String.valueOf(BUFFER_SIZE).getBytes();
   // log 文件的第一行固定为文件最后字节的位置
   private static final int gLineBytesLength = gLineBytes.length;
   private static final String LINE_FORMAT = "%-" + gLineBytesLength + "d";
@@ -240,7 +251,7 @@ public class Issue {
       gLogFile = null;
     }
     String fileName = "issues_" + SystemClock.elapsedRealtimeNanos() + ".log";
-    gLogFile = new File(ISSUES_ROOT_DIR, fileName);
+    gLogFile = new File(ISSUES_CACHE_DIR, fileName);
     if (gLogFile.exists()) {
       gLogFile.delete();
     }
@@ -248,7 +259,8 @@ public class Issue {
       gLogFile.createNewFile();
       xLog.e(TAG, "create log file :" + gLogFile.getAbsolutePath());
       gRandomAccessFile = new RandomAccessFile(gLogFile.getAbsolutePath(), "rw");
-      gMappedByteBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+      gMappedByteBuffer = gRandomAccessFile.getChannel()
+          .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
       // 写入 line
       gLineBytes = String.format(Locale.US, LINE_FORMAT, 0).getBytes();
       gMappedByteBuffer.put(gLineBytes);
@@ -264,15 +276,27 @@ public class Issue {
     if (saveService == null) {
       saveService = Executors.newSingleThreadExecutor();
     }
-    File[] files = ISSUES_ROOT_DIR.listFiles();
+    File[] files = ISSUES_CACHE_DIR.listFiles();
     if (null == files) {
       createLogFileAndBuffer();
       return;
     }
+    Arrays.sort(files, new Comparator<File>() {
+      @Override
+      public int compare(File o1, File o2) {
+        // 结果为负数表示 o2 排在前面
+        return (int) (o2.lastModified() - o1.lastModified());
+      }
+    });
+    int fileLength = 0;
     List<File> waitToZipLogFiles = new ArrayList<>();
     File lastLogFile = null;
     for (int i = 0; i < files.length; i++) {
-      File file = files[i];
+      final File file = files[i];
+      if( file.isDirectory() || !file.isFile() ) {
+        continue;
+      }
+      fileLength += file.length();
       if (file.getName().endsWith(".log")) {
         if (lastLogFile == null) {
           lastLogFile = file;
@@ -284,6 +308,20 @@ public class Issue {
         } else {
           waitToZipLogFiles.add(file);
         }
+      } else if (file.getName().endsWith(".zip")) {
+        // 开始上传 log 文件
+        executorService().execute(new Runnable() {
+          @Override
+          public void run() {
+            boolean uploadResult = doUploadZipLogFile(file);
+            if (uploadResult) {
+              file.delete();
+            }
+          }
+        });
+      }
+      if (fileLength >= gIssueSupplier.maxCacheSize() && file.exists()) {
+        file.delete();
       }
     }
     xLog.e(TAG, "initMappedByteBuffer lastLogFile:" + lastLogFile);
@@ -295,11 +333,12 @@ public class Issue {
       try {
         gLogFile = lastLogFile;
         gRandomAccessFile = new RandomAccessFile(lastLogFile.getAbsolutePath(), "rw");
-        gMappedByteBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+        gMappedByteBuffer = gRandomAccessFile.getChannel()
+            .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
         gMappedByteBuffer.get(gLineBytes);
         String gLineString = new String(gLineBytes).trim();
         int lastPosition = gLineBytesLength;
-        if(!TextUtils.isEmpty(gLineString)) {
+        if (!TextUtils.isEmpty(gLineString)) {
           // 新创建出来文件就立刻 crash 了，导致之前没有写入任何内容
           // 写入 line
           gLineBytes = String.format(Locale.US, LINE_FORMAT, 0).getBytes();
@@ -325,23 +364,28 @@ public class Issue {
 
   protected static void zipLogFile(final File logFile) {
     // 压缩 log 文件，成功后删除原始 log 文件
+    // 上传成功后删除压缩后的 log file
     xLog.e(TAG, "zipLogFile:" + logFile);
     executorService().execute(new Runnable() {
       @Override
       public void run() {
-        doZipLogFile(logFile);
+        File zipLogFile = doZipLogFile(logFile);
+        boolean uploadResult = doUploadZipLogFile(zipLogFile);
+        if (uploadResult) {
+          zipLogFile.delete();
+        }
       }
     });
   }
 
-  static void doZipLogFile(File logFile) {
+  static File doZipLogFile(File logFile) {
     File zipLogFileDir = logFile.getParentFile();
     String zipLogFileName = logFile.getName().replace(".log", ".zip");
     File zipLogFile = new File(zipLogFileDir, zipLogFileName);
     if (zipLogFile.exists()) {
       // 清理已经压缩过但是没有删除的 log 文件
       logFile.delete();
-      return;
+      return zipLogFile;
     }
     try {
       xLog.e(TAG, "doZipLogFile src:" + logFile.getAbsolutePath());
@@ -350,7 +394,7 @@ public class Issue {
       ZipOutputStream zop = new ZipOutputStream(fos);
       ZipEntry zipEntry = new ZipEntry(logFile.getName());
       zop.putNextEntry(zipEntry);
-      byte[] bytes = new byte[1024 * 50];
+      byte[] bytes = new byte[1024 * 64];
       int length;
       FileInputStream fip = new FileInputStream(logFile);
       while ((length = fip.read(bytes)) >= 0) {
@@ -365,35 +409,69 @@ public class Issue {
     } finally {
       logFile.delete();
     }
+    return zipLogFile;
   }
 
-  protected static String ISSUES_ROOT_DIR_NAME = "issues";
-  protected static File ISSUES_ROOT_DIR;
+  static boolean doUploadZipLogFile(File zipLogFile) {
+    if (zipLogFile == null || !zipLogFile.exists()) {
+      return false;
+    }
+    return gIssueSupplier.upLoad(zipLogFile);
+  }
 
   static void resetTag(String tag) {
     TAG = tag + "_Issue";
   }
 
-  protected static void init(Context context) {
-    ISSUES_ROOT_DIR = new File(appSaveFileRootDir(context), ISSUES_ROOT_DIR_NAME);
-    ISSUES_ROOT_DIR.mkdirs();
-    xLog.e(TAG, "issues save in:" + ISSUES_ROOT_DIR.getAbsolutePath());
-  }
-
-  private static File appSaveFileRootDir(Context context) {
-    File saveFileDir = null;
-    if (null == context) {
-      saveFileDir = Environment.getExternalStorageDirectory();
-    } else {
-      saveFileDir = context.getCacheDir();
+  protected static void init(IssueSupplier issueSupplier) {
+    if (null == issueSupplier) {
+      issueSupplier = new DefaultIssueSupplier();
     }
-    return saveFileDir;
+    gIssueSupplier = issueSupplier;
+    ISSUES_CACHE_DIR = new File(issueSupplier.cacheRootDir(), ISSUES_CACHE_DIR_NAME);
+    ISSUES_CACHE_DIR.mkdirs();
+    xLog.e(TAG, "issues save in:" + ISSUES_CACHE_DIR.getAbsolutePath());
   }
 
-  interface StoreListener {
-    int max();
-    File rootSaveDir();
-    void upLoad(File issueFile);
+  public static class DefaultIssueSupplier implements IssueSupplier {
+    @Override
+    public int maxCacheSize() {
+      return MAX_BUFFER_SIZE;
+    }
+
+    @Override
+    public File cacheRootDir() {
+      return Environment.getExternalStorageDirectory();
+    }
+
+    @Override
+    public boolean upLoad(File issueFile) {
+      return false;
+    }
+  }
+
+  public interface IssueSupplier {
+    /**
+     * 最大的磁盘缓存空间
+     *
+     * @return
+     */
+    int maxCacheSize();
+
+    /**
+     * 缓存根目录
+     *
+     * @return
+     */
+    File cacheRootDir();
+
+    /**
+     * 开始上传
+     *
+     * @param issueFile
+     * @return true 表示上传成功 false 表示失败
+     */
+    boolean upLoad(File issueFile);
   }
 
 }
