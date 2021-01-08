@@ -6,7 +6,7 @@ import android.os.SystemClock;
 
 import java.util.HashMap;
 
-import static com.xander.performance.PerformanceConfig.MAX_HANDLER_DISPATCH_MSG_TIME;
+import static com.xander.performance.Config.MAX_HANDLER_DISPATCH_MSG_TIME;
 
 /**
  * @author Xander Wang Created on 2020/11/24.
@@ -14,7 +14,7 @@ import static com.xander.performance.PerformanceConfig.MAX_HANDLER_DISPATCH_MSG_
  */
 public class PerformanceHandler extends Handler {
 
-  private static String TAG = pTool.TAG + "_PerformanceHandler";
+  private static String TAG = PERF.TAG + "_PerformanceHandler";
 
   private static HashMap<String, HandlerIssue> msgIssuesMap = new HashMap<>();
 

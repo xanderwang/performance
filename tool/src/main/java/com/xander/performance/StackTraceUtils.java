@@ -16,6 +16,7 @@ import java.util.Set;
  */
 class StackTraceUtils {
 
+  @Deprecated
   static Set<String> ignorePackageSet = new HashSet<>();
 
   static {
@@ -34,58 +35,32 @@ class StackTraceUtils {
     ));
   }
 
-  public static void print(String tag) {
-    List<String> listArray = list();
-    for (String s : listArray) {
-      xLog.d(tag, s);
-    }
-  }
-
   public static List<String> list() {
     StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
-    return list(stackTraceElements, true, StackTraceUtils.class.getName(), true, ignorePackageSet);
+    return list(stackTraceElements);
   }
 
-  public static List<String> list(StackTraceElement[] stackTraceElements, boolean filterPoint,
-      String pointClassName) {
-    return list(stackTraceElements, filterPoint, pointClassName, true, ignorePackageSet);
+  public static List<String> list(Thread thread) {
+    StackTraceElement[] stackTraceElements = thread.getStackTrace();
+    return list(stackTraceElements);
   }
 
-  public static List<String> list(StackTraceElement[] stackTraceElements, boolean filterPoint,
-      String pointClassName, boolean filterPackage, Set<String> ignorePackageSet) {
-    filterPoint = false;
-    filterPackage = false;
+  public static List<String> list(StackTraceElement[] stackTraceElements) {
     List<String> list = new ArrayList<>(stackTraceElements.length);
     StringBuilder stringBuilder = new StringBuilder();
-    boolean hasFindPointClass = !filterPoint;
     for (int i = 0, len = stackTraceElements.length; i < len; i++) {
       StackTraceElement element = stackTraceElements[i];
-      // 看 element 是否需要跳过，应该有些 element 是框架的栈，可以跳过
-      if (!hasFindPointClass) {
-        // 对比是否是 point class, point class 表示是框架切入的点，
-        // 这个切入的点和之前的点都可以跳过，因为是框架调用，开发者不应该看到
-        if (!pointClassName.equals(element.getClassName())) {
-          continue;
-        }
-        // 第一次找到 point class ，标记下，下次就不用再找了
-        hasFindPointClass = true;
-        continue;
-      }
-      String packageName = filterPackageName(stringBuilder, element.getClassName());
-      if (filterPackage && ignorePackageSet.contains(packageName)) {
-        // ignorePackageSet 表示忽略的包名，有些包名是框架库里面的方法调用，可以忽略掉
-        // 因为不影响开发者
-        continue;
-      }
-      list.add(stringStackTraceElement(stackTraceElements[i], stringBuilder));
+      list.add(stringStackTraceElement(element, stringBuilder));
     }
     return list;
   }
 
+  @Deprecated
   private static String filterPackageName(String className) {
     return filterPackageName(new StringBuilder(), className);
   }
 
+  @Deprecated
   private static String filterPackageName(StringBuilder stringBuilder, String className) {
     // 取前面 3 段作为包名，提高后续查询效率
     stringBuilder.setLength(0);
@@ -104,7 +79,7 @@ class StackTraceUtils {
   }
 
   private static String stringStackTraceElement(StackTraceElement element,
-      StringBuilder stringBuilder) {
+                                                StringBuilder stringBuilder) {
     stringBuilder.delete(0, stringBuilder.length());
     stringBuilder.append(element.getClassName())
         .append('.')

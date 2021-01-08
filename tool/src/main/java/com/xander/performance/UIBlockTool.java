@@ -17,9 +17,9 @@ import de.robv.android.xposed.XC_MethodHook;
  * <p>
  * 打印处俩 cpu 和内存的相关状态
  */
-public class UIBlockTool {
+class UIBlockTool {
 
-  private static String TAG = pTool.TAG + "_UIBlockTool";
+  private static String TAG = PERF.TAG + "_UIBlockTool";
 
   static void resetTag(String tag) {
     TAG = tag + "_UIBlockTool";
@@ -45,7 +45,7 @@ public class UIBlockTool {
       return;
     }
     dumpInfoHandler.removeCallbacks(dumpMainThreadRunnable);
-    dumpInfoHandler.postDelayed(dumpMainThreadRunnable, PerformanceConfig.UI_BLOCK_INTERVAL_TIME);
+    dumpInfoHandler.postDelayed(dumpMainThreadRunnable, Config.UI_BLOCK_INTERVAL_TIME);
   }
 
   private static void clearDumpInfo() {
@@ -92,7 +92,7 @@ public class UIBlockTool {
     public void run() {
       Issue uiIssue = new Issue(Issue.TYPE_UI_BLOCK,
           "UI BLOCK",
-          StackTraceUtils.list(Looper.getMainLooper().getThread().getStackTrace(), false, "")
+          StackTraceUtils.list(Looper.getMainLooper().getThread())
       );
       uiIssue.print();
     }

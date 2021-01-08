@@ -1,7 +1,6 @@
 package com.xander.performance;
 
 import android.os.Binder;
-import android.os.Build;
 import android.os.Parcel;
 
 import java.lang.reflect.Field;
@@ -17,9 +16,9 @@ import de.robv.android.xposed.XC_MethodHook;
  * @Description 利用 hook 方法， hook android.os.BinderProxy 类的 transact 方法，
  * 从而获取 ipc 调用链 这样可以知道系统的瓶颈在哪里
  */
-public class IPCTool {
+class IPCTool {
 
-  private static String TAG = pTool.TAG + "_IPCTool";
+  private static String TAG = PERF.TAG + "_IPCTool";
 
 
   static void resetTag(String tag) {
@@ -50,10 +49,19 @@ public class IPCTool {
       // );
       // 除了每次调用 android.os.BinderProxy.transact 方法，
       // Parcel.writeInterfaceToken 方法也会被调用，暂时用这个方法来判断是否有 IPC 调用
-      DexposedBridge.findAndHookMethod(Parcel.class,
-          "writeInterfaceToken",
-          String.class,
-          new WriteInterfaceTokenHook()
+      // 这个实际发现也会报错，在不同的平台上，好像涉及到了 Parcel 实例的数据读写貌似就会出问题
+      // DexposedBridge.findAndHookMethod(
+      //     Parcel.class,
+      //     "writeInterfaceToken",
+      //     String.class,
+      //     new ParcelWriteInterfaceTokenHook()
+      // );
+      // 观察 aidl 生成的代码，发现每次 ipc 调用也会调用 Parcel.readException 方法
+      // 但是感觉会误报  囧
+      DexposedBridge.findAndHookMethod(
+          Parcel.class,
+          "readException",
+          new ParcelReadExceptionHook()
       );
       xLog.e(TAG, "hookWithEpic");
     } catch (Exception e) {
@@ -70,7 +78,7 @@ public class IPCTool {
     }
   }
 
-  static class WriteInterfaceTokenHook extends XC_MethodHook {
+  static class ParcelWriteInterfaceTokenHook extends XC_MethodHook {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
@@ -81,12 +89,22 @@ public class IPCTool {
     }
   }
 
+  static class ParcelReadExceptionHook extends XC_MethodHook {
+    @Override
+    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+      super.beforeHookedMethod(param);
+      Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
+      ipcIssue.print();
+    }
+  }
+
   private static TransactListenerHandler gTransactListenerHandler = null;
 
   private static void hookTransactListener() {
     setTransactListener(null);
     try {
-      DexposedBridge.findAndHookMethod(Class.forName("android.os.BinderProxy"),
+      DexposedBridge.findAndHookMethod(
+          Class.forName("android.os.BinderProxy"),
           "setTransactListener",
           Class.forName("android.os.Binder$ProxyTransactListener"),
           new SetTransactListenerHook()
@@ -114,7 +132,8 @@ public class IPCTool {
       Method setMethod = binderProxy.getDeclaredMethod("setTransactListener", transactListener);
       setMethod.setAccessible(true);
       gTransactListenerHandler.setTarget(target);
-      Object proxyInstance = Proxy.newProxyInstance(Binder.class.getClassLoader(),
+      Object proxyInstance = Proxy.newProxyInstance(
+          Binder.class.getClassLoader(),
           new Class[]{transactListener},
           gTransactListenerHandler
       );

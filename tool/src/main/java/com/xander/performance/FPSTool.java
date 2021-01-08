@@ -16,15 +16,13 @@ import android.view.Choreographer.FrameCallback;
  * <p>
  * 详细的原理可以参考 https://juejin.im/post/6890407553457963022
  */
-public class FPSTool {
+class FPSTool {
 
-  private static String TAG = pTool.TAG + "_FPSTool";
+  private static String TAG = PERF.TAG + "_FPSTool";
 
   private static FrameRunnable frameRunnable = new FrameRunnable();
 
   private static Handler handler = new Handler();
-
-  private static long FPS_INTERVAL_TIME = 1000;
 
   static void resetTag(String tag) {
     TAG = tag + "_FPSTool";
@@ -65,7 +63,7 @@ public class FPSTool {
       }
       count = 0;
       time = curTime;
-      handler.postDelayed(this, FPS_INTERVAL_TIME);
+      handler.postDelayed(this, Config.FPS_INTERVAL_TIME);
     }
   }
 

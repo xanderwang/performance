@@ -7,7 +7,6 @@ import de.robv.android.xposed.XC_MethodHook;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,9 +26,9 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @CreateDate: 2020/4/13 22:30
  * @Version: 1.0
  */
-public class ThreadTool {
+class ThreadTool {
 
-  private static String TAG = pTool.TAG + "_ThreadTool";
+  private static String TAG = PERF.TAG + "_ThreadTool";
 
   static class ThreadIssue extends Issue {
     String key;

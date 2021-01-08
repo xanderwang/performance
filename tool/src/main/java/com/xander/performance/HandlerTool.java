@@ -3,7 +3,6 @@ package com.xander.performance;
 import android.os.Handler;
 import android.os.Message;
 import android.os.MessageQueue;
-import android.os.SystemClock;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -12,16 +11,14 @@ import java.util.HashMap;
 import de.robv.android.xposed.DexposedBridge;
 import de.robv.android.xposed.XC_MethodHook;
 
-import static com.xander.performance.PerformanceConfig.MAX_HANDLER_DISPATCH_MSG_TIME;
-
 /**
  * @author Xander Wang
  * Created on 2021/1/4.
  * @Description //TODO
  */
 @Deprecated
-public class HandlerTool {
-  private static String TAG = pTool.TAG + "_HandlerTool";
+class HandlerTool {
+  private static String TAG = PERF.TAG + "_HandlerTool";
 
   protected static HashMap<Integer, HandlerIssue> issueHashMap = new HashMap<>(32);
 
@@ -144,7 +141,7 @@ public class HandlerTool {
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
       boolean result = isInUse(param.thisObject);
-      xLog.e(TAG, "before MsgMarkInUse: " + param.thisObject + ",result:" +result);
+      xLog.e(TAG, "before MsgMarkInUse: " + param.thisObject + ",result:" + result);
       if (result) {
         xLog.e(TAG, "MsgMarkInUse", new Throwable());
       }
@@ -157,7 +154,7 @@ public class HandlerTool {
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       super.beforeHookedMethod(param);
       boolean result = isInUse(param.thisObject);
-      xLog.e(TAG, "before MsgRecycleUnchecked:" + param.thisObject + ",result:" +result);
+      xLog.e(TAG, "before MsgRecycleUnchecked:" + param.thisObject + ",result:" + result);
       if (result) {
         xLog.e(TAG, "MsgRecycleUnchecked", new Throwable());
       }
@@ -210,7 +207,7 @@ public class HandlerTool {
   static volatile boolean initMethod = false;
 
   private static Boolean isInUse(Object o) {
-    xLog.e(TAG,"isInUse initMethod:" + initMethod + ",method:" + method + ",o:" + o);
+    xLog.e(TAG, "isInUse initMethod:" + initMethod + ",method:" + method + ",o:" + o);
     if (initMethod && null == method) {
       return false;
     }

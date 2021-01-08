@@ -10,9 +10,9 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
-public class DumpTool {
+class DumpTool {
 
-  private static String TAG = pTool.TAG + "_DumpTool";
+  private static String TAG = PERF.TAG + "_DumpTool";
 
   private static LinkedHashSet<DumpSysListener> dumpListeners = new LinkedHashSet<>();
 

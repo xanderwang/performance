@@ -12,7 +12,6 @@ import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
@@ -52,11 +51,11 @@ public class Issue {
   @Deprecated
   public static final int TYPE_HANDLER = 4;
 
-  private static ExecutorService saveService = null;
+  private static ExecutorService taskService = null;
 
   /**
    * 虽然 SimpleDateFormat 是线程不安全的，但是这里只在单线程池里面使用，
-   *
+   * <p>
    * 所以这样写没有太大的问题
    */
   private static SimpleDateFormat dateFormat = new SimpleDateFormat(
@@ -174,14 +173,14 @@ public class Issue {
   }
 
   static ExecutorService executorService() {
-    if (saveService == null) {
+    if (taskService == null) {
       synchronized (Issue.class) {
-        if (saveService == null) {
-          saveService = Executors.newSingleThreadExecutor();
+        if (taskService == null) {
+          taskService = Executors.newSingleThreadExecutor();
         }
       }
     }
-    return saveService;
+    return taskService;
   }
 
   static class SaveIssueTask implements Runnable {
@@ -212,9 +211,9 @@ public class Issue {
 
   private static String ISSUES_CACHE_DIR_NAME = "issues";
   private static File ISSUES_CACHE_DIR;
-  private static IssueSupplier gIssueSupplier;
+  private static PERF.IssueSupplier gIssueSupplier;
 
-  private static final int MAX_BUFFER_SIZE = 20 * 1024 * 1024;
+  private static final int MAX_CACHE_SIZE = 10 * 1024 * 1024;
 
   private static final int BUFFER_SIZE = 1024 * 1024;
   private static File gLogFile;
@@ -267,47 +266,41 @@ public class Issue {
     } catch (IOException e) {
       xLog.e(TAG, "gRandomAccessFile IOException", e);
     }
+    deleteOldFiles();
   }
 
   protected static void initMappedByteBuffer() {
     // 遍历保存文件夹，按照创建时间排序，
-    // 只处理 log 文件，然后最后一个 log 文件是上一次创建的，并初始化全局的 log file
-    // 其他的 log 文件做压缩处理
-    if (saveService == null) {
-      saveService = Executors.newSingleThreadExecutor();
+    // 只处理 log 文件，然后第一个 log 文件是上一次创建的，并初始化全局的 log file
+    // 其他的 log 文件做压缩处理，最后做一次空间清理
+    if (taskService == null) {
+      taskService = Executors.newSingleThreadExecutor();
     }
     File[] files = ISSUES_CACHE_DIR.listFiles();
-    if (null == files) {
+    if (null == files || files.length == 0) {
       createLogFileAndBuffer();
       return;
     }
     Arrays.sort(files, new Comparator<File>() {
       @Override
       public int compare(File o1, File o2) {
-        // 结果为负数表示 o2 排在前面
+        // 结果为负数表示 o2 排在前面，也就是说后创建的文件在前面
         return (int) (o2.lastModified() - o1.lastModified());
       }
     });
-    int fileLength = 0;
-    List<File> waitToZipLogFiles = new ArrayList<>();
+    // List<File> waitToZipLogFiles = new ArrayList<>();
     File lastLogFile = null;
     for (int i = 0; i < files.length; i++) {
       final File file = files[i];
-      if( file.isDirectory() || !file.isFile() ) {
+      if (file.isDirectory() || !file.isFile()) {
         continue;
       }
-      fileLength += file.length();
       if (file.getName().endsWith(".log")) {
         if (lastLogFile == null) {
           lastLogFile = file;
           continue;
         }
-        if (lastLogFile.lastModified() < file.lastModified()) {
-          waitToZipLogFiles.add(lastLogFile);
-          lastLogFile = file;
-        } else {
-          waitToZipLogFiles.add(file);
-        }
+        zipLogFile(file);
       } else if (file.getName().endsWith(".zip")) {
         // 开始上传 log 文件
         executorService().execute(new Runnable() {
@@ -320,14 +313,8 @@ public class Issue {
           }
         });
       }
-      if (fileLength >= gIssueSupplier.maxCacheSize() && file.exists()) {
-        file.delete();
-      }
     }
     xLog.e(TAG, "initMappedByteBuffer lastLogFile:" + lastLogFile);
-    for (int i = 0, len = waitToZipLogFiles.size(); i < len; i++) {
-      zipLogFile(waitToZipLogFiles.get(i));
-    }
     if (null != lastLogFile) {
       // 处理 last log file 为全局的 log file
       try {
@@ -337,7 +324,7 @@ public class Issue {
             .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
         gMappedByteBuffer.get(gLineBytes);
         String gLineString = new String(gLineBytes).trim();
-        int lastPosition = gLineBytesLength;
+        int lastPosition = 0;
         if (!TextUtils.isEmpty(gLineString)) {
           // 新创建出来文件就立刻 crash 了，导致之前没有写入任何内容
           // 写入 line
@@ -353,6 +340,7 @@ public class Issue {
         } else {
           gMappedByteBuffer.position(lastPosition);
         }
+        deleteOldFiles();
       } catch (IOException e) {
         xLog.e(TAG, "initMappedByteBuffer", e);
         createLogFileAndBuffer();
@@ -366,12 +354,12 @@ public class Issue {
     // 压缩 log 文件，成功后删除原始 log 文件
     // 上传成功后删除压缩后的 log file
     xLog.e(TAG, "zipLogFile:" + logFile);
-    executorService().execute(new Runnable() {
+    executorService().submit(new Runnable() {
       @Override
       public void run() {
         File zipLogFile = doZipLogFile(logFile);
-        boolean uploadResult = doUploadZipLogFile(zipLogFile);
-        if (uploadResult) {
+        boolean uploadSuccess = doUploadZipLogFile(zipLogFile);
+        if (uploadSuccess) {
           zipLogFile.delete();
         }
       }
@@ -419,11 +407,43 @@ public class Issue {
     return gIssueSupplier.upLoad(zipLogFile);
   }
 
+  static void deleteOldFiles() {
+    // .log 文件忽略，然后按时间排序，然后删除
+    final long maxCacheSize = gIssueSupplier.maxCacheSize();
+    taskService.submit(new Runnable() {
+      @Override
+      public void run() {
+        File[] files = ISSUES_CACHE_DIR.listFiles();
+        if (null == files || files.length == 0) {
+          return;
+        }
+        Arrays.sort(files, new Comparator<File>() {
+          @Override
+          public int compare(File o1, File o2) {
+            // 结果为负数表示 o2 排在前面，也就是说后创建的文件在前面
+            return (int) (o2.lastModified() - o1.lastModified());
+          }
+        });
+        long fileLength = 0;
+        for (int i = 0; i < files.length; i++) {
+          File file = files[i];
+          if (file.isFile() && file.getName().endsWith("zip")) {
+            if (fileLength >= maxCacheSize) {
+              file.delete();
+            } else {
+              fileLength += file.length();
+            }
+          }
+        }
+      }
+    });
+  }
+
   static void resetTag(String tag) {
     TAG = tag + "_Issue";
   }
 
-  protected static void init(IssueSupplier issueSupplier) {
+  protected static void init(PERF.IssueSupplier issueSupplier) {
     if (null == issueSupplier) {
       issueSupplier = new DefaultIssueSupplier();
     }
@@ -433,10 +453,10 @@ public class Issue {
     xLog.e(TAG, "issues save in:" + ISSUES_CACHE_DIR.getAbsolutePath());
   }
 
-  public static class DefaultIssueSupplier implements IssueSupplier {
+  static class DefaultIssueSupplier implements PERF.IssueSupplier {
     @Override
-    public int maxCacheSize() {
-      return MAX_BUFFER_SIZE;
+    public long maxCacheSize() {
+      return MAX_CACHE_SIZE;
     }
 
     @Override
@@ -448,30 +468,6 @@ public class Issue {
     public boolean upLoad(File issueFile) {
       return false;
     }
-  }
-
-  public interface IssueSupplier {
-    /**
-     * 最大的磁盘缓存空间
-     *
-     * @return
-     */
-    int maxCacheSize();
-
-    /**
-     * 缓存根目录
-     *
-     * @return
-     */
-    File cacheRootDir();
-
-    /**
-     * 开始上传
-     *
-     * @param issueFile
-     * @return true 表示上传成功 false 表示失败
-     */
-    boolean upLoad(File issueFile);
   }
 
 }

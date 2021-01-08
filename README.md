@@ -16,50 +16,46 @@
 
 # 接入指南
 
-1 Project 根目录下的 build.gradle 文件下添加如下内容
+1 在 APP 工程目录下面的 build.gradle 添加如下内容
 
 ```groovy
-buildscript {
-
-  dependencies {
-
-    classpath "com.xander.performance.plugin:performance:0.1.5"
-
-  }
-
-}
-```
-
-2 在 APP 工程目录下面的 build.gradle 添加如下内容
-
-```groovy
-apply plugin: "com.xander.performance.performance"
-
 dependencies {
 
-  debugImplementation "com.xander.performance:p-tool:0.1.5"
-  releaseImplementation "com.xander.performance:p-tool-noop:0.1.5"
+  debugImplementation "com.xander.performance:p-tool:0.1.7"
+  releaseImplementation "com.xander.performance:p-tool-noop:0.1.7"
 }
 ```
 
-3 APP 工程的 Application 类新增类似如下初始化代码
+2 APP 工程的 Application 类新增类似如下初始化代码
 
 ```java
-
     private void initPerformanceTool(Context context) {
-        pTool.init(
-            new pTool.Builder()
-                .globalTag("pTool") // 全局 log 日志 tag ，可以快速过滤日志
-                .checkUIThread(true, 500) // 检查 ui 线程, 超过指定时间未响应，会被认为 ui 线程 delay
-                .checkThread(false) // 检查线程和线程池的创建
-                .checkFps(true) // 检查 Fps
-                .checkIPC(false) // 检查 IPC 调用
-                .checkHandlerCostTime(100) // 检查 Handler 处理 message 的时间, 超过时间指定时间，会被捕获并打印
-                .appContext(context)
-                .build()
-        );
-    }
+        PERF.Builder builder = new PERF.Builder().globalTag("p-tool") // 全局 log 日志 tag ，可以快速过滤日志
+            .checkUI(true, 100) // 检查 ui 线程, 超过指定时间还未结束，会被认为 ui 线程 block
+            .checkThread(false) // 检查线程和线程池的创建
+            .checkFps(false) // 检查 Fps
+            .checkIPC(true) // 检查 IPC 调用
+            .issueSupplier(new PERF.IssueSupplier() {
+                @Override
+                public long maxCacheSize() {
+                    // issue 文件缓存的最大空间
+                    return 1024 * 1024 * 20; 
+                }
 
+                @Override
+                public File cacheRootDir() {
+                    // issue 文件保存的根目录 
+                    return getApplicationContext().getCacheDir(); 
+                }
+
+                @Override
+                public boolean upLoad(File file) {
+                    // 上传入口，返回 true 表示上传成功
+                    return false;
+                }
+            }).build();
+        PERF.init(builder);
+    }
 ```
 
 # 原理介绍

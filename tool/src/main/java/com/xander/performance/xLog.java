@@ -6,7 +6,7 @@ import android.util.Log;
  * @author Xander Wang Created on 2020/7/29.
  * @Description
  */
-public class xLog {
+class xLog {
 
   private static int LOG_LEVEL = Log.DEBUG;
 

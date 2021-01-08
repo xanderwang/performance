@@ -1,8 +1,8 @@
 package com.xander.performance;
 
-import android.content.Context;
+import java.io.File;
 
-public class pTool {
+public class PERF {
 
   public static class Builder {
 
@@ -30,7 +30,7 @@ public class pTool {
       return this;
     }
 
-    public Builder appContext(Context context) {
+    public Builder issueSupplier(IssueSupplier supplier) {
       return this;
     }
 
@@ -42,6 +42,30 @@ public class pTool {
       return this;
     }
 
+  }
+
+  public interface IssueSupplier {
+    /**
+     * 最大的磁盘缓存空间
+     *
+     * @return
+     */
+    long maxCacheSize();
+
+    /**
+     * 缓存根目录
+     *
+     * @return
+     */
+    File cacheRootDir();
+
+    /**
+     * 开始上传
+     *
+     * @param issueFile
+     * @return true 表示上传成功 false 表示失败
+     */
+    boolean upLoad(File issueFile);
   }
 
   public static void init(Builder builder) {

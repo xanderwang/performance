@@ -3,7 +3,9 @@ package com.xander.performance;
 import android.content.Context;
 import android.util.Log;
 
-public class pTool {
+import java.io.File;
+
+public class PERF {
 
   static String TAG = "pTool";
 
@@ -19,7 +21,7 @@ public class pTool {
     /**
      * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
      */
-    long mUIBlockIntervalTime = PerformanceConfig.UI_BLOCK_INTERVAL_TIME;
+    long mUIBlockIntervalTime = Config.UI_BLOCK_INTERVAL_TIME;
     /**
      * 检测线程的 start 方法调用栈
      */
@@ -33,7 +35,7 @@ public class pTool {
      */
     boolean mCheckIPC = false;
 
-    Issue.IssueSupplier issueSupplier = null;
+    IssueSupplier issueSupplier = null;
 
     /**
      * 上下文，用于获取保存文件夹路径
@@ -44,7 +46,7 @@ public class pTool {
     String globalTag = TAG;
 
     public Builder checkUI(boolean check) {
-      return checkUI(check, PerformanceConfig.UI_BLOCK_INTERVAL_TIME);
+      return checkUI(check, Config.UI_BLOCK_INTERVAL_TIME);
     }
 
     public Builder checkUI(boolean check, long blockIntervalTime) {
@@ -73,7 +75,7 @@ public class pTool {
       return this;
     }
 
-    public Builder issueSupplier(Issue.IssueSupplier supplier) {
+    public Builder issueSupplier(IssueSupplier supplier) {
       issueSupplier = supplier;
       return this;
     }
@@ -87,6 +89,30 @@ public class pTool {
       return this;
     }
 
+  }
+
+  public interface IssueSupplier {
+    /**
+     * 最大的磁盘缓存空间
+     *
+     * @return
+     */
+    long maxCacheSize();
+
+    /**
+     * 缓存根目录
+     *
+     * @return
+     */
+    File cacheRootDir();
+
+    /**
+     * 开始上传
+     *
+     * @param issueFile
+     * @return true 表示上传成功 false 表示失败
+     */
+    boolean upLoad(File issueFile);
   }
 
   public static void init(Builder builder) {
@@ -108,7 +134,7 @@ public class pTool {
       ThreadTool.init();
     }
     if (builder.mCheckUI) {
-      PerformanceConfig.UI_BLOCK_INTERVAL_TIME = builder.mUIBlockIntervalTime;
+      Config.UI_BLOCK_INTERVAL_TIME = builder.mUIBlockIntervalTime;
       UIBlockTool.start();
     }
     if (builder.mCheckFPS) {

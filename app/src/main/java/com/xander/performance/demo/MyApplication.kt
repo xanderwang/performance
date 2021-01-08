@@ -2,21 +2,21 @@ package com.xander.performance.demo
 
 import android.app.Application
 import android.content.Context
-import com.xander.performance.Issue.IssueSupplier
-import com.xander.performance.pTool
+import com.xander.performance.PERF.IssueSupplier
+import com.xander.performance.PERF
 import java.io.File
 
 class MyApplication : Application() {
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(base)
-    pTool.init(pTool.Builder()
+    PERF.init(PERF.Builder()
         .globalTag("demo")
         .checkUI(true, 100)
-        .checkThread(false)
-        .checkFps(false)
-        .checkIPC(false)
+        .checkThread(true)
+        .checkFps(true)
+        .checkIPC(true)
         .issueSupplier(object : IssueSupplier {
-          override fun maxCacheSize(): Int {
+          override fun maxCacheSize(): Long {
             return 1024 * 1204 * 20
           }
 
