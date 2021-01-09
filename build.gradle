@@ -50,7 +50,6 @@ buildscript {
     if (rootProject.ext.use_plugin) {
       classpath "${plugin_classpath}"
     }
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlin_version}"
   }
 }
 
