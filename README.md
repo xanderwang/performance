@@ -60,18 +60,21 @@ dependencies {
 
 ## UI 线程 block 检测原理
 
-主要参考了 `AndroidPerformance` 的思路，对 UI 线程的 Looper 里面处理的 Message 进行监控，开始 dispatch 前，
-开启一个延时任务，如果这个 Message 在指定的时间段内完成了处理，在这个 Message 处理完后，就取消之前的计时任务，
-此时说明没有 block 。如果在指定的时间段内没有完成任务，说明此时有 block ，
-同时，这个定时任务就是打印 ui 线程的方法调用栈。
+主要参考了 `AndroidPerformance` 库的思路，对 UI 线程的 `Looper` 里面处理的 `Message` 进行监控。
+在 `Looper` 开始 dispatch 前，开启一个延时任务，如果这个 `Message` 在指定的时间段内完成了处理，
+那么在这个 `Message` 被处理完后，就取消之前的计时任务，说明 UI 线程没有 block 。如果在指定的时间段内没有
+完成任务，说明 UI 线程有 block ，在判断发生 block 的同时，我们可以执行刚才的延时任务，
+如果我们在这个延时任务里面打印 UI 线程的方法调用栈，就可以知道 UI 线程在做什么了。
 
 但是这个方案有一个缺点，就是无法处理 InputManager 的输入事件，比如 TV 端的遥控按键事件。通过按键事件的调用方法
-链进行分析，最终每个按键事件都调用了 DecorView 类的 dispatchKeyEvent 方法，所以这个方法是一个 AOP 的切入点，
-通过 epic 库来 hook 这个方法的调用，在 DecorView 类的 dispatchKeyEvent 方法调用前开启一个延时任务，如果这个
-延时任务在指定的时间段内处理完，就取消这个延时任务，说明没有 block 。如果在指定的时间段内没有执行完，说明此时
-有 block 。就执行这个延时任务，也就是打印 ui 线程的方法调用栈。
+链进行分析，最终每个按键事件都调用了 DecorView 类的 dispatchKeyEvent 方法，而非 Looper 的 dispatch Message
+流程。所以 `AndroidPerformance` 库又一个缺点，就是无法准确监控 TV 端应用的耗时情况。针对 TV 端应用按键处理，
+需要找到一个新的切入点，这个切入点就是刚刚的 DecorView 类的 dispatchKeyEvent 方法。通过 epic 库来 hook 这
+个方法的调用，在 DecorView 类的 dispatchKeyEvent 方法调用前开启一个延时任务，如果这个延时任务在指定的时间段
+内处理完，就取消这个延时任务，说明没有 block 。如果在指定的时间段内没有执行完，说明此时有 block 。就执行这个
+延时任务，也就是打印 UI 线程的方法调用栈。
 
-目前做的还比较粗糙，后续可以考虑参考 AndroidPerformance 打印 CPU 、内存等更多的信息。
+以上就是 UI 线程 block 的检测原理了，目前做的还比较粗糙，后续可以考虑参考 AndroidPerformance 打印 CPU 、内存等更多的信息。
 
 ## App 的 FPS 检测的原理
 
