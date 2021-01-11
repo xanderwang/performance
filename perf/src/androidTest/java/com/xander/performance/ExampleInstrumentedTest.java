@@ -1,4 +1,4 @@
-package com.xander.performance.tool;
+package com.xander.performance;
 
 import android.content.Context;
 import androidx.test.platform.app.InstrumentationRegistry;

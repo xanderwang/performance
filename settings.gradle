@@ -15,5 +15,5 @@ if (composingMode) {
 }
 include ':lib-epic'
 include ':app'
-include ':tool'
-include ':tool-noop'
+include ':perf'
+include ':perf-noop'

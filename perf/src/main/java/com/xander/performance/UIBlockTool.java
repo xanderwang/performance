@@ -27,9 +27,9 @@ class UIBlockTool {
 
   static void start() {
     xLog.e(TAG, "start");
+    startDumpInfoThread();
     hookDecorViewDispatchKeyEvent();
     initMainLooperPrinter();
-    startDumpInfoThread();
   }
 
   private static void startDumpInfoThread() {

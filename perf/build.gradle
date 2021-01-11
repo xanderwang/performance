@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+//apply plugin: 'kotlin-android'
+//apply plugin: 'kotlin-android-extensions'
 apply plugin: "maven"
 apply plugin: 'com.novoda.bintray-release'
 
@@ -12,7 +14,6 @@ android {
     targetSdkVersion _android['targetSdkVersion']
     versionCode 1
     versionName "1.0"
-
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     consumerProguardFiles 'consumer-rules.pro'
   }
@@ -26,11 +27,28 @@ android {
 }
 
 dependencies {
+
   implementation fileTree(dir: 'libs', include: ['*.jar'])
+
   testImplementation 'junit:junit:4.13.1'
   androidTestImplementation 'androidx.test.ext:junit:1.1.2'
   androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
+  def _dependencies = rootProject.ext.dependencies
+  def user_epic = true
+  if (user_epic) {
+    implementation _dependencies['epic']
+    // api project(path: ':lib-epic')
+  } else {
+    implementation _dependencies['epic-xander']
+  }
+  implementation _dependencies['free_reflection']
+
+  // implementation _dependencies['core-ktx']
+  // implementation _dependencies['kotlin-stdlib-jdk']
+
 }
+
 
 // git项目的地址
 def _siteUrl = 'https://github.com/XanderWang/performance'
@@ -38,7 +56,7 @@ def _siteUrl = 'https://github.com/XanderWang/performance'
 def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
 def _group = 'com.xander.performance'
-def _artifactId = 'p-tool-noop'
+def _artifactId = 'perf'
 def _version = rootProject.ext.lib_publish_version
 
 uploadArchives {
@@ -62,7 +80,7 @@ publish {
   artifactId = _artifactId
   publishVersion = _version
   dryRun = false
-  desc = 'a lib for android , it can check app performance, this is a noop lib'
+  desc = 'a lib for android , it can check app performance'
   website = _siteUrl
   bintrayUser = user
   bintrayKey = key
