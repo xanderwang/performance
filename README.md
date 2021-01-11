@@ -1,10 +1,18 @@
-# Performance
+由于本人工作需要，需要解决一些性能问题，虽然有 Profiler 、Systrace 等工具，
+但是无法实时监控，于是计划写一个能实时监控性能的小工具，经过学习大佬们的文章，
+最终完成了这个开源的性能实时检测库。初步能达到预期效果，这里做个记录，算是小结了。
 
-这是一个性能检测库，可以检测以下问题
+开源库的地址是:
+
+> [https://github.com/XanderWang/performance](https://github.com/XanderWang/performance)
+
+幸苦各位能给个小小的 star 鼓励下。
+
+这个性能检测库，可以检测以下问题
 
 - [x] UI 线程 block 检测
 - [x] App 的 FPS 检测
-- [x] 线程和线程池的创建也启动监控
+- [x] 线程和线程池的创建和启动监控
 - [x] IPC(进程间通讯)监控
 
 同时还实现了以下功能
@@ -30,8 +38,8 @@ dependencies {
     private void initPerformanceTool(Context context) {
         PERF.Builder builder = new PERF.Builder().globalTag("p-tool") // 全局 log 日志 tag ，可以快速过滤日志
             .checkUI(true, 100) // 检查 ui 线程, 超过指定时间还未结束，会被认为 ui 线程 block
-            .checkThread(false) // 检查线程和线程池的创建
-            .checkFps(false) // 检查 Fps
+            .checkThread(true) // 检查线程和线程池的创建
+            .checkFps(true) // 检查 Fps
             .checkIPC(true) // 检查 IPC 调用
             .issueSupplier(new PERF.IssueSupplier() {
                 @Override
@@ -60,21 +68,21 @@ dependencies {
 
 ## UI 线程 block 检测原理
 
-主要参考了 `AndroidPerformance` 库的思路，对 UI 线程的 `Looper` 里面处理的 `Message` 进行监控。
+主要参考了 `AndroidPerformanceMonitor` 库的思路，对 UI 线程的 `Looper` 里面处理的 `Message` 进行监控。
 在 `Looper` 开始 dispatch 前，开启一个延时任务，如果这个 `Message` 在指定的时间段内完成了处理，
 那么在这个 `Message` 被处理完后，就取消之前的计时任务，说明 UI 线程没有 block 。如果在指定的时间段内没有
 完成任务，说明 UI 线程有 block ，在判断发生 block 的同时，我们可以执行刚才的延时任务，
 如果我们在这个延时任务里面打印 UI 线程的方法调用栈，就可以知道 UI 线程在做什么了。
 
-但是这个方案有一个缺点，就是无法处理 InputManager 的输入事件，比如 TV 端的遥控按键事件。通过按键事件的调用方法
+但是这个方案有一个缺点，就是无法处理 `InputManager` 的输入事件，比如 TV 端的遥控按键事件。通过按键事件的调用方法
 链进行分析，最终每个按键事件都调用了 `DecorView` 类的 dispatchKeyEvent 方法，而非 `Looper` 的 dispatch Message
-流程。所以 `AndroidPerformance` 库是无法准确监控 TV 端应用的耗时情况。针对 TV 端应用按键处理，
+流程。所以 `AndroidPerformanceMonitor` 库是无法准确监控 TV 端应用的耗时情况。针对 TV 端应用按键处理，
 需要找到一个新的切入点，这个切入点就是刚刚的 `DecorView` 类的 dispatchKeyEvent 方法。通过 `epic` 库来 `hook` 这
 个方法的调用，在 `DecorView` 类的 dispatchKeyEvent 方法调用前开启一个延时任务，如果这个延时任务在指定的时间段
 内处理完，就取消这个延时任务，说明没有 block 。如果在指定的时间段内没有执行完，说明此时有 block 。就执行这个
 延时任务，也就是打印 UI 线程的方法调用栈。
 
-以上就是 UI 线程 block 的检测原理了，目前做的还比较粗糙，后续可以考虑参考 `AndroidPerformance` 打印 CPU 、内存等更多的信息。
+以上就是 UI 线程 block 的检测原理了，目前做的还比较粗糙，后续可以考虑参考 `AndroidPerformanceMonitor` 打印 CPU 、内存等更多的信息。
 
 ## App 的 FPS 检测的原理
 
@@ -103,7 +111,7 @@ MessageQueue 里面放一个一个异步 `Message` 。由于之前 `MessageQueue
 执行完成后，就会执行上面说的 `VSync` 信号计数的任务，所以最后统计到的 `VSync` 信号数量可以认为是某段时间内绘制的帧数。
 然后就可以通过这段时间的长度和 `VSync` 信号数量来计算帧率了。
 
-## 线程和线程池的监控的原理
+## 线程和线程池的创建和启动监控原理
 
 线程和线程池的监控，主要是监控线程和线程池在哪里创建和执行的，如果我们可以知道这些信息，
 我们就可以比较清楚线程和线程池的创建和启动时机是否合理。从而得出优化方案。
@@ -157,4 +165,10 @@ MessageQueue 里面放一个一个异步 `Message` 。由于之前 `MessageQueue
 类型参数的方法的时候，不稳定，会有异常。由于暂时还没能力解决这个异常，只能重新找切入点。最后发现 `AIDL` 生成的代码里面，
 除了调用了 调用 `BinderProxy` 的 `transact` 方法外，还调用了 `Parcel` 的 `readException` 方法，于是决定 `hook` 这个
 方法来切入 `IPC` 调用流程，从而达到 `IPC` 监控的目的。
+
+
+参考资料:
+1. [AndroidPerformanceMonitor](https://github.com/markzhai/AndroidPerformanceMonitor)
+2. [面试官：如何监测应用的 FPS ？](https://juejin.cn/post/6890407553457963022)
+3. [深入探索Android卡顿优化（下）](https://juejin.cn/post/6844904066259091469)
 
