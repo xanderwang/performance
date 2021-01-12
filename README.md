@@ -27,8 +27,8 @@
 
 ```groovy
 dependencies {
-  debugImplementation "com.xander.performance:perf:0.1.8"
-  releaseImplementation "com.xander.performance:perf-noop:0.1.8"
+  debugImplementation "com.xander.performance:perf:0.1.9"
+  releaseImplementation "com.xander.performance:perf-noop:0.1.9"
 }
 ```
 
@@ -168,7 +168,8 @@ MessageQueue 里面放一个一个异步 `Message` 。由于之前 `MessageQueue
 
 
 参考资料:
-1. [AndroidPerformanceMonitor](https://github.com/markzhai/AndroidPerformanceMonitor)
-2. [面试官：如何监测应用的 FPS ？](https://juejin.cn/post/6890407553457963022)
-3. [深入探索Android卡顿优化（下）](https://juejin.cn/post/6844904066259091469)
+1. [epic](https://github.com/tiann/epic)
+2. [AndroidPerformanceMonitor](https://github.com/markzhai/AndroidPerformanceMonitor)
+3. [面试官：如何监测应用的 FPS ？](https://juejin.cn/post/6890407553457963022)
+4. [深入探索Android卡顿优化（下）](https://juejin.cn/post/6844904066259091469)
 

@@ -119,6 +119,9 @@ public class PERF {
     if (builder == null) {
       builder = new Builder();
     }
+    if (null == builder.issueSupplier) {
+      throw new IllegalArgumentException("issue supplier is missing!!!");
+    }
     xLog.setLogLevel(builder.logLevel);
     // Logger.setLogLevel(builder.logLevel);
     TAG = builder.globalTag;

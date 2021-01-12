@@ -120,7 +120,7 @@ class ThreadTool {
       ThreadPoolExecutorConstructorHook constructorHook = new ThreadPoolExecutorConstructorHook();
       Constructor<?>[] constructors = ThreadPoolExecutor.class.getDeclaredConstructors();
       for (int i = 0; i < constructors.length; i++) {
-        if (constructors[i].getParameterTypes().length != 6) {
+        if (constructors[i].getParameterTypes().length > 6) {
           continue;
         }
         DexposedBridge.hookMethod(constructors[i], constructorHook);

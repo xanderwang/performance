@@ -51,7 +51,7 @@ public class Issue {
   @Deprecated
   public static final int TYPE_HANDLER = 4;
 
-  private static ExecutorService taskService = null;
+  private volatile static ExecutorService taskService = Executors.newSingleThreadExecutor();
 
   /**
    * 虽然 SimpleDateFormat 是线程不安全的，但是这里只在单线程池里面使用，
@@ -173,13 +173,14 @@ public class Issue {
   }
 
   static ExecutorService executorService() {
-    if (taskService == null) {
-      synchronized (Issue.class) {
-        if (taskService == null) {
-          taskService = Executors.newSingleThreadExecutor();
-        }
-      }
-    }
+    // 单例好像有点问题，hook 的时候，先直接创建
+    // if (taskService == null) {
+    //   synchronized (Issue.class) {
+    //     if (taskService == null) {
+    //       taskService = Executors.newSingleThreadExecutor();
+    //     }
+    //   }
+    // }
     return taskService;
   }
 
