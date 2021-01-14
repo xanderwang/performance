@@ -27,6 +27,10 @@ public class PERF {
      */
     boolean mCheckThread = false;
     /**
+     * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
+     */
+    long mFPSIntervalTime = Config.FPS_INTERVAL_TIME;
+    /**
      * 是否检测 fps
      */
     boolean mCheckFPS = false;
@@ -36,12 +40,6 @@ public class PERF {
     boolean mCheckIPC = false;
 
     IssueSupplier issueSupplier = null;
-
-    /**
-     * 上下文，用于获取保存文件夹路径
-     */
-    @Deprecated
-    Context appContext = null;
 
     String globalTag = TAG;
 
@@ -62,6 +60,12 @@ public class PERF {
 
     public Builder checkFps(boolean check) {
       mCheckFPS = check;
+      return this;
+    }
+
+    public Builder checkFps(boolean check, long fpsIntervalTime) {
+      mCheckFPS = check;
+      mFPSIntervalTime = fpsIntervalTime;
       return this;
     }
 
@@ -141,6 +145,7 @@ public class PERF {
       UIBlockTool.start();
     }
     if (builder.mCheckFPS) {
+      Config.FPS_INTERVAL_TIME = builder.mFPSIntervalTime;
       FPSTool.start();
     }
     if (builder.mCheckIPC) {
