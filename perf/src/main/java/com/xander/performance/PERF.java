@@ -1,13 +1,12 @@
 package com.xander.performance;
 
-import android.content.Context;
 import android.util.Log;
 
 import java.io.File;
 
 public class PERF {
 
-  static String TAG = "pTool";
+  static String TAG = "PERF";
 
   public static class Builder {
     /**
@@ -38,13 +37,16 @@ public class PERF {
      * 是否需要检测 ipc， 也就是进程间通讯
      */
     boolean mCheckIPC = false;
-
+    /**
+     * Issue 的相关配置
+     */
     IssueSupplier issueSupplier = null;
 
     String globalTag = TAG;
 
     public Builder checkUI(boolean check) {
-      return checkUI(check, Config.UI_BLOCK_INTERVAL_TIME);
+      mCheckUI = check;
+      return this;
     }
 
     public Builder checkUI(boolean check, long blockIntervalTime) {
@@ -134,7 +136,6 @@ public class PERF {
     FPSTool.resetTag(TAG);
     IPCTool.resetTag(TAG);
     UIBlockTool.resetTag(TAG);
-    PerformanceHandler.resetTag(TAG);
     Issue.resetTag(TAG);
     Issue.init(builder.issueSupplier);
     if (builder.mCheckThread) {

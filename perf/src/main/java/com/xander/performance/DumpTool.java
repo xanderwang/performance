@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
+@Deprecated
 class DumpTool {
 
   private static String TAG = PERF.TAG + "_DumpTool";

@@ -12,6 +12,7 @@ import static com.xander.performance.Config.MAX_HANDLER_DISPATCH_MSG_TIME;
  * @author Xander Wang Created on 2020/11/24.
  * @Description
  */
+@Deprecated
 public class PerformanceHandler extends Handler {
 
   private static String TAG = PERF.TAG + "_PerformanceHandler";

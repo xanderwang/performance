@@ -1,9 +1,7 @@
 package com.xander.performance;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @ProjectName: performace
@@ -15,25 +13,6 @@ import java.util.Set;
  * @Version: 1.0
  */
 class StackTraceUtils {
-
-  @Deprecated
-  static Set<String> ignorePackageSet = new HashSet<>();
-
-  static {
-    StringBuilder stringBuilder = new StringBuilder();
-    ignorePackageSet.add(filterPackageName(
-        stringBuilder,
-        com.xander.performance.StackTraceUtils.class.getName()
-    ));
-    ignorePackageSet.add(filterPackageName(
-        stringBuilder,
-        me.weishu.epic.BuildConfig.class.getName()
-    ));
-    ignorePackageSet.add(filterPackageName(
-        stringBuilder,
-        de.robv.android.xposed.DexposedBridge.class.getName()
-    ));
-  }
 
   public static List<String> list() {
     StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
@@ -53,29 +32,6 @@ class StackTraceUtils {
       list.add(stringStackTraceElement(element, stringBuilder));
     }
     return list;
-  }
-
-  @Deprecated
-  private static String filterPackageName(String className) {
-    return filterPackageName(new StringBuilder(), className);
-  }
-
-  @Deprecated
-  private static String filterPackageName(StringBuilder stringBuilder, String className) {
-    // 取前面 3 段作为包名，提高后续查询效率
-    stringBuilder.setLength(0);
-    int count = 0;
-    for (int m = 0, n = className.length(); m < n; m++) {
-      char c = className.charAt(m);
-      if (c == '.') {
-        count++;
-      }
-      if (count == 3) {
-        break;
-      }
-      stringBuilder.append(c);
-    }
-    return stringBuilder.toString();
   }
 
   private static String stringStackTraceElement(StackTraceElement element,

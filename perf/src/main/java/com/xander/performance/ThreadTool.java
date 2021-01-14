@@ -250,11 +250,11 @@ class ThreadTool {
     @Override
     protected void afterHookedMethod(MethodHookParam param) throws Throwable {
       super.afterHookedMethod(param);
-      // 线程 run 方法走完，线程即将被销毁，去除 thread info 相关的记录
+      // 线程 run 方法走完，线程即将被销毁，删除 thread info 相关的记录。
       String threadKey = Integer.toHexString(param.thisObject.hashCode());
       ThreadIssue threadIssues = threadInfoMap.get(threadKey);
       if (null == threadIssues) {
-        xLog.e(TAG, "can not find thread info when thread run !!!!!!");
+        xLog.e(TAG, "can not find thread info after thread run !!!!!!");
         return;
       }
       threadInfoMap.remove(threadKey);
@@ -264,7 +264,7 @@ class ThreadTool {
       }
       ThreadPoolIssue threadPoolIssues = threadPoolInfoMap.get(threadIssues.threadPoolKey);
       if (null == threadPoolIssues) {
-        xLog.e(TAG, "can not find thread pool info !!!!!!");
+        xLog.e(TAG, "can not find thread pool info after thread run  !!!!!!");
         return;
       }
       threadPoolIssues.removeThreadInfo(threadIssues);
