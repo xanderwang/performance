@@ -27,8 +27,8 @@
 
 ```groovy
 dependencies {
-  debugImplementation "com.xander.performance:perf:0.1.10"
-  releaseImplementation "com.xander.performance:perf-noop:0.1.10"
+  debugImplementation "com.xander.performance:perf:0.1.9"
+  releaseImplementation "com.xander.performance:perf-noop:0.1.9"
 }
 ```
 
