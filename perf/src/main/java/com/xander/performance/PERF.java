@@ -12,35 +12,35 @@ public class PERF {
     /**
      * logLevel ，设置可以打印的 log 等级
      */
-    int logLevel = Log.DEBUG;
+    int           logLevel             = Log.DEBUG;
     /**
      * 是否开启检测 UI 线程
      */
-    boolean mCheckUI = false;
+    boolean       mCheckUI             = false;
     /**
      * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
      */
-    long mUIBlockIntervalTime = Config.UI_BLOCK_INTERVAL_TIME;
+    long          mUIBlockIntervalTime = Config.UI_BLOCK_INTERVAL_TIME;
     /**
      * 检测线程的 start 方法调用栈
      */
-    boolean mCheckThread = false;
+    boolean       mCheckThread         = false;
     /**
      * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
      */
-    long mFPSIntervalTime = Config.FPS_INTERVAL_TIME;
+    long          mFPSIntervalTime     = Config.FPS_INTERVAL_TIME;
     /**
      * 是否检测 fps
      */
-    boolean mCheckFPS = false;
+    boolean       mCheckFPS            = false;
     /**
      * 是否需要检测 ipc， 也就是进程间通讯
      */
-    boolean mCheckIPC = false;
+    boolean       mCheckIPC            = false;
     /**
      * Issue 的相关配置
      */
-    IssueSupplier issueSupplier = null;
+    IssueSupplier issueSupplier        = null;
 
     String globalTag = TAG;
 
@@ -132,7 +132,6 @@ public class PERF {
     // Logger.setLogLevel(builder.logLevel);
     TAG = builder.globalTag;
     ThreadTool.resetTag(TAG);
-    DumpTool.resetTag(TAG);
     FPSTool.resetTag(TAG);
     IPCTool.resetTag(TAG);
     UIBlockTool.resetTag(TAG);

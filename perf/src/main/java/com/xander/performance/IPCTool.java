@@ -20,7 +20,6 @@ class IPCTool {
 
   private static String TAG = PERF.TAG + "_IPCTool";
 
-
   static void resetTag(String tag) {
     TAG = tag + "_IPCTool";
   }
@@ -37,7 +36,7 @@ class IPCTool {
 
   private static void hookWithEpic() {
     try {
-      // 这个 hook 会报错，很奇怪
+      // 这个方法  epic hook 的话会报错，很奇怪，理论上是一个比较好的 hook 点
       // DexposedBridge.findAndHookMethod(
       //     Class.forName("android.os.BinderProxy"),
       //     "transact",
@@ -49,15 +48,16 @@ class IPCTool {
       // );
       // 除了每次调用 android.os.BinderProxy.transact 方法，
       // Parcel.writeInterfaceToken 方法也会被调用，暂时用这个方法来判断是否有 IPC 调用
-      // 这个实际发现也会报错，在不同的平台上，好像涉及到了 Parcel 实例的数据读写貌似就会出问题
+      // 这个一开始没问题，但是后面发现有个平台一直有问题，在不同的平台上，好像 epic hook
+      // 如果涉及到了 Parcel 实例的数据读写貌似就会出问题，这个方案暂时舍弃
       // DexposedBridge.findAndHookMethod(
       //     Parcel.class,
       //     "writeInterfaceToken",
       //     String.class,
       //     new ParcelWriteInterfaceTokenHook()
       // );
-      // 观察 aidl 生成的代码，发现每次 ipc 调用也会调用 Parcel.readException 方法
-      // 但是感觉会误报  囧
+      // 观察 AIDL 生成的代码，发现每次 IPC 调用也会调用 Parcel.readException 方法
+      // 故初步用这个方法作为切入点来监控系统的 IPC 调用情况
       DexposedBridge.findAndHookMethod(
           Parcel.class,
           "readException",
@@ -65,7 +65,7 @@ class IPCTool {
       );
       xLog.e(TAG, "hookWithEpic");
     } catch (Exception e) {
-      xLog.e(TAG, "hookWithEpic", e);
+      xLog.e(TAG, "hookWithEpic Exception", e);
     }
   }
 
@@ -192,7 +192,9 @@ class IPCTool {
 
     @Override
     protected void buildOtherString(StringBuilder sb) {
-      sb.append("ipc interface: ").append(ipcInterface).append('\n');
+      if (null != ipcInterface) {
+        sb.append("ipc interface: ").append(ipcInterface).append('\n');
+      }
     }
   }
 

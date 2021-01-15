@@ -22,6 +22,10 @@ public class PERF {
       return this;
     }
 
+    public Builder checkFps(boolean check, long fpsIntervalTime) {
+      return this;
+    }
+
     public Builder checkIPC(boolean check) {
       return this;
     }

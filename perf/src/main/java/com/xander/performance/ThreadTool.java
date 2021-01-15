@@ -4,7 +4,6 @@ import android.text.TextUtils;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -18,10 +17,11 @@ import de.robv.android.xposed.XC_MethodHook;
  * @ClassName: ThreadTool
  * @Description: 通过 hook 类的方法来监听线程的创建、启动，线程池的创建和执行任务
  * <p>
- * 监听线程的创建、启动：主要原理就是通过 hook ，在调用线程 start 方法的时候，保存调用栈。
- * 监听线程池的创建、启动: 主要原理就是通过 hook，在线程池构造方法里保存调用栈，然后保存调用栈，
- * 在线程池执行任务的时候，保存任务和线程池的关联，任务和 Worker 的关联，如果线程池需要创建线程了，
- * 根据线程和任务的关系，从而获取线程和线程池的关联。
+ * 监听线程的创建、启动：主要原理就是通过 hook ，在调用线程构造方法和 start 方法的时候，保存调用栈。
+ * 监听线程池的创建: 主要原理就是通过 hook，在线程池构造方法被调用的时候，保存调用栈。
+ * 建立线程池和线程池创建的线程的关联：查阅源码，线程池创建线程，实际是通过其内部类 Worker 来创建的，
+ * 由于是内部类，所以实际 Worker 类实例和线程池的实例可以建立一个关联，Worker 创建线程的时候，也有一个关联，
+ * 最后通过 Worker 这个纽带，就可以把线程池和线程池创建的线程关联起来监控。
  * @Author: Xander
  * @CreateDate: 2020/4/13 22:30
  * @Version: 1.0
@@ -31,11 +31,11 @@ class ThreadTool {
   private static String TAG = PERF.TAG + "_ThreadTool";
 
   static class ThreadIssue extends Issue {
-    String key;
-    String threadPoolKey;
-    boolean lostCreateTrace = false;
-    List<String> createTrace;
-    List<String> startTrace;
+    String       key; // 线程 key ，线程实例的 hashCode
+    String       threadPoolKey; // 与之对应的线程池的 key ,如果不是线程池创建的线程，取值为 null
+    boolean      lostCreateTrace = false; // 是否丢失创建实例调用栈，如果库初始化比较晚，可能会出现没有创建实例调用栈
+    List<String> createTrace; // 创建实例调用栈
+    List<String> startTrace;  // 启动线程调用栈
 
     public ThreadIssue(String msg) {
       super(Issue.TYPE_THREAD, msg, null);
@@ -53,10 +53,10 @@ class ThreadTool {
   }
 
   static class ThreadPoolIssue extends Issue {
-    String key;
-    boolean lostCreateTrace = false;
-    List<String> createTrace;
-    List<ThreadIssue> childThreadList = new ArrayList<>();
+    String            key; // 线程池 key ，线程池实例的 hashCode
+    boolean           lostCreateTrace = false; // 是否丢失创建线程池实例的调用栈，如果库初始化比较晚，可能会出现没有创建实例调用栈
+    List<String>      createTrace; // 创建线程池实例的调用栈
+    List<ThreadIssue> childThreadList = new ArrayList<>(); // 创建的线程，如果线程销毁后，会自动删除
 
     public ThreadPoolIssue(String msg) {
       super(Issue.TYPE_THREAD, msg, null);
@@ -67,6 +67,7 @@ class ThreadTool {
       if (!lostCreateTrace) {
         sb.append("create trace:\n");
       } else {
+        // 这种情况下，用某个线程的创建栈来代替，尽量输出一些信息
         sb.append("one thread create trace:\n");
       }
       buildListString(sb, createTrace);
@@ -126,19 +127,18 @@ class ThreadTool {
         DexposedBridge.hookMethod(constructors[i], constructorHook);
       }
 
-      // 根据构造方法里面的 runnable 是否为 Worker 可知是否为线程池创建的线程。
-      DexposedBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
-      DexposedBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
-      DexposedBridge.findAndHookMethod(Thread.class, "run", new ThreadRunHook());
-
       // java.util.concurrent.ThreadPoolExecutor$Worker 是一个内部类，
-      // 所以构造方法第一参数就是 ThreadPoolExecutor, 所以构造方法可以将 worker 和 线程池绑定
-      // 同时，run 方法执行完，表示线程池里面的一个线程执行完。可以考虑在里面做一些清理工作
+      // 所以构造方法第一参数就是 ThreadPoolExecutor, 所以构造方法可以将 Worker 和 线程池绑定
       DexposedBridge.hookAllConstructors(
           Class.forName("java.util.concurrent.ThreadPoolExecutor$Worker"),
           new WorkerConstructorHook()
       );
 
+      // 根据构造方法里面的 runnable 是否为 Worker 可知是否为线程池创建的线程。
+      DexposedBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
+      DexposedBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
+      // run 方法执行完，表示线程执行完。可以考虑在里面做一些清理工作
+      DexposedBridge.findAndHookMethod(Thread.class, "run", new ThreadRunHook());
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -192,14 +192,15 @@ class ThreadTool {
       if (hasRunnable) {
         Object runnable = param.args[0] instanceof Runnable ? param.args[0] : param.args[1];
         // xLog.e(TAG, "ThreadConstructorHook hasRunnable:" + runnable.getClass().getName());
-        if ("java.util.concurrent.ThreadPoolExecutor$Worker".equals(runnable.getClass().getName())) {
+        if ("java.util.concurrent.ThreadPoolExecutor$Worker".equals(runnable.getClass()
+            .getName())) {
           workerKey = Integer.toHexString(runnable.hashCode());
         }
       }
       // xLog.e(TAG, "ThreadConstructorHook workerKey:" + workerKey);
       // xLog.e(TAG, "ThreadConstructorHook workerThreadPoolMap.containsKey(workerKey):" + workerThreadPoolMap.containsKey(workerKey));
       if (workerThreadPoolMap.containsKey(workerKey)) {
-        // 线程创建的线程
+        // 线程池创建的线程
         String threadPoolKey = workerThreadPoolMap.get(workerKey);
         ThreadPoolIssue threadPoolIssues = threadPoolInfoMap.get(threadPoolKey);
         if (threadPoolIssues == null) {

@@ -1,6 +1,7 @@
 由于本人工作需要，需要解决一些性能问题，虽然有 Profiler 、Systrace 等工具，
-但是无法实时监控，于是计划写一个能实时监控性能的小工具，经过学习大佬们的文章，
-最终完成了这个开源的性能实时检测库。初步能达到预期效果，这里做个记录，算是小结了。
+但是无法实时监控，多少有些不方便，于是计划写一个能实时监控性能的小工具，
+经过学习大佬们的文章，最终完成了这个开源的性能实时检测库。初步能达到预期效果，
+这里做个记录，算是小结了。
 
 开源库的地址是:
 
@@ -8,18 +9,18 @@
 
 幸苦各位能给个小小的 star 鼓励下。
 
-这个性能检测库，可以检测以下问题
+这个性能检测库，可以检测以下问题：
 
 - [x] UI 线程 block 检测
 - [x] App 的 FPS 检测
-- [x] 线程和线程池的创建和启动监控
+- [x] 线程的创建和启动监控以及线程池的创建监控
 - [x] IPC(进程间通讯)监控
 
 同时还实现了以下功能
 
-- [x] 实时通过 logcat 打印问题
-- [x] 高效保存检测信息到本地
-- [x] 提供上报到指定服务器接口
+- [x] 实时通过 logcat 打印检测到的问题
+- [x] 保存检测到的信息到文件
+- [x] 提供上报信息文件接口
 
 # 接入指南
 
@@ -27,8 +28,8 @@
 
 ```groovy
 dependencies {
-  debugImplementation "com.xander.performance:perf:0.1.9"
-  releaseImplementation "com.xander.performance:perf-noop:0.1.9"
+  debugImplementation "com.xander.performance:perf:0.1.10"
+  releaseImplementation "com.xander.performance:perf-noop:0.1.10"
 }
 ```
 
@@ -36,10 +37,11 @@ dependencies {
 
 ```java
     private void initPerformanceTool(Context context) {
-        PERF.Builder builder = new PERF.Builder().globalTag("p-tool") // 全局 log 日志 tag ，可以快速过滤日志
-            .checkUI(true, 100) // 检查 ui 线程, 超过指定时间还未结束，会被认为 ui 线程 block，时间单位为 ms
+        PERF.Builder builder = new PERF.Builder()
+            .globalTag("perf") // 检测库的全局 logcat 日志 tag ，设置后可以快速过滤日志，默认是 PERF
+            .checkUI(true, 100) // 检查 UI 线程, 超过指定时间还未结束，会被认为 ui 线程 block，时间单位为 ms
             .checkThread(true) // 检查线程和线程池的创建
-            .checkFps(true) // 检查 Fps
+            .checkFps(true) // 检查 App 的 FPS，还可以额外指定检测时间间隔，时间间隔单位为 ms
             .checkIPC(true) // 检查 IPC 调用
             .issueSupplier(new PERF.IssueSupplier() {
                 @Override
@@ -64,15 +66,20 @@ dependencies {
     }
 ```
 
-# 更新记录
+# 主要更新记录
 
+- 0.1.10 FPS 的检测时间间隔从默认 2s 调整为 1s，同时支持自定义时间间隔。
 - 0.1.9  优化线程池创建的监控。
 - 0.1.8  初版发布，完成基本的功能。
-
 
 不建议直接在线上使用这个库，在编写这个库，测试 hook 的时候，在不同的机器和 rom 上，会有不同的问题，
 这里建议先只在线下自测使用这个检测库。
 
+# 后期计划
+
+- IPC 的监控目前只能监控调用，无法检测 IPC 调用耗时时间，后期计划按照耗时时间来检测。
+- Issue 保存到文件的逻辑优化，目前写的自我感觉不是很好，后面计划优化下。
+- 暂时发现不同的平台多少有些问题，故不建议线上环境直接上线，后期希望能优化下，做出可以上线的版本。
 
 # 原理介绍
 
@@ -157,7 +164,7 @@ com.xander.performace.demo W/demo_FPSTool: APP FPS is: 60 Hz
 com.xander.performace.demo W/demo_FPSTool: APP FPS is: 60 Hz
 ```
 
-## 线程和线程池的创建和启动监控原理
+## 线程的创建和启动监控以及线程池的创建监控
 
 线程和线程池的监控，主要是监控线程和线程池在哪里创建和执行的，如果我们可以知道这些信息，
 我们就可以比较清楚线程和线程池的创建和启动时机是否合理。从而得出优化方案。

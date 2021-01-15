@@ -55,8 +55,8 @@ class UIBlockTool {
     dumpInfoHandler.removeCallbacks(dumpMainThreadRunnable);
   }
 
-  private static DumpInfoThread dumpInfoThread = new DumpInfoThread("DumpInfoThread");
-  private static Handler dumpInfoHandler;
+  private static DumpInfoThread   dumpInfoThread         = new DumpInfoThread("DumpInfoThread");
+  private static Handler          dumpInfoHandler;
   private static DumpInfoRunnable dumpMainThreadRunnable = new DumpInfoRunnable();
 
   private static class WatcherMainLooperPrinter implements Printer {
@@ -70,6 +70,9 @@ class UIBlockTool {
     }
   }
 
+  /**
+   * 后台异步 dump info 线程，利用 Looper 机制，做延时任务处理。
+   */
   private static class DumpInfoThread extends Thread {
     DumpInfoThread(String name) {
       super(name);
@@ -89,7 +92,8 @@ class UIBlockTool {
   private static class DumpInfoRunnable implements Runnable {
     @Override
     public void run() {
-      Issue uiIssue = new Issue(Issue.TYPE_UI_BLOCK,
+      Issue uiIssue = new Issue(
+          Issue.TYPE_UI_BLOCK,
           "UI BLOCK",
           StackTraceUtils.list(Looper.getMainLooper().getThread())
       );
@@ -98,27 +102,27 @@ class UIBlockTool {
   }
 
   /**
-   * 如果是 TV 设备，用遥控或者键盘操作的话，不会走到 Handler 的 dispatchMessage 方法
+   * 如果是 TV 设备，用遥控或者键盘操作的话，不会走 Looper loop Message 方法
    * <p>
-   * 而是会走 InputManager 里面的方法，最终调用 DecorView 的 dispatchKeyEvent 方法
+   * 而是会走 InputManager 里面的方法，InputManager 最终调用 DecorView 的 dispatchKeyEvent 方法
    * <p>
-   * 这里通过 epic 库来 hook dispatchKeyEvent 方法的调用链来监控 block
+   * 这里通过 epic 库来 hook DecorView 的 dispatchKeyEvent 方法的来监控 UI block
    */
   private static void hookDecorViewDispatchKeyEvent() {
     try {
       Class decorViewClass = Class.forName("com.android.internal.policy.DecorView");
-      DexposedBridge.findAndHookMethod(decorViewClass,
+      DexposedBridge.findAndHookMethod(
+          decorViewClass,
           "dispatchKeyEvent",
           KeyEvent.class,
           new DecorViewDispatchKeyEventHook()
       );
     } catch (Exception e) {
-      e.printStackTrace();
       xLog.e(TAG, "hookDecorViewDispatchKeyEvent", e);
     }
   }
 
-  static class DecorViewDispatchKeyEventHook extends XC_MethodHook {
+  private static class DecorViewDispatchKeyEventHook extends XC_MethodHook {
     @Override
     protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
       startDumpInfo();

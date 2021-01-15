@@ -28,28 +28,23 @@ import java.util.zip.ZipOutputStream;
  */
 public class Issue {
 
-  private static String TAG = "_Issue";
+  private static      String TAG           = "_Issue";
   /**
    * 检测 UI block
    */
-  public static final int TYPE_UI_BLOCK = 0;
+  public static final int    TYPE_UI_BLOCK = 0;
   /**
    * 检测 FPS
    */
-  public static final int TYPE_FPS = 1;
+  public static final int    TYPE_FPS      = 1;
   /**
    * 检测 IPC，进程间通讯
    */
-  public static final int TYPE_IPC = 2;
+  public static final int    TYPE_IPC      = 2;
   /**
    * 检测线程的创建
    */
-  public static final int TYPE_THREAD = 3;
-  /**
-   * 检测主线程耗时任务，和 ANR 的检测有些区别
-   */
-  @Deprecated
-  public static final int TYPE_HANDLER = 4;
+  public static final int    TYPE_THREAD   = 3;
 
   private volatile static ExecutorService taskService = Executors.newSingleThreadExecutor();
 
@@ -66,11 +61,11 @@ public class Issue {
   /**
    * 类型
    */
-  protected int type = -1;
+  protected int    type       = -1;
   /**
    * 消息
    */
-  protected String msg = "";
+  protected String msg        = "";
   /**
    * 发生的时间
    */
@@ -210,20 +205,20 @@ public class Issue {
     }
   }
 
-  private static String ISSUES_CACHE_DIR_NAME = "issues";
-  private static File ISSUES_CACHE_DIR;
+  private static String             ISSUES_CACHE_DIR_NAME = "issues";
+  private static File               ISSUES_CACHE_DIR;
   private static PERF.IssueSupplier gIssueSupplier;
 
   private static final int MAX_CACHE_SIZE = 10 * 1024 * 1024;
 
-  private static final int BUFFER_SIZE = 1024 * 1024;
-  private static File gLogFile;
-  private static RandomAccessFile gRandomAccessFile;
-  private static MappedByteBuffer gMappedByteBuffer;
-  private static byte[] gLineBytes = String.valueOf(BUFFER_SIZE).getBytes();
+  private static final int              BUFFER_SIZE      = 1024 * 1024;
+  private static       File             gLogFile;
+  private static       RandomAccessFile gRandomAccessFile;
+  private static       MappedByteBuffer gMappedByteBuffer;
+  private static       byte[]           gLineBytes       = String.valueOf(BUFFER_SIZE).getBytes();
   // log 文件的第一行固定为文件最后字节的位置
-  private static final int gLineBytesLength = gLineBytes.length;
-  private static final String LINE_FORMAT = "%-" + gLineBytesLength + "d";
+  private static final int              gLineBytesLength = gLineBytes.length;
+  private static final String           LINE_FORMAT      = "%-" + gLineBytesLength + "d";
 
   protected static MappedByteBuffer gMappedByteBuffer() {
     if (null == gMappedByteBuffer) {
