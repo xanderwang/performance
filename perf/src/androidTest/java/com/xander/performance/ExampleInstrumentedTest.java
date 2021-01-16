@@ -19,6 +19,6 @@ import static org.junit.Assert.*;
     // Context of the app under test.
     Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-    assertEquals("com.xander.performace.tool.test", appContext.getPackageName());
+    assertEquals("com.xander.performace", appContext.getPackageName());
   }
 }
