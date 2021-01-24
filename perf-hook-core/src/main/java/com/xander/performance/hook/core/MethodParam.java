@@ -2,7 +2,7 @@ package com.xander.performance.hook.core;
 
 import java.lang.reflect.Member;
 
-public interface IMethodParam {
+public interface MethodParam {
 
   Object getResult();
 

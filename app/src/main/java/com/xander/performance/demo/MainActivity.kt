@@ -9,9 +9,9 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.xander.asu.aLog
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
@@ -23,42 +23,41 @@ class MainActivity : AppCompatActivity() {
   }
 
   fun testThread(v: View) {
-    Log.e(TAG, "testThread thread name:${Thread.currentThread().name}")
+    aLog.e(TAG, "testThread thread name:${Thread.currentThread().name}")
     thread(name = "test-thread", start = true) {
-      Log.d(TAG, Thread.currentThread().name)
+      aLog.d(TAG, Thread.currentThread().name)
       Thread.sleep(3000)
     }
   }
 
   fun testThreadPool(v: View) {
-    Log.e(TAG, "testThreadPool thread name:${Thread.currentThread().name}")
+    aLog.e(TAG, "testThreadPool thread name:${Thread.currentThread().name}")
     // threadPool.submit {
-    //   Log.d(TAG, "testThreadPool")
+    //   aLog.d(TAG, "testThreadPool")
     // }
     Executors.newSingleThreadExecutor().execute {
-      Log.d(TAG, "execute!!!")
+      aLog.d(TAG, "execute!!!")
     }
-
     // Executors.newFixedThreadPool(3, Executors.defaultThreadFactory()).execute {
-    //   Log.d(TAG, "execute!!!")
+    //   aLog.d(TAG, "execute!!!")
     // }
   }
 
   fun testANR(v: View) {
-    Log.d(TAG, "testANR thread name:${Thread.currentThread().name}")
+    aLog.d(TAG, "testANR thread name:${Thread.currentThread().name}")
     Thread.sleep(1000)
   }
 
   fun testIPC(v: View) {
-    Log.d(TAG, "testIPC thread name:${Thread.currentThread().name}")
+    aLog.d(TAG, "testIPC thread name:${Thread.currentThread().name}")
     val ams: ActivityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
     ams.runningAppProcesses.forEach {
-      Log.d(TAG, "runningAppProcesses: ${it.processName}")
+      aLog.d(TAG, "runningAppProcesses: ${it.processName}")
     }
   }
 
   fun testFps(v: View) {
-    Log.d(TAG, "testFps thread name:${Thread.currentThread().name}")
+    aLog.d(TAG, "testFps thread name:${Thread.currentThread().name}")
     Thread.sleep(200)
   }
 
@@ -69,13 +68,13 @@ class MainActivity : AppCompatActivity() {
   private val handler = Handler()
 
   fun testHandler(v: View) {
-    Log.d(TAG, "testHandler thread name:${Thread.currentThread().name}")
+    aLog.d(TAG, "testHandler thread name:${Thread.currentThread().name}")
     lazyHandler.post {
-      Log.d(TAG, "do lazyHandler post msg !!!")
+      aLog.d(TAG, "do lazyHandler post msg !!!")
       Thread.sleep(1000)
     }
     handler.post {
-      Log.d(TAG, "do handler post msg !!!")
+      aLog.d(TAG, "do handler post msg !!!")
       Thread.sleep(1000)
     }
   }
@@ -84,8 +83,8 @@ class MainActivity : AppCompatActivity() {
 
   private val serviceConnection: ServiceConnection = object : ServiceConnection {
     override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-      Log.e(TAG, "onServiceConnected:$service")
-      Log.e(TAG, "onServiceConnected", IllegalAccessException())
+      aLog.e(TAG, "onServiceConnected:$service")
+      aLog.e(TAG, "onServiceConnected", IllegalAccessException())
       iDemoService = IDemoService.Stub.asInterface(service)
     }
 
@@ -102,7 +101,7 @@ class MainActivity : AppCompatActivity() {
   }
 
   companion object {
-    private val TAG by lazy { "demo_" }
+    private const val TAG = "MainActivity"
   }
 
 }

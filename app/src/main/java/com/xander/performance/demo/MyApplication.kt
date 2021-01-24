@@ -10,7 +10,7 @@ class MyApplication : Application() {
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(base)
     PERF.init(PERF.Builder()
-        .globalTag("demo")
+        .globalTag("test_perf")
         .checkUI(true, 100)
         .checkThread(true)
         .checkFps(true)

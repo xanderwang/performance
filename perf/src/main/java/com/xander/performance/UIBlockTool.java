@@ -5,8 +5,11 @@ import android.os.Looper;
 import android.util.Printer;
 import android.view.KeyEvent;
 
-import de.robv.android.xposed.DexposedBridge;
-import de.robv.android.xposed.XC_MethodHook;
+import com.xander.asu.aLog;
+import com.xander.performance.hook.HookBridge;
+import com.xander.performance.hook.core.MethodParam;
+import com.xander.performance.hook.core.MethodHook;
+
 
 /**
  * @author xander
@@ -19,14 +22,10 @@ import de.robv.android.xposed.XC_MethodHook;
  */
 class UIBlockTool {
 
-  private static String TAG = PERF.TAG + "_UIBlockTool";
-
-  static void resetTag(String tag) {
-    TAG = tag + "_UIBlockTool";
-  }
+  private static final String TAG = "UIBlockTool";
 
   static void start() {
-    xLog.e(TAG, "start");
+    aLog.e(TAG, "start");
     startDumpInfoThread();
     hookDecorViewDispatchKeyEvent();
     initMainLooperPrinter();
@@ -92,8 +91,7 @@ class UIBlockTool {
   private static class DumpInfoRunnable implements Runnable {
     @Override
     public void run() {
-      Issue uiIssue = new Issue(
-          Issue.TYPE_UI_BLOCK,
+      Issue uiIssue = new Issue(Issue.TYPE_UI_BLOCK,
           "UI BLOCK",
           StackTraceUtils.list(Looper.getMainLooper().getThread())
       );
@@ -111,26 +109,27 @@ class UIBlockTool {
   private static void hookDecorViewDispatchKeyEvent() {
     try {
       Class decorViewClass = Class.forName("com.android.internal.policy.DecorView");
-      DexposedBridge.findAndHookMethod(
-          decorViewClass,
+      HookBridge.findAndHookMethod(decorViewClass,
           "dispatchKeyEvent",
           KeyEvent.class,
           new DecorViewDispatchKeyEventHook()
       );
     } catch (Exception e) {
-      xLog.e(TAG, "hookDecorViewDispatchKeyEvent", e);
+      aLog.e(TAG, "hookDecorViewDispatchKeyEvent", e);
     }
   }
 
-  private static class DecorViewDispatchKeyEventHook extends XC_MethodHook {
+  private static class DecorViewDispatchKeyEventHook extends MethodHook {
     @Override
-    protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+    public void beforeHookedMethod(MethodParam param) throws Throwable {
+      super.beforeHookedMethod(param);
       startDumpInfo();
     }
 
     @Override
-    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+    public void afterHookedMethod(MethodParam param) throws Throwable {
       clearDumpInfo();
+      super.afterHookedMethod(param);
     }
   }
 

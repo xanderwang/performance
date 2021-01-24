@@ -1,4 +1,4 @@
-package com.xander.performance.hook.epic;
+package com.xander.performance.hook.sandhook;
 
 import com.xander.performance.hook.core.MethodParam;
 
@@ -6,11 +6,11 @@ import java.lang.reflect.Member;
 
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam;
 
-public class MethodHookParamEpic implements MethodParam {
+public class MethodSandHookParam implements MethodParam {
 
   MethodHookParam methodHookParam;
 
-  public MethodHookParamEpic() {
+  public MethodSandHookParam() {
   }
 
   public void setMethodHookParam(MethodHookParam methodHookParam) {

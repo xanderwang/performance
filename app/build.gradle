@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-// apply plugin: 'kotlin-android-extensions'
 
 if (rootProject.ext.use_plugin) {
   apply plugin: "${rootProject.ext.plugin_apply_name}"
@@ -66,8 +65,11 @@ dependencies {
   implementation _dependencies['kotlinx-coroutines-core']
   implementation _dependencies['kotlinx-coroutines-android']
 
+  implementation _dependencies['asu']
+
   debugImplementation _dependencies['perf']
   releaseImplementation _dependencies['perf-noop']
-  implementation _dependencies['perf-hook-epic']
+  // implementation _dependencies['perf-hook-epic']
+  implementation _dependencies['perf-hook-sandhook']
 
 }

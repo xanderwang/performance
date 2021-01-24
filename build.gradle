@@ -81,11 +81,11 @@ allprojects {
       if (rootProject.ext.use_local_lib) {
         substitute module('com.xander.performance:perf') with project(':perf')
         substitute module('com.xander.performance:perf-noop') with project(':perf-noop')
-        // substitute module('me.weishu.epic:epic-xander') with project(':lib-epic')
       }
       if (rootProject.ext.use_local_hook_lib) {
         substitute module('com.xander.performance:perf-hook-core') with project(':perf-hook-core')
         substitute module('com.xander.performance:perf-hook-epic') with project(':perf-hook-epic')
+        substitute module('com.xander.performance:perf-hook-sandhook') with project(':perf-hook-sandhook')
         substitute module('com.xander.performance:perf-hook') with project(':perf-hook')
       }
       // Substitute one module dependency for another

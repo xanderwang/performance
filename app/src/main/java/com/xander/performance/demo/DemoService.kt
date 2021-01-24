@@ -1,36 +1,32 @@
-package com.xander.performance.demo;
+package com.xander.performance.demo
 
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
-import android.os.RemoteException;
-import android.util.Log;
-
-import androidx.annotation.Nullable;
+import android.app.Service
+import android.content.Intent
+import android.os.IBinder
+import android.os.RemoteException
+import com.xander.asu.aLog
 
 /**
  * @author Xander Wang
  * Created on 2020/12/24.
  * @Description //TODO
  */
-public class DemoService extends Service {
-
-  static class MyDemoServer extends IDemoService.Stub {
-    @Override
-    public void demo() throws RemoteException {
-
+class DemoService : Service() {
+  internal class MyDemoServer : IDemoService.Stub() {
+    @Throws(RemoteException::class)
+    override fun demo() {
     }
   }
 
-  private MyDemoServer myDemoServer = new MyDemoServer();
+  private val myDemoServer = MyDemoServer()
+  override fun onBind(intent: Intent): IBinder? {
+    aLog.e(TAG, "DemoService:$this")
+    aLog.e(TAG, "DemoService MyDemoServer:$myDemoServer")
+    aLog.e(TAG, "DemoService MyDemoServer", IllegalAccessException())
+    return myDemoServer
+  }
 
-
-  @Nullable
-  @Override
-  public IBinder onBind(Intent intent) {
-    Log.e("xxx","DemoService:" + this);
-    Log.e("xxx","DemoService MyDemoServer:" + myDemoServer);
-    Log.e("xxx","DemoService MyDemoServer", new IllegalAccessException());
-    return myDemoServer;
+  companion object {
+    private const val TAG = "DemoService"
   }
 }

@@ -9,6 +9,4 @@ public class aConstants {
 
   protected static String tagFormat = "%s_%s";
 
-
-
 }

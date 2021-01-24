@@ -4,6 +4,8 @@ import android.os.Environment;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
+import com.xander.asu.aLog;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,7 +30,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class Issue {
 
-  private static      String TAG           = "_Issue";
+  private static      String TAG           = "Issue";
   /**
    * 检测 UI block
    */
@@ -53,10 +55,7 @@ public class Issue {
    * <p>
    * 所以这样写没有太大的问题
    */
-  private static SimpleDateFormat dateFormat = new SimpleDateFormat(
-      "yyyy-MM-dd HH:mm:ss",
-      Locale.US
-  );
+  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 
   /**
    * 类型
@@ -155,7 +154,7 @@ public class Issue {
   }
 
   protected void log(String tag, String msg) {
-    xLog.w(tag, msg);
+    aLog.w(tag, msg);
   }
 
   public void print() {
@@ -228,7 +227,7 @@ public class Issue {
   }
 
   protected static void createLogFileAndBuffer() {
-    xLog.e(TAG, "createLogFileAndBuffer gBuffer:" + gMappedByteBuffer);
+    aLog.e(TAG, "createLogFileAndBuffer gBuffer:" + gMappedByteBuffer);
     if (null != gMappedByteBuffer) {
       gMappedByteBuffer.force();
       gMappedByteBuffer = null;
@@ -237,7 +236,7 @@ public class Issue {
       try {
         gRandomAccessFile.close();
       } catch (IOException e) {
-        xLog.e(TAG, "gRandomAccessFile IOException", e);
+        aLog.e(TAG, "gRandomAccessFile IOException", e);
       }
       gRandomAccessFile = null;
     }
@@ -252,15 +251,14 @@ public class Issue {
     }
     try {
       gLogFile.createNewFile();
-      xLog.e(TAG, "create log file :" + gLogFile.getAbsolutePath());
+      aLog.e(TAG, "create log file :" + gLogFile.getAbsolutePath());
       gRandomAccessFile = new RandomAccessFile(gLogFile.getAbsolutePath(), "rw");
-      gMappedByteBuffer = gRandomAccessFile.getChannel()
-          .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+      gMappedByteBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
       // 写入 line
       gLineBytes = String.format(Locale.US, LINE_FORMAT, 0).getBytes();
       gMappedByteBuffer.put(gLineBytes);
     } catch (IOException e) {
-      xLog.e(TAG, "gRandomAccessFile IOException", e);
+      aLog.e(TAG, "gRandomAccessFile IOException", e);
     }
     deleteOldFiles();
   }
@@ -310,14 +308,13 @@ public class Issue {
         });
       }
     }
-    xLog.e(TAG, "initMappedByteBuffer lastLogFile:" + lastLogFile);
+    aLog.e(TAG, "initMappedByteBuffer lastLogFile:" + lastLogFile);
     if (null != lastLogFile) {
       // 处理 last log file 为全局的 log file
       try {
         gLogFile = lastLogFile;
         gRandomAccessFile = new RandomAccessFile(lastLogFile.getAbsolutePath(), "rw");
-        gMappedByteBuffer = gRandomAccessFile.getChannel()
-            .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+        gMappedByteBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
         gMappedByteBuffer.get(gLineBytes);
         String gLineString = new String(gLineBytes).trim();
         int lastPosition = 0;
@@ -330,7 +327,7 @@ public class Issue {
         } else {
           lastPosition = Integer.parseInt(new String(gLineBytes).trim());
         }
-        xLog.e(TAG, "initMappedByteBuffer lastPosition:" + lastPosition);
+        aLog.e(TAG, "initMappedByteBuffer lastPosition:" + lastPosition);
         if (lastPosition >= BUFFER_SIZE) {
           createLogFileAndBuffer();
         } else {
@@ -338,7 +335,7 @@ public class Issue {
         }
         deleteOldFiles();
       } catch (IOException e) {
-        xLog.e(TAG, "initMappedByteBuffer", e);
+        aLog.e(TAG, "initMappedByteBuffer", e);
         createLogFileAndBuffer();
       }
     } else {
@@ -349,7 +346,7 @@ public class Issue {
   protected static void zipLogFile(final File logFile) {
     // 压缩 log 文件，成功后删除原始 log 文件
     // 上传成功后删除压缩后的 log file
-    xLog.e(TAG, "zipLogFile:" + logFile);
+    aLog.e(TAG, "zipLogFile:" + logFile);
     executorService().submit(new Runnable() {
       @Override
       public void run() {
@@ -372,8 +369,8 @@ public class Issue {
       return zipLogFile;
     }
     try {
-      xLog.e(TAG, "doZipLogFile src:" + logFile.getAbsolutePath());
-      xLog.e(TAG, "doZipLogFile dst:" + zipLogFile.getAbsolutePath());
+      aLog.e(TAG, "doZipLogFile src:" + logFile.getAbsolutePath());
+      aLog.e(TAG, "doZipLogFile dst:" + zipLogFile.getAbsolutePath());
       FileOutputStream fos = new FileOutputStream(zipLogFile);
       ZipOutputStream zop = new ZipOutputStream(fos);
       ZipEntry zipEntry = new ZipEntry(logFile.getName());
@@ -435,10 +432,6 @@ public class Issue {
     });
   }
 
-  static void resetTag(String tag) {
-    TAG = tag + "_Issue";
-  }
-
   protected static void init(PERF.IssueSupplier issueSupplier) {
     if (null == issueSupplier) {
       issueSupplier = new DefaultIssueSupplier();
@@ -446,7 +439,7 @@ public class Issue {
     gIssueSupplier = issueSupplier;
     ISSUES_CACHE_DIR = new File(issueSupplier.cacheRootDir(), ISSUES_CACHE_DIR_NAME);
     ISSUES_CACHE_DIR.mkdirs();
-    xLog.e(TAG, "issues save in:" + ISSUES_CACHE_DIR.getAbsolutePath());
+    aLog.e(TAG, "issues save in:" + ISSUES_CACHE_DIR.getAbsolutePath());
   }
 
   static class DefaultIssueSupplier implements PERF.IssueSupplier {

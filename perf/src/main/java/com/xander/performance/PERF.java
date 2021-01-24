@@ -2,7 +2,11 @@ package com.xander.performance;
 
 import android.util.Log;
 
+import com.xander.asu.aConstants;
+
 import java.io.File;
+
+import me.weishu.reflection.Reflection;
 
 public class PERF {
 
@@ -122,20 +126,15 @@ public class PERF {
   }
 
   public static void init(Builder builder) {
+    Reflection.unseal(AppHelper.appContext());
     if (builder == null) {
       builder = new Builder();
     }
     if (null == builder.issueSupplier) {
       throw new IllegalArgumentException("issue supplier is missing!!!");
     }
-    xLog.setLogLevel(builder.logLevel);
-    // Logger.setLogLevel(builder.logLevel);
-    TAG = builder.globalTag;
-    ThreadTool.resetTag(TAG);
-    FPSTool.resetTag(TAG);
-    IPCTool.resetTag(TAG);
-    UIBlockTool.resetTag(TAG);
-    Issue.resetTag(TAG);
+    aConstants.logLevel = builder.logLevel;
+    aConstants.globalTag = builder.globalTag;
     Issue.init(builder.issueSupplier);
     if (builder.mCheckThread) {
       ThreadTool.init();

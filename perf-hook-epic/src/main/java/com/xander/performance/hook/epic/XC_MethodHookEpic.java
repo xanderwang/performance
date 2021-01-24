@@ -27,7 +27,6 @@ public class XC_MethodHookEpic extends XC_MethodHook {
 
   @Override
   protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-    aLog.d(TAG, "beforeHookedMethod:%s(%s)", param.method.getName(), Arrays.toString(param.args));
     super.beforeHookedMethod(param);
     if (null == paramEpic) {
       paramEpic = new MethodHookParamEpic();
@@ -38,12 +37,11 @@ public class XC_MethodHookEpic extends XC_MethodHook {
 
   @Override
   protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-    aLog.d(TAG, "afterHookedMethod:%s", param.getResult());
+    super.afterHookedMethod(param);
     if (null == paramEpic) {
       paramEpic = new MethodHookParamEpic();
     }
     paramEpic.setMethodHookParam(param);
     methodHook.afterHookedMethod(paramEpic);
-    super.afterHookedMethod(param);
   }
 }

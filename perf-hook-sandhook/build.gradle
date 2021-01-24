@@ -23,11 +23,12 @@ android {
 
 dependencies {
   def _dependencies = rootProject.ext.dependencies
-  implementation _dependencies['free_reflection']
+  implementation _dependencies['perf-hook-core']
   implementation _dependencies['asu']
-  implementation _dependencies['perf-hook']
+  implementation _dependencies['sandhook']
+  implementation _dependencies['sandhook-nativehook']
+  implementation _dependencies['sandhook-xposedcompat']
 }
-
 
 // git项目的地址
 def _siteUrl = 'https://github.com/XanderWang/performance'
@@ -35,7 +36,7 @@ def _siteUrl = 'https://github.com/XanderWang/performance'
 def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
 def _group = 'com.xander.performance'
-def _artifactId = 'perf'
+def _artifactId = 'perf-hook-epic'
 def _version = rootProject.ext.lib_publish_version
 
 uploadArchives {

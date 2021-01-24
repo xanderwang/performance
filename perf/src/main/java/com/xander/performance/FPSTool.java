@@ -6,6 +6,8 @@ import android.os.SystemClock;
 import android.view.Choreographer;
 import android.view.Choreographer.FrameCallback;
 
+import com.xander.asu.aLog;
+
 /**
  * @author Xander Wang Created on 2020/11/4.
  * @Description 利用 Choreographer 向系统注册一个 FrameCallback
@@ -18,18 +20,14 @@ import android.view.Choreographer.FrameCallback;
  */
 class FPSTool {
 
-  private static String TAG = PERF.TAG + "_FPSTool";
+  private static final String TAG = "FPSTool";
 
   private static FrameRunnable frameRunnable = new FrameRunnable();
 
   private static Handler handler = new Handler();
 
-  static void resetTag(String tag) {
-    TAG = tag + "_FPSTool";
-  }
-
   static void start() {
-    xLog.e(TAG, "start");
+    aLog.e(TAG, "start");
     handler = new Handler(Looper.getMainLooper());
     handler.post(frameRunnable);
     Choreographer.getInstance().postFrameCallback(frameRunnable);
@@ -56,9 +54,9 @@ class FPSTool {
         int fps = (int) (1000.f * count / (curTime - time) + 0.5f);
         String fpsStr = String.format("APP FPS is: %-3sHz", fps);
         if (fps <= 50) {
-          xLog.e(TAG, fpsStr);
+          aLog.e(TAG, fpsStr);
         } else {
-          xLog.w(TAG, fpsStr);
+          aLog.w(TAG, fpsStr);
         }
       }
       count = 0;
