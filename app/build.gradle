@@ -61,17 +61,13 @@ dependencies {
   implementation _dependencies['appcompat']
   implementation _dependencies['constraintlayout']
 
-  //implementation project(path: ':tool')
-  //implementation project(path: ':tool-noop')
-  implementation _dependencies['performance_tool']
-  //implementation _dependencies['performance_tool_noop']
-
-  //implementation _dependencies['hooklib']
-  // need for android 11
-  //implementation _dependencies['nativehook']
-
   implementation _dependencies['core-ktx']
   implementation _dependencies['kotlin-stdlib-jdk']
   implementation _dependencies['kotlinx-coroutines-core']
   implementation _dependencies['kotlinx-coroutines-android']
+
+  debugImplementation _dependencies['perf']
+  releaseImplementation _dependencies['perf-noop']
+  implementation _dependencies['perf-hook-epic']
+
 }

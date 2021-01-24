@@ -12,7 +12,8 @@ buildscript {
   ext.kotlin_version = '1.4.20'
   ext.lib_publish_version = "0.1.10"
   ext.lib_version = "0.1.10"
-  ext.use_local_lib = false
+  ext.use_local_lib = true
+  ext.use_local_hook_lib = true
 
   ext.local_repo_path = rootProject.file("./repos").absolutePath
   println("local repo path:$local_repo_path")
@@ -76,10 +77,16 @@ allprojects {
     resolutionStrategy.dependencySubstitution {
       // Substitute project and module dependencies
       // 远程的 lib 依赖变成本地的依赖
-      if (use_local_lib) {
+      substitute module('com.xander.asu:asu') with project(':a-simple-util')
+      if (rootProject.ext.use_local_lib) {
         substitute module('com.xander.performance:perf') with project(':perf')
         substitute module('com.xander.performance:perf-noop') with project(':perf-noop')
-        substitute module('me.weishu.epic:epic-xander') with project(':lib-epic')
+        // substitute module('me.weishu.epic:epic-xander') with project(':lib-epic')
+      }
+      if (rootProject.ext.use_local_hook_lib) {
+        substitute module('com.xander.performance:perf-hook-core') with project(':perf-hook-core')
+        substitute module('com.xander.performance:perf-hook-epic') with project(':perf-hook-epic')
+        substitute module('com.xander.performance:perf-hook') with project(':perf-hook')
       }
       // Substitute one module dependency for another
       // 修改某个依赖的版本

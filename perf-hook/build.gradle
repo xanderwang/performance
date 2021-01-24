@@ -12,24 +12,20 @@ android {
     targetSdkVersion _android['targetSdkVersion']
     versionCode 1
     versionName "1.0"
-
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    consumerProguardFiles 'consumer-rules.pro'
   }
 
   buildTypes {
     release {
       minifyEnabled false
-      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
   }
 }
 
 dependencies {
-  implementation fileTree(dir: 'libs', include: ['*.jar'])
-  testImplementation 'junit:junit:4.13.1'
-  androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-  androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
+  def _dependencies = rootProject.ext.dependencies
+  api _dependencies['perf-hook-core']
+  implementation _dependencies['asu']
 }
 
 // git项目的地址
@@ -38,7 +34,7 @@ def _siteUrl = 'https://github.com/XanderWang/performance'
 def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
 def _group = 'com.xander.performance'
-def _artifactId = 'perf-noop'
+def _artifactId = 'perf-hook'
 def _version = rootProject.ext.lib_publish_version
 
 uploadArchives {
@@ -62,7 +58,7 @@ publish {
   artifactId = _artifactId
   publishVersion = _version
   dryRun = false
-  desc = 'a lib for android , it can check app performance, this is a noop lib'
+  desc = 'a lib for android , it can check app performance'
   website = _siteUrl
   bintrayUser = user
   bintrayKey = key

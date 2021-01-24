@@ -16,5 +16,8 @@
 // include ':lib-epic'
 include ':app'
 include ':perf'
+include ':a-simple-util'
 include ':perf-noop'
 include ':perf-hook'
+include ':perf-hook-core'
+include ':perf-hook-epic'

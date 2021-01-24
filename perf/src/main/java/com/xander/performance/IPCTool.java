@@ -3,6 +3,10 @@ package com.xander.performance;
 import android.os.Binder;
 import android.os.Parcel;
 
+import com.xander.performance.hook.HookBridge;
+import com.xander.performance.hook.core.IMethodParam;
+import com.xander.performance.hook.core.MethodHook;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -58,14 +62,30 @@ class IPCTool {
       // );
       // 观察 AIDL 生成的代码，发现每次 IPC 调用也会调用 Parcel.readException 方法
       // 故初步用这个方法作为切入点来监控系统的 IPC 调用情况
-      DexposedBridge.findAndHookMethod(
+      // DexposedBridge.findAndHookMethod(
+      //     Parcel.class,
+      //     "readException",
+      //     new ParcelReadExceptionHook()
+      // );
+
+      HookBridge.findAndHookMethod(
           Parcel.class,
           "readException",
-          new ParcelReadExceptionHook()
+          new NewParcelReadExceptionHook()
       );
+
       xLog.e(TAG, "hookWithEpic");
     } catch (Exception e) {
       xLog.e(TAG, "hookWithEpic Exception", e);
+    }
+  }
+
+  static class NewParcelReadExceptionHook extends MethodHook {
+    @Override
+    public void beforeHookedMethod(IMethodParam param) throws Throwable {
+      super.beforeHookedMethod(param);
+      Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC 123", StackTraceUtils.list());
+      ipcIssue.print();
     }
   }
 
