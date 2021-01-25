@@ -16,7 +16,7 @@ public class AppHelper extends ContentProvider {
 
   @Override
   public boolean onCreate() {
-    mAppContext = getContext();
+    mAppContext = getContext().getApplicationContext();
     return false;
   }
 

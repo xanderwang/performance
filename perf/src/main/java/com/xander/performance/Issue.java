@@ -1,6 +1,5 @@
 package com.xander.performance;
 
-import android.os.Environment;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
@@ -55,7 +54,10 @@ public class Issue {
    * <p>
    * 所以这样写没有太大的问题
    */
-  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+  private static SimpleDateFormat dateFormat = new SimpleDateFormat(
+      "yyyy-MM-dd HH:mm:ss",
+      Locale.US
+  );
 
   /**
    * 类型
@@ -208,20 +210,72 @@ public class Issue {
     }
   }
 
-  private static String             ISSUES_CACHE_DIR_NAME = "issues";
-  private static File               ISSUES_CACHE_DIR;
-  private static PERF.IssueSupplier gIssueSupplier;
+  private static String ISSUES_CACHE_DIR_NAME = "perf_issues";
+
+  private static File ISSUES_CACHE_DIR;
+
+  private static PERF.IssueSupplier<File> gCacheDirSupplier = new PERF.IssueSupplier<File>() {
+    @Override
+    public File get() {
+      return AppHelper.appContext().getCacheDir();
+    }
+  };
+
+  private static PERF.IssueSupplier<Integer> gMaxCacheSizeSupplier = new PERF.IssueSupplier<Integer>() {
+    @Override
+    public Integer get() {
+      return MAX_CACHE_SIZE;
+    }
+  };
+
+  private static PERF.LogFileUploader logFileUploader = new PERF.LogFileUploader() {
+    @Override
+    public boolean upload(File logFile) {
+      return false;
+    }
+  };
+
+  private static PERF.IssueSupplier<PERF.LogFileUploader> gUploaderSupplier = new PERF.IssueSupplier<PERF.LogFileUploader>() {
+    @Override
+    public PERF.LogFileUploader get() {
+      return logFileUploader;
+    }
+  };
 
   private static final int MAX_CACHE_SIZE = 10 * 1024 * 1024;
 
-  private static final int              BUFFER_SIZE      = 1024 * 1024;
-  private static       File             gLogFile;
-  private static       RandomAccessFile gRandomAccessFile;
-  private static       MappedByteBuffer gMappedByteBuffer;
-  private static       byte[]           gLineBytes       = String.valueOf(BUFFER_SIZE).getBytes();
+  private static final int BUFFER_SIZE = 1024 * 1024;
+
+  private static File gLogFile;
+
+  private static RandomAccessFile gRandomAccessFile;
+
+  private static MappedByteBuffer gMappedByteBuffer;
+
+  private static byte[] gLineBytes = String.valueOf(BUFFER_SIZE).getBytes();
+
   // log 文件的第一行固定为文件最后字节的位置
-  private static final int              gLineBytesLength = gLineBytes.length;
-  private static final String           LINE_FORMAT      = "%-" + gLineBytesLength + "d";
+  private static final int gLineBytesLength = gLineBytes.length;
+
+  private static final String LINE_FORMAT = "%-" + gLineBytesLength + "d";
+
+  protected static void init(PERF.IssueSupplier<File> cacheDir,
+      PERF.IssueSupplier<Integer> maxCacheSize,
+      PERF.IssueSupplier<PERF.LogFileUploader> logFileUploader) {
+    if (null != cacheDir) {
+      gCacheDirSupplier = cacheDir;
+    }
+    if (null != maxCacheSize) {
+      gMaxCacheSizeSupplier = maxCacheSize;
+    }
+    if (null != logFileUploader) {
+      gUploaderSupplier = logFileUploader;
+    }
+    ISSUES_CACHE_DIR = new File(gCacheDirSupplier.get(), ISSUES_CACHE_DIR_NAME);
+    ISSUES_CACHE_DIR.mkdirs();
+    aLog.e(TAG, "issues save in:" + ISSUES_CACHE_DIR.getAbsolutePath());
+  }
+
 
   protected static MappedByteBuffer gMappedByteBuffer() {
     if (null == gMappedByteBuffer) {
@@ -257,7 +311,8 @@ public class Issue {
       gLogFile.createNewFile();
       aLog.e(TAG, "create log file :" + gLogFile.getAbsolutePath());
       gRandomAccessFile = new RandomAccessFile(gLogFile.getAbsolutePath(), "rw");
-      gMappedByteBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+      gMappedByteBuffer = gRandomAccessFile.getChannel()
+          .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
       // 写入 line
       gLineBytes = String.format(Locale.US, LINE_FORMAT, 0).getBytes();
       gMappedByteBuffer.put(gLineBytes);
@@ -318,7 +373,8 @@ public class Issue {
       try {
         gLogFile = lastLogFile;
         gRandomAccessFile = new RandomAccessFile(lastLogFile.getAbsolutePath(), "rw");
-        gMappedByteBuffer = gRandomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+        gMappedByteBuffer = gRandomAccessFile.getChannel()
+            .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
         gMappedByteBuffer.get(gLineBytes);
         String gLineString = new String(gLineBytes).trim();
         int lastPosition = 0;
@@ -401,13 +457,13 @@ public class Issue {
     if (zipLogFile == null || !zipLogFile.exists()) {
       return false;
     }
-    return gIssueSupplier.upLoad(zipLogFile);
+    return gUploaderSupplier.get().upload(zipLogFile);
   }
 
   static void deleteOldFiles() {
     // .log 文件忽略，然后按时间排序，然后删除
-    final long maxCacheSize = gIssueSupplier.maxCacheSize();
-    taskService.submit(new Runnable() {
+    final long maxCacheSize = gMaxCacheSizeSupplier.get();
+    Runnable deleteRunnable = new Runnable() {
       @Override
       public void run() {
         File[] files = ISSUES_CACHE_DIR.listFiles();
@@ -424,43 +480,17 @@ public class Issue {
         long fileLength = 0;
         for (int i = 0; i < files.length; i++) {
           File file = files[i];
-          if (file.isFile() && file.getName().endsWith("zip")) {
-            if (fileLength >= maxCacheSize) {
-              file.delete();
-            } else {
-              fileLength += file.length();
-            }
+          if (!(file.isFile() && file.getName().endsWith("zip"))) {
+            continue;
+          }
+          if (fileLength >= maxCacheSize) {
+            file.delete();
+          } else {
+            fileLength += file.length();
           }
         }
       }
-    });
+    };
+    taskService.submit(deleteRunnable);
   }
-
-  protected static void init(PERF.IssueSupplier issueSupplier) {
-    if (null == issueSupplier) {
-      issueSupplier = new DefaultIssueSupplier();
-    }
-    gIssueSupplier = issueSupplier;
-    ISSUES_CACHE_DIR = new File(issueSupplier.cacheRootDir(), ISSUES_CACHE_DIR_NAME);
-    ISSUES_CACHE_DIR.mkdirs();
-    aLog.e(TAG, "issues save in:" + ISSUES_CACHE_DIR.getAbsolutePath());
-  }
-
-  static class DefaultIssueSupplier implements PERF.IssueSupplier {
-    @Override
-    public long maxCacheSize() {
-      return MAX_CACHE_SIZE;
-    }
-
-    @Override
-    public File cacheRootDir() {
-      return Environment.getExternalStorageDirectory();
-    }
-
-    @Override
-    public boolean upLoad(File issueFile) {
-      return false;
-    }
-  }
-
 }

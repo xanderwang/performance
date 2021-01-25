@@ -16,36 +16,56 @@ public class PERF {
     /**
      * logLevel ，设置可以打印的 log 等级
      */
-    int           logLevel             = Log.DEBUG;
+    int logLevel = Log.DEBUG;
+
     /**
      * 是否开启检测 UI 线程
      */
-    boolean       mCheckUI             = false;
+    boolean mCheckUI = false;
+
     /**
      * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
      */
-    long          mUIBlockIntervalTime = Config.UI_BLOCK_INTERVAL_TIME;
+    long mUIBlockIntervalTime = Config.UI_BLOCK_INTERVAL_TIME;
+
     /**
      * 检测线程的 start 方法调用栈
      */
-    boolean       mCheckThread         = false;
+    boolean mCheckThread = false;
+
     /**
      * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
      */
-    long          mFPSIntervalTime     = Config.FPS_INTERVAL_TIME;
+    long mFPSIntervalTime = Config.FPS_INTERVAL_TIME;
+
     /**
      * 是否检测 fps
      */
-    boolean       mCheckFPS            = false;
+    boolean mCheckFPS = false;
+
     /**
      * 是否需要检测 ipc， 也就是进程间通讯
      */
-    boolean       mCheckIPC            = false;
-    /**
-     * Issue 的相关配置
-     */
-    IssueSupplier issueSupplier        = null;
+    boolean mCheckIPC = false;
 
+    /**
+     * issue 文件的保存目录
+     */
+    IssueSupplier<File> cacheDirSupplier = null;
+
+    /**
+     * issue 缓存最大的目录大小
+     */
+    IssueSupplier<Integer> macCacheSizeSupplier = null;
+
+    /**
+     * log file 上传器
+     */
+    IssueSupplier<LogFileUploader> uploaderSupplier = null;
+
+    /**
+     * 全局的 log tag
+     */
     String globalTag = TAG;
 
     public Builder checkUI(boolean check) {
@@ -85,8 +105,18 @@ public class PERF {
       return this;
     }
 
-    public Builder issueSupplier(IssueSupplier supplier) {
-      issueSupplier = supplier;
+    public Builder cacheDirSupplier(IssueSupplier<File> cache) {
+      cacheDirSupplier = cache;
+      return this;
+    }
+
+    public Builder maxCacheSizeSupplier(IssueSupplier<Integer> cacheSize) {
+      macCacheSizeSupplier = cacheSize;
+      return this;
+    }
+
+    public Builder uploaderSupplier(IssueSupplier<LogFileUploader> uploader) {
+      uploaderSupplier = uploader;
       return this;
     }
 
@@ -98,31 +128,14 @@ public class PERF {
     public Builder build() {
       return this;
     }
-
   }
 
-  public interface IssueSupplier {
-    /**
-     * 最大的磁盘缓存空间
-     *
-     * @return
-     */
-    long maxCacheSize();
+  public interface IssueSupplier<T> {
+    T get();
+  }
 
-    /**
-     * 缓存根目录
-     *
-     * @return
-     */
-    File cacheRootDir();
-
-    /**
-     * 开始上传
-     *
-     * @param issueFile
-     * @return true 表示上传成功 false 表示失败
-     */
-    boolean upLoad(File issueFile);
+  public interface LogFileUploader {
+    boolean upload(File logFile);
   }
 
   public static void init(Builder builder) {
@@ -130,12 +143,9 @@ public class PERF {
     if (builder == null) {
       builder = new Builder();
     }
-    if (null == builder.issueSupplier) {
-      throw new IllegalArgumentException("issue supplier is missing!!!");
-    }
     aConstants.logLevel = builder.logLevel;
     aConstants.globalTag = builder.globalTag;
-    Issue.init(builder.issueSupplier);
+    Issue.init(builder.cacheDirSupplier, builder.macCacheSizeSupplier, builder.uploaderSupplier);
     if (builder.mCheckThread) {
       ThreadTool.init();
     }
@@ -143,12 +153,12 @@ public class PERF {
       Config.UI_BLOCK_INTERVAL_TIME = builder.mUIBlockIntervalTime;
       UIBlockTool.start();
     }
+    if (builder.mCheckIPC) {
+      IPCTool.start();
+    }
     if (builder.mCheckFPS) {
       Config.FPS_INTERVAL_TIME = builder.mFPSIntervalTime;
       FPSTool.start();
-    }
-    if (builder.mCheckIPC) {
-      IPCTool.start();
     }
   }
 

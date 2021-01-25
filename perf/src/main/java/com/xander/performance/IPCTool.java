@@ -36,7 +36,7 @@ class IPCTool {
 
   private static void hookIPC() {
     try {
-      if (!HookBridge.isEpic()) {
+      if (HookBridge.isSandHook()) {
         // 这个方法  epic hook 的话会报错，很奇怪，理论上是一个比较好的 hook 点
         Class<?> binderProxyClass = Class.forName("android.os.BinderProxy");
         if (null != binderProxyClass) {
@@ -77,8 +77,7 @@ class IPCTool {
       if (null != ipcInterface) {
         String issueToken = ipcInterface + param.getArgs()[0];
         IPCIssue ipcIssue = new IPCIssue(ipcInterface, "IPC", null);
-        // ipcIssue.print();
-        ipcIssue.startTime = SystemClock.uptimeMillis();
+        ipcIssue.startTime = SystemClock.elapsedRealtime();
         issueHashMap.put(issueToken, ipcIssue);
       } else {
         Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
@@ -97,7 +96,7 @@ class IPCTool {
         String issueToken = ipcInterface + param.getArgs()[0];
         IPCIssue ipcIssue = issueHashMap.remove(issueToken);
         if (null != ipcIssue) {
-          ipcIssue.costTime = (SystemClock.uptimeMillis() - ipcIssue.startTime) / 1000;
+          ipcIssue.costTime = SystemClock.elapsedRealtime() - ipcIssue.startTime;
           if (ipcIssue.costTime >= Config.UI_BLOCK_INTERVAL_TIME) {
             ipcIssue.setData(StackTraceUtils.list());
             ipcIssue.print();

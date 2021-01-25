@@ -4,11 +4,11 @@
 
 - [epic](https://github.com/tiann/epic)
 - [SandHook](https://github.com/ganyao114/SandHook)
-- [SHook]()
-- [X64AndHook]()
-- [Whale](https://github.com/asLody/whale)
-- [Yahfa](https://github.com/PAGalaxyLab/YAHFA)
 - [FastHook](https://github.com/turing-technician/FastHook)
-- [BUGHook]()
-- [AndHookEx]()
-- [Jail Hooker 64]()
+- ~~[Yahfa](https://github.com/PAGalaxyLab/YAHFA)~~
+- ~~[Whale](https://github.com/asLody/whale)~~
+- ~~SHook~~
+- ~~X64AndHook~~
+- ~~BUGHook~~
+- ~~AndHookEx~~
+- ~~Jail Hooker 64~~

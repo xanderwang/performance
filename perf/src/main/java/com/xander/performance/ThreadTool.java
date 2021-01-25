@@ -109,11 +109,10 @@ class ThreadTool {
 
   static void init() {
     aLog.e(TAG, "init");
-    hookWithEpic();
-    //hookWithSandHook(); // sandhook 不是很好用，先注释
+    hookThread();
   }
 
-  public static void hookWithEpic() {
+  public static void hookThread() {
     // hook 7 个参数的构造方法好像会报错，故 hook 指定参数数目的构造方法
     ThreadPoolExecutorConstructorHook constructorHook = new ThreadPoolExecutorConstructorHook();
     Constructor<?>[] constructors = ThreadPoolExecutor.class.getDeclaredConstructors();
@@ -250,7 +249,7 @@ class ThreadTool {
 
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
-      super.afterHookedMethod(param);
+      // super.afterHookedMethod(param);
       // 线程 run 方法走完，线程即将被销毁，删除 thread info 相关的记录。
       String threadKey = Integer.toHexString(param.getThisObject().hashCode());
       ThreadIssue threadIssues = threadInfoMap.get(threadKey);

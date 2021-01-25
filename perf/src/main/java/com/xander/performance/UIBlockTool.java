@@ -124,14 +124,14 @@ class UIBlockTool {
   private static class DecorViewDispatchKeyEventHook extends MethodHook {
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
-      super.beforeHookedMethod(param);
+      // super.beforeHookedMethod(param);
       startDumpInfo();
     }
 
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
+      // super.afterHookedMethod(param);
       clearDumpInfo();
-      super.afterHookedMethod(param);
     }
   }
 

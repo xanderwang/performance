@@ -34,7 +34,15 @@ public class PERF {
       return this;
     }
 
-    public Builder issueSupplier(IssueSupplier supplier) {
+    public Builder cacheDirSupplier(IssueSupplier<File> cache) {
+      return this;
+    }
+
+    public Builder maxCacheSizeSupplier(IssueSupplier<Integer> cacheSize) {
+      return this;
+    }
+
+    public Builder uploaderSupplier(IssueSupplier<LogFileUploader> uploader) {
       return this;
     }
 
@@ -48,28 +56,12 @@ public class PERF {
 
   }
 
-  public interface IssueSupplier {
-    /**
-     * 最大的磁盘缓存空间
-     *
-     * @return
-     */
-    long maxCacheSize();
+  public interface IssueSupplier<T> {
+    T get();
+  }
 
-    /**
-     * 缓存根目录
-     *
-     * @return
-     */
-    File cacheRootDir();
-
-    /**
-     * 开始上传
-     *
-     * @param issueFile
-     * @return true 表示上传成功 false 表示失败
-     */
-    boolean upLoad(File issueFile);
+  public interface LogFileUploader {
+    boolean upload(File logFile);
   }
 
   public static void init(Builder builder) {
