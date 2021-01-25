@@ -97,6 +97,10 @@ public class Issue {
     return data;
   }
 
+  public void setData(Object data) {
+    this.data = data;
+  }
+
   protected String typeToString() {
     String str = null;
     switch (type) {

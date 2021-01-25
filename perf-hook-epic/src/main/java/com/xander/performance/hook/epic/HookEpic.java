@@ -16,6 +16,11 @@ public class HookEpic implements IHookBridge {
   private static final String TAG = "HookEpic";
 
   @Override
+  public int getHookType() {
+    return IHookBridge.TYPE_EPIC;
+  }
+
+  @Override
   public void hookMethod(Member hookMethod, MethodHook callback) {
     aLog.d(TAG, "hookMethod:%s", aUtil.memberToString(hookMethod));
     DexposedBridge.hookMethod(hookMethod, new XC_MethodHookEpic(callback));

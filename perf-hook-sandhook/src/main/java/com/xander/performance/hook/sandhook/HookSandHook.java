@@ -17,6 +17,11 @@ public class HookSandHook implements IHookBridge {
   private static final String TAG = "HookSandHook";
 
   @Override
+  public int getHookType() {
+    return IHookBridge.TYPE_SAND_HOOK;
+  }
+
+  @Override
   public void hookMethod(Member hookMethod, MethodHook callback) {
     aLog.d(TAG, "hookMethod:%s", aUtil.memberToString(hookMethod));
     XposedBridge.hookMethod(hookMethod, new XC_MethodSandHook(callback));

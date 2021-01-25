@@ -2,6 +2,9 @@ package com.xander.performance.hook.core;
 
 import java.lang.reflect.Member;
 
+/**
+ * hook 后，被调用的
+ */
 public interface MethodParam {
 
   Object getResult();

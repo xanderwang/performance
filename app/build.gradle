@@ -69,7 +69,7 @@ dependencies {
 
   debugImplementation _dependencies['perf']
   releaseImplementation _dependencies['perf-noop']
-  // implementation _dependencies['perf-hook-epic']
-  implementation _dependencies['perf-hook-sandhook']
+  implementation _dependencies['perf-hook-epic']
+  // implementation _dependencies['perf-hook-sandhook']
 
 }

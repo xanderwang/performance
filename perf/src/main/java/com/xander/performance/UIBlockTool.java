@@ -91,7 +91,8 @@ class UIBlockTool {
   private static class DumpInfoRunnable implements Runnable {
     @Override
     public void run() {
-      Issue uiIssue = new Issue(Issue.TYPE_UI_BLOCK,
+      Issue uiIssue = new Issue(
+          Issue.TYPE_UI_BLOCK,
           "UI BLOCK",
           StackTraceUtils.list(Looper.getMainLooper().getThread())
       );
@@ -109,7 +110,8 @@ class UIBlockTool {
   private static void hookDecorViewDispatchKeyEvent() {
     try {
       Class decorViewClass = Class.forName("com.android.internal.policy.DecorView");
-      HookBridge.findAndHookMethod(decorViewClass,
+      HookBridge.findAndHookMethod(
+          decorViewClass,
           "dispatchKeyEvent",
           KeyEvent.class,
           new DecorViewDispatchKeyEventHook()

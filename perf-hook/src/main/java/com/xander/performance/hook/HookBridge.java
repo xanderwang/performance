@@ -30,6 +30,18 @@ public class HookBridge {
     }
   }
 
+  public static boolean isEpic() {
+    return IHookBridge.TYPE_EPIC == iHookBridge.getHookType();
+  }
+
+  public static boolean isSandHook() {
+    return IHookBridge.TYPE_SAND_HOOK == iHookBridge.getHookType();
+  }
+
+  public static boolean isFastHook() {
+    return IHookBridge.TYPE_FAST_HOOK == iHookBridge.getHookType();
+  }
+
   public static void hookAllConstructors(Class<?> clazz, MethodHook callback) {
     Constructor<?>[] constructors = clazz.getDeclaredConstructors();
     assertNotNullOrEmpty(constructors);

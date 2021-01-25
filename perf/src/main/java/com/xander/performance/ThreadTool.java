@@ -4,12 +4,11 @@ import android.text.TextUtils;
 
 import com.xander.asu.aLog;
 import com.xander.performance.hook.HookBridge;
-import com.xander.performance.hook.core.MethodParam;
 import com.xander.performance.hook.core.MethodHook;
+import com.xander.performance.hook.core.MethodParam;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -162,7 +161,7 @@ class ThreadTool {
   static class WorkerConstructorHook extends MethodHook {
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
-      aLog.e(TAG, "WorkerConstructorHook: " + Arrays.toString(param.getArgs()));
+      // aLog.e(TAG, "WorkerConstructorHook: " + Arrays.toString(param.getArgs()));
       String workerKey = Integer.toHexString(param.getThisObject().hashCode());
       String threadPoolKey = Integer.toHexString(param.getArgs()[0].hashCode());
       // aLog.e(TAG, "WorkerConstructorHook workerKey:" + workerKey);
@@ -175,7 +174,7 @@ class ThreadTool {
 
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
-      aLog.e(TAG, "Thread constructor: " + Arrays.toString(param.getArgs()));
+      // aLog.e(TAG, "Thread constructor: " + Arrays.toString(param.getArgs()));
       ThreadIssue threadIssues = new ThreadIssue("THREAD CREATE");
       String threadKey = Integer.toHexString(param.getThisObject().hashCode());
       threadIssues.key = threadKey;
@@ -184,22 +183,22 @@ class ThreadTool {
       boolean hasRunnable = (param.getArgs().length == 1 && param.getArgs()[0] instanceof Runnable) ||
           (param.getArgs().length > 1 && param.getArgs()[1] instanceof Runnable);
 
-      aLog.e(TAG, "ThreadConstructorHook hasRunnable:" + hasRunnable);
+      // aLog.e(TAG, "ThreadConstructorHook hasRunnable:" + hasRunnable);
       // 获取 runnable
       String workerKey = "";
       if (hasRunnable) {
         Object runnable = param.getArgs()[0] instanceof Runnable ? param.getArgs()[0] : param.getArgs()[1];
-        aLog.e(TAG, "ThreadConstructorHook runnable class:" + runnable.getClass().getName());
-        if ("java.util.concurrent.ThreadPoolExecutor$Worker".equals(runnable.getClass().getName())) {
+        // aLog.e(TAG, "ThreadConstructorHook runnable class:" + runnable.getClass().getName());
+        String runnableClassName = runnable.getClass().getName();
+        if ("java.util.concurrent.ThreadPoolExecutor$Worker".equals(runnableClassName)) {
           workerKey = Integer.toHexString(runnable.hashCode());
         }
       }
-      aLog.e(TAG, "ThreadConstructorHook workerKey:" + workerKey);
-      aLog.e(
-          TAG,
-          "ThreadConstructorHook workerThreadPoolMap.containsKey(workerKey):" +
-              workerThreadPoolMap.containsKey(workerKey)
-      );
+      // aLog.e(TAG, "ThreadConstructorHook workerKey:" + workerKey);
+      // aLog.e(TAG,
+      //     "ThreadConstructorHook workerThreadPoolMap.containsKey(workerKey):" +
+      //         workerThreadPoolMap.containsKey(workerKey)
+      // );
       if (workerThreadPoolMap.containsKey(workerKey)) {
         // 线程池创建的线程
         String threadPoolKey = workerThreadPoolMap.get(workerKey);
