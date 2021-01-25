@@ -62,19 +62,23 @@ public class Issue {
   /**
    * 类型
    */
-  protected int    type       = -1;
+  protected int type = -1;
+
   /**
    * 消息
    */
-  protected String msg        = "";
+  protected String msg = "";
+
   /**
    * 发生的时间
    */
   protected String createTime = "";
+
   /**
    * 数据
    */
   protected Object data;
+
   /**
    * byte 数据，用来缓存数据的 string 数组
    */
@@ -173,14 +177,6 @@ public class Issue {
   }
 
   static ExecutorService executorService() {
-    // 单例好像有点问题，hook 的时候，先直接创建
-    // if (taskService == null) {
-    //   synchronized (Issue.class) {
-    //     if (taskService == null) {
-    //       taskService = Executors.newSingleThreadExecutor();
-    //     }
-    //   }
-    // }
     return taskService;
   }
 
@@ -356,7 +352,7 @@ public class Issue {
         zipLogFile(file);
       } else if (file.getName().endsWith(".zip")) {
         // 开始上传 log 文件
-        executorService().execute(new Runnable() {
+        Runnable uploadRunnable = new Runnable() {
           @Override
           public void run() {
             boolean uploadResult = doUploadZipLogFile(file);
@@ -364,41 +360,45 @@ public class Issue {
               file.delete();
             }
           }
-        });
+        };
+        executorService().execute(uploadRunnable);
       }
     }
     aLog.e(TAG, "initMappedByteBuffer lastLogFile:" + lastLogFile);
     if (null != lastLogFile) {
-      // 处理 last log file 为全局的 log file
-      try {
-        gLogFile = lastLogFile;
-        gRandomAccessFile = new RandomAccessFile(lastLogFile.getAbsolutePath(), "rw");
-        gMappedByteBuffer = gRandomAccessFile.getChannel()
-            .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
-        gMappedByteBuffer.get(gLineBytes);
-        String gLineString = new String(gLineBytes).trim();
-        int lastPosition = 0;
-        if (!TextUtils.isEmpty(gLineString)) {
-          // 新创建出来文件就立刻 crash 了，导致之前没有写入任何内容
-          // 写入 line
-          gLineBytes = String.format(Locale.US, LINE_FORMAT, 0).getBytes();
-          gMappedByteBuffer.put(gLineBytes);
-          lastPosition = gMappedByteBuffer().position();
-        } else {
-          lastPosition = Integer.parseInt(new String(gLineBytes).trim());
-        }
-        aLog.e(TAG, "initMappedByteBuffer lastPosition:" + lastPosition);
-        if (lastPosition >= BUFFER_SIZE) {
-          createLogFileAndBuffer();
-        } else {
-          gMappedByteBuffer.position(lastPosition);
-        }
-        deleteOldFiles();
-      } catch (IOException e) {
-        aLog.e(TAG, "initMappedByteBuffer", e);
-        createLogFileAndBuffer();
-      }
+      readLogFile(lastLogFile);
     } else {
+      createLogFileAndBuffer();
+    }
+  }
+
+  protected static void readLogFile(File logFile) {
+    // 处理 last log file 为全局的 log file
+    try {
+      gLogFile = logFile;
+      gRandomAccessFile = new RandomAccessFile(logFile.getAbsolutePath(), "rw");
+      gMappedByteBuffer = gRandomAccessFile.getChannel()
+          .map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+      gMappedByteBuffer.get(gLineBytes);// 读取行号记录
+      String gLineString = new String(gLineBytes).trim();
+      int lastPosition = 0;
+      if (TextUtils.isEmpty(gLineString)) {
+        // 新创建出来文件就立刻 crash 了，导致之前没有写入任何内容
+        gLineBytes = String.format(Locale.US, LINE_FORMAT, 0).getBytes();
+        gMappedByteBuffer.put(gLineBytes);// 写入 0
+        lastPosition = gMappedByteBuffer().position();
+      } else {
+        lastPosition = Integer.parseInt(gLineString);
+      }
+      aLog.e(TAG, "initMappedByteBuffer lastPosition:" + lastPosition);
+      if (lastPosition >= BUFFER_SIZE) {
+        createLogFileAndBuffer();
+      } else {
+        gMappedByteBuffer.position(lastPosition);
+      }
+      deleteOldFiles();// 尝试删除超出磁盘缓存的 log 文件
+    } catch (IOException e) {
+      aLog.e(TAG, "initMappedByteBuffer", e);
       createLogFileAndBuffer();
     }
   }
