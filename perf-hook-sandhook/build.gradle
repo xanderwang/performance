@@ -36,7 +36,7 @@ def _siteUrl = 'https://github.com/XanderWang/performance'
 def _gitUrl = 'https://github.com/XanderWang/performance.git'
 // group
 def _group = 'com.xander.performance'
-def _artifactId = 'perf-hook-epic'
+def _artifactId = 'perf-hook-sandhook'
 def _version = rootProject.ext.lib_publish_version
 
 uploadArchives {
