@@ -86,6 +86,7 @@ class MainActivity : AppCompatActivity() {
       aLog.e(TAG, "onServiceConnected:$service")
       aLog.e(TAG, "onServiceConnected", IllegalAccessException())
       iDemoService = IDemoService.Stub.asInterface(service)
+      iDemoService?.demo()
     }
 
     override fun onServiceDisconnected(name: ComponentName?) {

@@ -6,8 +6,10 @@ import com.xander.performance.PERF
 import java.io.File
 
 class KotlinApplication : Application() {
-  override fun attachBaseContext(base: Context) {
-    initPERF(base)
+
+  override fun onCreate() {
+    super.onCreate()
+    initPERF(this)
   }
 
   private fun doUpload(log: File): Boolean {

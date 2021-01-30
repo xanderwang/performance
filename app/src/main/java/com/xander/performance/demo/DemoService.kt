@@ -15,14 +15,17 @@ class DemoService : Service() {
   internal class MyDemoServer : IDemoService.Stub() {
     @Throws(RemoteException::class)
     override fun demo() {
+      aLog.e(TAG, "DemoService demo thread:$${Thread.currentThread().name}")
+      Thread.sleep(1000)
     }
   }
 
   private val myDemoServer = MyDemoServer()
+
   override fun onBind(intent: Intent): IBinder? {
-    aLog.e(TAG, "DemoService:$this")
-    aLog.e(TAG, "DemoService MyDemoServer:$myDemoServer")
-    aLog.e(TAG, "DemoService MyDemoServer", IllegalAccessException())
+    aLog.d(TAG, "DemoService onBind:$this")
+    aLog.d(TAG, "DemoService MyDemoServer:$myDemoServer")
+    aLog.d(TAG, "DemoService onBind thread:$${Thread.currentThread().name}")
     return myDemoServer
   }
 

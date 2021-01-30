@@ -72,13 +72,13 @@ dependencies {
   releaseImplementation _dependencies['perf-noop']
 
   // hook 方案封装，必须添加
-  implementation _dependencies['perf-hook']
-  // 以下是 hook 方案选择一个就好了。如果运行报错，就换另外一个，如果还是报错，就提个 issue
+  debugImplementation _dependencies['perf-hook']
 
+  // 以下是 hook 方案选择一个就好了。如果运行报错，就换另外一个，如果还是报错，就提个 issue
   // SandHook 方案，推荐添加。如果运行报错，可以替换为 epic 库。
-  // implementation _dependencies['perf-hook-sandhook']
+  debugImplementation _dependencies['perf-hook-sandhook']
 
   // epic 方法。如果运行报错，可以替换为 SandHook。
-  implementation _dependencies['perf-hook-epic']
+  // debugImplementation _dependencies['perf-hook-epic']
 
 }

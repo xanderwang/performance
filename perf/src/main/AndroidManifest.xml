@@ -1,16 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.xander.performance">
+  xmlns:tools="http://schemas.android.com/tools"
+  package="com.xander.performance">
 
-    <uses-sdk tools:overrideLibrary="me.weishu.freereflection" />
+  <uses-sdk tools:overrideLibrary="me.weishu.freereflection" />
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-    <application>
-        <provider
-            android:name="com.xander.performance.AppHelper"
-            android:authorities="com.xander.performance.AppHelper" />
-    </application>
+  <application>
+    <provider
+      android:name="com.xander.performance.AppHelper"
+      android:authorities="com.xander.performance.AppHelper" />
+  </application>
 
 </manifest>

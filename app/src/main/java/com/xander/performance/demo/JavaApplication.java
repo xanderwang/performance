@@ -15,8 +15,9 @@ import java.io.File;
 public class JavaApplication extends Application {
 
   @Override
-  protected void attachBaseContext(Context base) {
-    initPERF(base);
+  public void onCreate() {
+    super.onCreate();
+    initPERF(this);
   }
 
   private void initPERF(final Context context) {
