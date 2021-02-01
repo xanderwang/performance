@@ -3,9 +3,9 @@
 由于本人工作需要，需要解决一些性能问题，虽然有 `Profiler` 、`Systrace
 ` 等工具，但是无法实时监控，多少有些不方便，于是计划写一个能实时监控性能的小工具。经过学习大佬们的文章，最终完成了这个开源的性能实时检测库。初步能达到预期效果，这里做个记录，算是小结了。
 
-开源库的地址是:
+开源库的[地址](https://github.com/XanderWang/performance)是:
 
-> [https://github.com/XanderWang/performance](https://github.com/XanderWang/performance)
+> https://github.com/XanderWang/performance
 
 幸苦各位能给个小小的 star 鼓励下。
 
@@ -45,36 +45,71 @@ dependencies {
 
 2 `APP` 工程的 `Application` 类新增类似如下初始化代码。
 
+Java 初始化示例
+
 ```java
-    private void initPerformanceTool(Context context) {
-        PERF.Builder builder = new PERF.Builder()
-            .globalTag("perf") // 检测库的全局 logcat 日志 tag ，设置后可以快速过滤日志，默认是 PERF
-            .checkUI(true, 100) // 检查 UI 线程, 超过指定时间还未结束，会被认为 ui 线程 block，时间单位为 ms
-            .checkThread(true) // 检查线程和线程池的创建
-            .checkFps(true) // 检查 App 的 FPS，还可以额外指定检测时间间隔，时间间隔单位为 ms
-            .checkIPC(true) // 检查 IPC 调用
-            .issueSupplier(new PERF.IssueSupplier() {
-                @Override
-                public long maxCacheSize() {
-                    // issue 文件缓存的最大空间
-                    return 1024 * 1024 * 20; 
-                }
-
-                @Override
-                public File cacheRootDir() {
-                    // issue 文件保存的根目录 
-                    return getApplicationContext().getCacheDir(); 
-                }
-
-                @Override
-                public boolean upLoad(File file) {
-                    // 上传入口，返回 true 表示上传成功
-                    return false;
-                }
-            }).build();
-        PERF.init(builder);
-    }
+  private void initPERF(final Context context) {
+    final PERF.LogFileUploader logFileUploader = new PERF.LogFileUploader() {
+      @Override
+      public boolean upload(File logFile) {
+        return false;
+      }
+    };
+    PERF.init(new PERF.Builder()
+        .checkUI(true, 100) // 检查 ui lock
+        .checkIPC(true) // 检查 ipc 调用
+        .checkFps(true, 1000) // 检查 fps
+        .checkThread(true) // 检查线程和线程池
+        .globalTag("test_perf") // 全局 logcat tag ,方便过滤
+        .cacheDirSupplier(new PERF.IssueSupplier<File>() {
+          @Override
+          public File get() {
+            // issue 文件保存目录
+            return context.getCacheDir();
+          }
+        })
+        .maxCacheSizeSupplier(new PERF.IssueSupplier<Integer>() {
+          @Override
+          public Integer get() {
+            // issue 文件最大占用存储空间
+            return 10 * 1024 * 1024;
+          }
+        })
+        .uploaderSupplier(new PERF.IssueSupplier<PERF.LogFileUploader>() {
+          @Override
+          public PERF.LogFileUploader get() {
+            // issue 文件上传接口
+            return logFileUploader;
+          }
+        })
+        .build());
+  }
 ```
+
+kotlin 示例
+
+```kotlin
+  private fun doUpload(log: File): Boolean {
+    return false
+  }
+
+  private fun initPERF(context: Context) {
+    PERF.init(PERF.Builder()
+        .checkUI(true, 100)// 检查 ui lock
+        .checkIPC(true) // 检查 ipc 调用
+        .checkFps(true, 1000) // 检查 fps
+        .checkThread(true)// 检查线程和线程池
+        .globalTag("test_perf")// 全局 logcat tag ,方便过滤
+        .cacheDirSupplier { context.cacheDir } // issue 文件保存目录
+        .maxCacheSizeSupplier { 10 * 1024 * 1024 } // issue 文件最大占用存储空间
+        .uploaderSupplier { // issue 文件的上传接口实现
+          PERF.LogFileUploader { logFile -> doUpload(logFile) }
+        }
+        .build()
+    )
+  }
+```
+
 
 # 主要更新记录
 
@@ -253,17 +288,18 @@ com.xander.performace.demo W/demo_Issue: =======================================
 
 -  Mail
 
-> <420640763@qq.com>
+<420640763@qq.com>
 
 - 微信
 
-![微信](https://s3.ax1x.com/2021/01/30/ykQVgg.jpg)
+![微信](https://s3.ax1x.com/2021/01/30/yASVMD.jpg)
 
 
 # 参考资料:
 
 1. [epic](https://github.com/tiann/epic)
-2. [AndroidPerformanceMonitor](https://github.com/markzhai/AndroidPerformanceMonitor)
-3. [面试官：如何监测应用的 FPS ？](https://juejin.cn/post/6890407553457963022)
-4. [深入探索Android卡顿优化（下）](https://juejin.cn/post/6844904066259091469)
+2. [SandHook](https://github.com/ganyao114/SandHook)
+3. [AndroidPerformanceMonitor](https://github.com/markzhai/AndroidPerformanceMonitor)
+4. [面试官：如何监测应用的 FPS ？](https://juejin.cn/post/6890407553457963022)
+5. [深入探索Android卡顿优化（下）](https://juejin.cn/post/6844904066259091469)
 
