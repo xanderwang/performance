@@ -13,8 +13,8 @@ import de.robv.android.xposed.XposedBridge;
 /**
  * 提供对外的统一的 hook 方法
  */
-public class HookSandHook implements IHookBridge {
-  private static final String TAG = "HookSandHook";
+public class SandHookBridge implements IHookBridge {
+  private static final String TAG = "SandHookBridge";
 
   @Override
   public int getHookType() {
@@ -23,7 +23,7 @@ public class HookSandHook implements IHookBridge {
 
   @Override
   public void hookMethod(Member hookMethod, MethodHook callback) {
-    aLog.d(TAG, "hookMethod:%s", aUtil.memberToString(hookMethod));
+    aLog.d(TAG, "hookMethod: %s", aUtil.memberToString(hookMethod));
     XposedBridge.hookMethod(hookMethod, new XC_MethodSandHook(callback));
   }
 }

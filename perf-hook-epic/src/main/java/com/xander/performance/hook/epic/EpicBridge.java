@@ -12,8 +12,8 @@ import de.robv.android.xposed.DexposedBridge;
 /**
  * 提供对外的统一的 hook 方法
  */
-public class HookEpic implements IHookBridge {
-  private static final String TAG = "HookEpic";
+public class EpicBridge implements IHookBridge {
+  private static final String TAG = "EpicBridge";
 
   @Override
   public int getHookType() {
@@ -22,7 +22,7 @@ public class HookEpic implements IHookBridge {
 
   @Override
   public void hookMethod(Member hookMethod, MethodHook callback) {
-    aLog.d(TAG, "hookMethod:%s", aUtil.memberToString(hookMethod));
+    aLog.d(TAG, "hookMethod: %s", aUtil.memberToString(hookMethod));
     DexposedBridge.hookMethod(hookMethod, new XC_MethodHookEpic(callback));
   }
 }

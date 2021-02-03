@@ -6,11 +6,11 @@ import java.lang.reflect.Member;
 
 import de.robv.android.xposed.XC_MethodHook.MethodHookParam;
 
-public class MethodHookParamEpic implements MethodParam {
+public class MethodEpicParam implements MethodParam {
 
   MethodHookParam methodHookParam;
 
-  public MethodHookParamEpic() {
+  public MethodEpicParam() {
   }
 
   public void setMethodHookParam(MethodHookParam methodHookParam) {

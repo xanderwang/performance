@@ -1,9 +1,6 @@
 package com.xander.performance.hook.epic;
 
-import com.xander.asu.aLog;
 import com.xander.performance.hook.core.MethodHook;
-
-import java.util.Arrays;
 
 import de.robv.android.xposed.XC_MethodHook;
 
@@ -18,7 +15,7 @@ public class XC_MethodHookEpic extends XC_MethodHook {
   /**
    * 实现外层的 hook param ，用来桥接 epic 的 MethodHookParam
    */
-  MethodHookParamEpic paramEpic;
+  MethodEpicParam paramEpic;
 
   public XC_MethodHookEpic(MethodHook methodHook) {
     super();
@@ -29,7 +26,7 @@ public class XC_MethodHookEpic extends XC_MethodHook {
   protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
     super.beforeHookedMethod(param);
     if (null == paramEpic) {
-      paramEpic = new MethodHookParamEpic();
+      paramEpic = new MethodEpicParam();
     }
     paramEpic.setMethodHookParam(param);
     methodHook.beforeHookedMethod(paramEpic);
@@ -39,7 +36,7 @@ public class XC_MethodHookEpic extends XC_MethodHook {
   protected void afterHookedMethod(MethodHookParam param) throws Throwable {
     super.afterHookedMethod(param);
     if (null == paramEpic) {
-      paramEpic = new MethodHookParamEpic();
+      paramEpic = new MethodEpicParam();
     }
     paramEpic.setMethodHookParam(param);
     methodHook.afterHookedMethod(paramEpic);

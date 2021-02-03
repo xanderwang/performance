@@ -25,8 +25,15 @@ public class HookBridge {
   static {
     ServiceLoader<IHookBridge> iHookBridgeLoader = ServiceLoader.load(IHookBridge.class);
     Iterator<IHookBridge> iterator = iHookBridgeLoader.iterator();
+    if (!iterator.hasNext()) {
+      // multi dex 的时候，发现会找不到配置，目前通过设置 classloader 来处理
+      iHookBridgeLoader = ServiceLoader.load(IHookBridge.class, IHookBridge.class.getClassLoader());
+      iterator = iHookBridgeLoader.iterator();
+    }
+    aLog.e(TAG, "HookBridge init has instance: %s", iterator.hasNext());
     while (iterator.hasNext()) {
       iHookBridge = iterator.next();
+      aLog.e(TAG, "HookBridge init find instance: %s", iHookBridge.getClass());
     }
   }
 
