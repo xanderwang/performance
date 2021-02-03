@@ -23,6 +23,7 @@ android {
 
 dependencies {
   def _dependencies = rootProject.ext.dependencies
+  implementation _dependencies['startup']
   implementation _dependencies['free_reflection']
   implementation _dependencies['asu']
   implementation _dependencies['perf-hook']

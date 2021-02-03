@@ -1,47 +1,13 @@
 package com.xander.performance;
 
-import android.content.ContentProvider;
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
 
-public class AppHelper extends ContentProvider {
+public class AppHelper {
 
-  private static Context mAppContext = null;
+  protected static Context mAppContext = null;
 
-  public static Context appContext() {
+  protected static Context appContext() {
     return mAppContext;
   }
 
-  @Override
-  public boolean onCreate() {
-    mAppContext = getContext().getApplicationContext();
-    return false;
-  }
-
-  @Override
-  public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-    return null;
-  }
-
-  @Override
-  public String getType(Uri uri) {
-    return null;
-  }
-
-  @Override
-  public Uri insert(Uri uri, ContentValues values) {
-    return null;
-  }
-
-  @Override
-  public int delete(Uri uri, String selection, String[] selectionArgs) {
-    return 0;
-  }
-
-  @Override
-  public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-    return 0;
-  }
 }

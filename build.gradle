@@ -35,7 +35,7 @@ buildscript {
 
   repositories {
     maven { url uri("${local_repo_path}") }
-    maven { url "https://maven.aliyun.com/repository/public" }
+    maven { url 'https://maven.aliyun.com/repository/jcenter' }
     maven { url "https://maven.aliyun.com/repository/google" }
     jcenter()
     google()
@@ -69,7 +69,7 @@ allprojects {
 
   repositories {
     maven { url uri("${local_repo_path}") }
-    maven { url "https://maven.aliyun.com/repository/public" }
+    maven { url 'https://maven.aliyun.com/repository/jcenter' }
     maven { url "https://maven.aliyun.com/repository/google" }
     jcenter()
     google()
