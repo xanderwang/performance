@@ -9,6 +9,7 @@ import com.xander.performance.hook.core.MethodParam;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -127,6 +128,7 @@ class ThreadTool {
     // 所以构造方法第一参数就是 ThreadPoolExecutor, 所以构造方法可以将 Worker 和 线程池绑定
     Class<?> workerClass = null;
     try {
+      // java.util.concurrent.ThreadPoolExecutor$Worker
       workerClass = Class.forName("java.util.concurrent.ThreadPoolExecutor$Worker");
       HookBridge.hookAllConstructors(workerClass, new WorkerConstructorHook());
     } catch (ClassNotFoundException e) {
@@ -141,10 +143,20 @@ class ThreadTool {
   }
 
   static class ThreadPoolExecutorConstructorHook extends MethodHook {
+
     @Override
-    public void afterHookedMethod(MethodParam param) throws Throwable {
-      // aLog.e(TAG, "Thread pool constructor: " + Arrays.toString(param.args));
+    public void beforeHookedMethod(MethodParam param) throws Throwable {
+      // aLog.e(
+      //     TAG,
+      //     "ThreadPoolExecutorConstructorHook beforeHookedMethod:%s",
+      //     Arrays.toString(param.getArgs())
+      // );
       String threadPoolInfoKey = Integer.toHexString(param.getThisObject().hashCode());
+      // aLog.e(
+      //     TAG,
+      //     "ThreadPoolExecutorConstructorHook beforeHookedMethod threadPoolInfoKey:%s",
+      //     threadPoolInfoKey
+      // );
       if (threadPoolInfoMap.containsKey(threadPoolInfoKey)) {
         return;
       }
@@ -160,11 +172,11 @@ class ThreadTool {
   static class WorkerConstructorHook extends MethodHook {
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
-      // aLog.e(TAG, "WorkerConstructorHook: " + Arrays.toString(param.getArgs()));
+      // aLog.e(TAG, "WorkerConstructorHook beforeHookedMethod:%s", Arrays.toString(param.getArgs()));
       String workerKey = Integer.toHexString(param.getThisObject().hashCode());
       String threadPoolKey = Integer.toHexString(param.getArgs()[0].hashCode());
-      // aLog.e(TAG, "WorkerConstructorHook workerKey:" + workerKey);
-      // aLog.e(TAG, "WorkerConstructorHook threadPoolKey:" + threadPoolKey);
+      // aLog.e(TAG, "WorkerConstructorHook beforeHookedMethod workerKey: %s", workerKey);
+      // aLog.e(TAG, "WorkerConstructorHook beforeHookedMethod threadPoolKey:%s", threadPoolKey);
       workerThreadPoolMap.put(workerKey, threadPoolKey);
     }
   }
@@ -172,40 +184,33 @@ class ThreadTool {
   static class ThreadConstructorHook extends MethodHook {
 
     @Override
-    public void beforeHookedMethod(MethodParam param) throws Throwable {
-      // aLog.e(TAG, "Thread constructor: " + Arrays.toString(param.getArgs()));
+    public void afterHookedMethod(MethodParam param) throws Throwable {
+      // aLog.e(TAG, "ThreadConstructorHook afterHookedMethod:%s", Arrays.toString(param.getArgs()));
       ThreadIssue threadIssues = new ThreadIssue("THREAD CREATE");
       String threadKey = Integer.toHexString(param.getThisObject().hashCode());
       threadIssues.key = threadKey;
       threadIssues.createTrace = StackTraceUtils.list();
-
-      boolean hasRunnable = (param.getArgs().length == 1 && param.getArgs()[0] instanceof Runnable) ||
-          (param.getArgs().length > 1 && param.getArgs()[1] instanceof Runnable);
-
-      // aLog.e(TAG, "ThreadConstructorHook hasRunnable:" + hasRunnable);
-      // 获取 runnable
+      Object[] args = param.getArgs();
+      // 获取 workerKey
       String workerKey = "";
-      if (hasRunnable) {
-        Object runnable = param.getArgs()[0] instanceof Runnable ? param.getArgs()[0] : param.getArgs()[1];
-        // aLog.e(TAG, "ThreadConstructorHook runnable class:" + runnable.getClass().getName());
-        String runnableClassName = runnable.getClass().getName();
-        if ("java.util.concurrent.ThreadPoolExecutor$Worker".equals(runnableClassName)) {
-          workerKey = Integer.toHexString(runnable.hashCode());
+      for (int i = 0; i < args.length; i++) {
+        String argClassName = args[i].getClass().getName();
+        // aLog.e(TAG, "ThreadConstructorHook afterHookedMethod arg Class Name:%s", argClassName);
+        if ("java.util.concurrent.ThreadPoolExecutor$Worker".equals(argClassName)) {
+          workerKey = Integer.toHexString(args[i].hashCode());
         }
       }
-      // aLog.e(TAG, "ThreadConstructorHook workerKey:" + workerKey);
-      // aLog.e(TAG,
-      //     "ThreadConstructorHook workerThreadPoolMap.containsKey(workerKey):" +
-      //         workerThreadPoolMap.containsKey(workerKey)
-      // );
-      if (workerThreadPoolMap.containsKey(workerKey)) {
+      aLog.e(TAG, "ThreadConstructorHook afterHookedMethod workerKey:%s", workerKey);
+      boolean isInThreadPool = workerThreadPoolMap.containsKey(workerKey);
+      aLog.e(TAG, "ThreadConstructorHook afterHookedMethod is in pool:%s", isInThreadPool);
+      if (isInThreadPool) {
         // 线程池创建的线程
         String threadPoolKey = workerThreadPoolMap.get(workerKey);
         ThreadPoolIssue threadPoolIssues = threadPoolInfoMap.get(threadPoolKey);
         if (threadPoolIssues == null) {
           // 部分情况下，比如库初始化的比较晚，部分线程池已经创建了，就会出现线程创建时没有对应的线程池
           // 这里用线程的创建调用链来代替线程池的创建调用链，多少有些参考价值
-          threadPoolIssues = new ThreadPoolIssue("THREAD POOL CREATE");
+          threadPoolIssues = new ThreadPoolIssue("THREAD POOL LOST CREATE INFO!!!");
           threadPoolIssues.key = threadPoolKey;
           threadPoolIssues.lostCreateTrace = true;
           threadPoolIssues.createTrace = StackTraceUtils.list();
@@ -225,13 +230,12 @@ class ThreadTool {
   static class ThreadStartHook extends MethodHook {
 
     @Override
-    public void beforeHookedMethod(MethodParam param) throws Throwable {
-      //super.beforeHookedMethod(param);
-      //aLog.e(TAG, "ThreadStartHook:" + Arrays.toString(param.args));
+    public void afterHookedMethod(MethodParam param) throws Throwable {
+      // aLog.e(TAG, "ThreadStartHook afterHookedMethod:%s", Arrays.toString(param.getArgs()));
       String threadKey = Integer.toHexString(param.getThisObject().hashCode());
       ThreadIssue threadIssues = threadInfoMap.get(threadKey);
       if (null == threadIssues) {
-        aLog.e(TAG, "can not find thread info when thread start !!!!!!");
+        aLog.e(TAG, "ThreadStartHook can not find thread info when thread start !!!!!!");
         threadIssues = new ThreadIssue("THREAD CREATE");
         threadIssues.key = threadKey;
         threadIssues.lostCreateTrace = true;
@@ -240,12 +244,23 @@ class ThreadTool {
       if (TextUtils.isEmpty(threadIssues.threadPoolKey)) {
         // 非线程池创建的线程
         threadIssues.startTrace = StackTraceUtils.list();
-        threadIssues.print();
       }
+      threadIssues.print();
     }
   }
 
   static class ThreadRunHook extends MethodHook {
+
+    @Override
+    public void beforeHookedMethod(MethodParam param) throws Throwable {
+      // super.beforeHookedMethod(param);
+      // String threadKey = Integer.toHexString(param.getThisObject().hashCode());
+      aLog.e(TAG, "ThreadRunHook beforeHookedMethod threadInfoMap size:" + threadInfoMap.size());
+      aLog.e(
+          TAG,
+          "ThreadRunHook beforeHookedMethod threadPoolInfoMap size:" + threadPoolInfoMap.size()
+      );
+    }
 
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
@@ -254,23 +269,26 @@ class ThreadTool {
       String threadKey = Integer.toHexString(param.getThisObject().hashCode());
       ThreadIssue threadIssues = threadInfoMap.get(threadKey);
       if (null == threadIssues) {
-        aLog.e(TAG, "can not find thread info after thread run !!!!!!");
+        aLog.e(TAG, "ThreadRunHook can not find thread info after thread run !!!!!!");
         return;
       }
       threadInfoMap.remove(threadKey);
-      aLog.e(TAG, "threadInfoMap size:" + threadInfoMap.size());
+      aLog.e(TAG, "ThreadRunHook afterHookedMethod threadInfoMap size:" + threadInfoMap.size());
       if (TextUtils.isEmpty(threadIssues.threadPoolKey)) {
         return;
       }
       ThreadPoolIssue threadPoolIssues = threadPoolInfoMap.get(threadIssues.threadPoolKey);
       if (null == threadPoolIssues) {
-        aLog.e(TAG, "can not find thread pool info after thread run  !!!!!!");
+        aLog.e(TAG, "ThreadRunHook can not find thread pool info after thread run  !!!!!!");
         return;
       }
       threadPoolIssues.removeThreadInfo(threadIssues);
       if (threadPoolIssues.isEmpty()) {
         threadPoolInfoMap.remove(threadIssues.threadPoolKey);
-        aLog.e(TAG, "threadPoolInfoMap size:" + threadPoolInfoMap.size());
+        aLog.e(
+            TAG,
+            "ThreadRunHook afterHookedMethod threadPoolInfoMap size:" + threadPoolInfoMap.size()
+        );
       }
     }
   }

@@ -130,7 +130,7 @@ public class Issue {
 
   private void buildIssueString() {
     String dataString = null;
-    if (null == dataBytes) {
+    if (null == dataBytes || dataBytes.length == 0 ) {
       StringBuilder sb = new StringBuilder();
       sb.append("\n=================================================\n");
       sb.append("type: ").append(typeToString()).append('\n');
@@ -145,7 +145,7 @@ public class Issue {
       }
       dataString = sb.toString();
       dataBytes = dataString.getBytes();
-      data = null; // 释放，节省内存
+      // data = null; // 释放，节省内存
       log(TAG, dataString);
     } else {
       log(TAG, new String(dataBytes));
@@ -190,6 +190,9 @@ public class Issue {
 
     @Override
     public void run() {
+      if (null == issue || null == issue.dataBytes) {
+        return;
+      }
       MappedByteBuffer buffer = gMappedByteBuffer();
       if (buffer.remaining() < issue.dataBytes.length) {
         createLogFileAndBuffer();
