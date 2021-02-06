@@ -26,12 +26,17 @@ public class PERF {
     /**
      * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
      */
-    long mUIBlockIntervalTime = Config.UI_BLOCK_INTERVAL_TIME;
+    long mUIBlockTime = Config.UI_BLOCK_TIME;
 
     /**
      * 检测线程的 start 方法调用栈
      */
     boolean mCheckThread = false;
+
+    /**
+     * 线程 block 的时间间隔，超过了表示后台执行的任务太多了，需要注意。
+     */
+    long mThreadBlockTime = Config.THREAD_BLOCK_TIME;
 
     /**
      * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
@@ -73,14 +78,20 @@ public class PERF {
       return this;
     }
 
-    public Builder checkUI(boolean check, long blockIntervalTime) {
+    public Builder checkUI(boolean check, long blockTime) {
       mCheckUI = check;
-      mUIBlockIntervalTime = blockIntervalTime;
+      mUIBlockTime = blockTime;
       return this;
     }
 
     public Builder checkThread(boolean check) {
       mCheckThread = check;
+      return this;
+    }
+
+    public Builder checkThread(boolean check, long threadBlockTime) {
+      mCheckThread = check;
+      mThreadBlockTime = threadBlockTime;
       return this;
     }
 
@@ -147,10 +158,11 @@ public class PERF {
     aConstants.globalTag = builder.globalTag;
     Issue.init(builder.cacheDirSupplier, builder.macCacheSizeSupplier, builder.uploaderSupplier);
     if (builder.mCheckThread) {
+      Config.THREAD_BLOCK_TIME = builder.mThreadBlockTime;
       ThreadTool.init();
     }
     if (builder.mCheckUI) {
-      Config.UI_BLOCK_INTERVAL_TIME = builder.mUIBlockIntervalTime;
+      Config.UI_BLOCK_TIME = builder.mUIBlockTime;
       UIBlockTool.start();
     }
     if (builder.mCheckIPC) {

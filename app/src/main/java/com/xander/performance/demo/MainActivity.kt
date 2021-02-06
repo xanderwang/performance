@@ -24,9 +24,13 @@ class MainActivity : AppCompatActivity() {
 
   fun testThread(v: View) {
     aLog.e(TAG, "testThread thread name:${Thread.currentThread().name}")
-    thread(name = "test-thread", start = true) {
+    thread(name = "test-thread-10000", start = true) {
+      Thread.sleep(10000)
       aLog.d(TAG, Thread.currentThread().name)
+    }
+    thread(name = "test-thread-3000", start = true) {
       Thread.sleep(3000)
+      aLog.d(TAG, Thread.currentThread().name)
     }
   }
 

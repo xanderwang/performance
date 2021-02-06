@@ -44,7 +44,7 @@ class UIBlockTool {
       return;
     }
     dumpInfoHandler.removeCallbacks(dumpMainThreadRunnable);
-    dumpInfoHandler.postDelayed(dumpMainThreadRunnable, Config.UI_BLOCK_INTERVAL_TIME);
+    dumpInfoHandler.postDelayed(dumpMainThreadRunnable, Config.UI_BLOCK_TIME);
   }
 
   private static void clearDumpInfo() {

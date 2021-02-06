@@ -10,11 +10,15 @@ public class PERF {
       return this;
     }
 
-    public Builder checkUI(boolean check, long blockIntervalTime) {
+    public Builder checkUI(boolean check, long blockTime) {
       return this;
     }
 
     public Builder checkThread(boolean check) {
+      return this;
+    }
+
+    public Builder checkThread(boolean check, long threadBlockTime) {
       return this;
     }
 

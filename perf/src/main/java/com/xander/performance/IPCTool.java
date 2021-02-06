@@ -1,18 +1,14 @@
 package com.xander.performance;
 
-import android.os.Binder;
 import android.os.Parcel;
 import android.os.SystemClock;
 
 import com.xander.asu.aLog;
 import com.xander.performance.hook.HookBridge;
-import com.xander.performance.hook.core.MethodParam;
 import com.xander.performance.hook.core.MethodHook;
+import com.xander.performance.hook.core.MethodParam;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.HashMap;
 
 
@@ -28,6 +24,41 @@ class IPCTool {
   private static Method binderInterfaceDescriptor = null;
 
   private static HashMap<String, IPCIssue> issueHashMap = new HashMap<>(64);
+
+  private static void startTransact(Object ipcInterface, Object methodToken) {
+    if (null == ipcInterface) {
+      Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
+      ipcIssue.print();
+      return;
+    }
+    String ipcToken = String.format("%s_%s", ipcInterface, methodToken);
+    IPCIssue ipcIssue = new IPCIssue(ipcInterface, "IPC", null);
+    ipcIssue.startTime = SystemClock.elapsedRealtime();
+    issueHashMap.put(ipcToken, ipcIssue);
+  }
+
+  private static void endTransact(Object ipcInterface, Object methodToken,
+      StackTraceElement[] startTrace) {
+    if (null == ipcInterface) {
+      return;
+    }
+    String ipcToken = String.format("%s_%s", ipcInterface, methodToken);
+    IPCIssue ipcIssue = issueHashMap.remove(ipcToken);
+    if (null != ipcIssue) {
+      ipcIssue.costTime = SystemClock.elapsedRealtime() - ipcIssue.startTime;
+      if (ipcIssue.costTime >= Config.UI_BLOCK_TIME) {
+        ipcIssue.setData(StackTraceUtils.list(startTrace));
+        ipcIssue.print();
+      }
+    } else {
+      aLog.e(TAG, "can not find ipc info when end transact!!!");
+    }
+  }
+
+  private static void justCheckTransact(StackTraceElement[] startTrace) {
+    Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list(startTrace));
+    ipcIssue.print();
+  }
 
   static void start() {
     aLog.e(TAG, "start");
@@ -69,149 +100,30 @@ class IPCTool {
   static class BinderTransactProxyHook extends MethodHook {
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-      String ipcInterface = null;
+      // super.beforeHookedMethod(param);
+      Object ipcInterface = null;
       if (null != binderInterfaceDescriptor) {
-        ipcInterface = (String) binderInterfaceDescriptor.invoke(param.getThisObject());
+        ipcInterface = binderInterfaceDescriptor.invoke(param.getThisObject());
       }
-      if (null != ipcInterface) {
-        String issueToken = ipcInterface + param.getArgs()[0];
-        IPCIssue ipcIssue = new IPCIssue(ipcInterface, "IPC", null);
-        ipcIssue.startTime = SystemClock.elapsedRealtime();
-        issueHashMap.put(issueToken, ipcIssue);
-      } else {
-        Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
-        ipcIssue.print();
-      }
+      startTransact(ipcInterface, param.getArgs()[0]);
     }
 
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
-      super.afterHookedMethod(param);
-      String ipcInterface = null;
+      // super.afterHookedMethod(param);
+      Object ipcInterface = null;
       if (null != binderInterfaceDescriptor) {
-        ipcInterface = (String) binderInterfaceDescriptor.invoke(param.getThisObject());
+        ipcInterface = binderInterfaceDescriptor.invoke(param.getThisObject());
       }
-      if (null != ipcInterface) {
-        String issueToken = ipcInterface + param.getArgs()[0];
-        IPCIssue ipcIssue = issueHashMap.remove(issueToken);
-        if (null != ipcIssue) {
-          ipcIssue.costTime = SystemClock.elapsedRealtime() - ipcIssue.startTime;
-          if (ipcIssue.costTime >= Config.UI_BLOCK_INTERVAL_TIME) {
-            ipcIssue.setData(StackTraceUtils.list());
-            ipcIssue.print();
-          }
-        }
-      }
+      endTransact(ipcInterface, param.getArgs()[0], Thread.currentThread().getStackTrace());
     }
   }
 
   static class ParcelReadExceptionHook extends MethodHook {
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-      Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
-      ipcIssue.print();
-    }
-  }
-
-  @Deprecated
-  static class ParcelWriteInterfaceTokenHook extends MethodHook {
-    @Override
-    public void beforeHookedMethod(MethodParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-      aLog.e(TAG, "WriteInterfaceTokenHook:" + param.getArgs()[0]);
-      // aLog.e(TAG, "WriteInterfaceTokenHook:", new Throwable());
-      IPCIssue ipcIssue = new IPCIssue(param.getArgs()[0], "IPC", StackTraceUtils.list());
-      ipcIssue.print();
-    }
-  }
-
-  @Deprecated
-  private static TransactListenerHandler gTransactListenerHandler = null;
-
-  @Deprecated
-  private static void hookTransactListener() {
-    setTransactListener(null);
-    try {
-      HookBridge.findAndHookMethod(
-          Class.forName("android.os.BinderProxy"),
-          "setTransactListener",
-          Class.forName("android.os.Binder$ProxyTransactListener"),
-          new SetTransactListenerHook()
-      );
-      aLog.e(TAG, "hookTransactListener");
-    } catch (Exception e) {
-      aLog.e(TAG, "hookTransactListener", e);
-    }
-  }
-
-  /**
-   * hook transact 方法总是碰到各种问题，所以换一种方式，但是这个只有 Android 10 以上的版本
-   */
-  @Deprecated
-  private static void setTransactListener(Object target) {
-    try {
-      if (null == gTransactListenerHandler) {
-        synchronized (IPCTool.class) {
-          if (null == gTransactListenerHandler) {
-            gTransactListenerHandler = new TransactListenerHandler();
-          }
-        }
-      }
-      Class binderProxy = Class.forName("android.os.BinderProxy");
-      Class transactListener = Class.forName("android.os.Binder$ProxyTransactListener");
-      Method setMethod = binderProxy.getDeclaredMethod("setTransactListener", transactListener);
-      setMethod.setAccessible(true);
-      gTransactListenerHandler.setTarget(target);
-      Object proxyInstance = Proxy.newProxyInstance(
-          Binder.class.getClassLoader(),
-          new Class[]{transactListener},
-          gTransactListenerHandler
-      );
-      setMethod.invoke(null, proxyInstance);
-      // aLog.e(TAG, "invoke setTransactListener");
-      Field listener = binderProxy.getDeclaredField("sTransactListener");
-      listener.setAccessible(true);
-      aLog.e(TAG, "android.os.BinderProxy.sTransactListener is:" + listener.get(null));
-    } catch (Exception e) {
-      aLog.e(TAG, "setTransactListener error", e);
-    }
-  }
-
-  @Deprecated
-  static class TransactListenerHandler implements InvocationHandler {
-
-    private Object target;
-
-    public TransactListenerHandler() {
-    }
-
-    public void setTarget(Object target) {
-      this.target = target;
-    }
-
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      String methodName = method.getName();
-      if ("onTransactStarted".equals(methodName)) {
-        Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
-        ipcIssue.print();
-      }
-      if (null != target) {
-        method.setAccessible(true);
-        return method.invoke(target, args);
-      }
-      return null;
-    }
-  }
-
-  @Deprecated
-  static class SetTransactListenerHook extends MethodHook {
-    @Override
-    public void afterHookedMethod(MethodParam param) throws Throwable {
-      super.afterHookedMethod(param);
-      setTransactListener(param.getArgs()[0]);
+      // super.beforeHookedMethod(param);
+      justCheckTransact(Thread.currentThread().getStackTrace());
     }
   }
 
@@ -233,7 +145,7 @@ class IPCTool {
         sb.append("ipc interface: ").append(ipcInterface).append('\n');
       }
       if (costTime > 0) {
-        sb.append("ipc cost time: ").append(costTime).append(" ms\n");
+        sb.append("cost time: ").append(costTime).append(" ms\n");
       }
     }
   }
