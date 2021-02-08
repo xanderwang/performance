@@ -289,7 +289,7 @@ class ThreadTool {
       saveThreadPoolCreateInfo(
           threadPoolInfoKey,
           "THREAD POOL CREATE",
-          cThread.getStackTrace()
+          new Throwable().getStackTrace()
       );
     }
   }
@@ -325,7 +325,7 @@ class ThreadTool {
         }
       }
       aLog.d(TAG, "ThreadConstructorHook afterHookedMethod workerKey:%s", workerKey);
-      saveThreadCreateInfo(threadKey, workerKey, cThread.getStackTrace());
+      saveThreadCreateInfo(threadKey, workerKey, new Throwable().getStackTrace());
     }
   }
 
@@ -337,7 +337,7 @@ class ThreadTool {
       // Thread cThread = (Thread) param.getThisObject();
       Thread cThread = Thread.currentThread();
       String threadKey = Integer.toHexString(cThread.hashCode());
-      saveStartThreadInfo(threadKey, cThread.getName(), cThread.getStackTrace());
+      saveStartThreadInfo(threadKey, cThread.getName(), new Throwable().getStackTrace());
     }
   }
 
