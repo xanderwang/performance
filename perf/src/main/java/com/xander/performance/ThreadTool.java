@@ -143,7 +143,7 @@ class ThreadTool {
     threadInfo.createTrace = StackTraceUtils.list(createTrace);
     boolean isInThreadPool = workerThreadPoolMap.containsKey(workerKey);
     aLog.d(TAG, "saveThreadCreateInfo: is in thread pool:%s", isInThreadPool);
-    aLog.d(TAG, "saveThreadCreateInfo: createTrace:%s", StackTraceUtils.list(createTrace));
+    // aLog.d(TAG, "saveThreadCreateInfo: createTrace:%s", StackTraceUtils.list(createTrace));
     if (isInThreadPool) {
       // 线程池创建的线程
       String threadPoolKey = workerThreadPoolMap.get(workerKey);
@@ -164,6 +164,7 @@ class ThreadTool {
       // 因为，Worker 只创建一个 Thread
       workerThreadPoolMap.remove(workerKey);
     }
+    // 需要？
     threadMap.put(threadKey, threadInfo);
   }
 
@@ -212,7 +213,7 @@ class ThreadTool {
     );
   }
 
-  private static void threadStartRun(Thread thread) {
+  private static void threadRunStart(Thread thread) {
     if (null == thread) {
       return;
     }
@@ -222,7 +223,7 @@ class ThreadTool {
     threadTraceHandler.postDelayed(dumpTask, Config.THREAD_BLOCK_TIME);
   }
 
-  private static void threadEndRun(Thread thread) {
+  private static void threadRunEnd(Thread thread) {
     if (null == thread) {
       return;
     }
@@ -274,8 +275,8 @@ class ThreadTool {
 
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
-      Thread cThread = Thread.currentThread();
-      String threadPoolInfoKey = Integer.toHexString(cThread.hashCode());
+      Object threadPool = param.getThisObject();
+      String threadPoolInfoKey = Integer.toHexString(threadPool.hashCode());
       // aLog.d(
       //     TAG,
       //     "ThreadPoolExecutorConstructorHook beforeHookedMethod:%s",
@@ -311,8 +312,7 @@ class ThreadTool {
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
       // aLog.d(TAG, "ThreadConstructorHook afterHookedMethod:%s", Arrays.toString(param.getArgs()));
-      // Thread cThread = (Thread) param.getThisObject();
-      Thread cThread = Thread.currentThread();
+      Thread cThread = (Thread) param.getThisObject();
       String threadKey = Integer.toHexString(cThread.hashCode());
       // 获取 workerKey
       String workerKey = "";
@@ -334,8 +334,8 @@ class ThreadTool {
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
       // aLog.d(TAG, "ThreadStartHook afterHookedMethod:%s", Arrays.toString(param.getArgs()));
-      // Thread cThread = (Thread) param.getThisObject();
-      Thread cThread = Thread.currentThread();
+      Thread cThread = (Thread) param.getThisObject();
+      // Thread cThread = Thread.currentThread();
       String threadKey = Integer.toHexString(cThread.hashCode());
       saveStartThreadInfo(threadKey, cThread.getName(), new Throwable().getStackTrace());
     }
@@ -359,7 +359,7 @@ class ThreadTool {
         aLog.d(TAG, "RunnableRunHook beforeHookedMethod in main thread");
         return;
       }
-      threadStartRun(cThread);
+      threadRunStart(cThread);
     }
 
     @Override
@@ -369,7 +369,7 @@ class ThreadTool {
         aLog.d(TAG, "RunnableRunHook afterHookedMethod in main thread");
         return;
       }
-      threadEndRun(cThread);
+      threadRunEnd(cThread);
     }
   }
 
