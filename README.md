@@ -29,17 +29,17 @@
 ```groovy
 dependencies {
   // 必选
-  debugImplementation "com.xander.performance:perf:0.1.11"
-  releaseImplementation "com.xander.performance:perf-noop:0.1.11"  
+  debugImplementation "com.xander.performance:perf:0.1.12"
+  releaseImplementation "com.xander.performance:perf-noop:0.1.12"  
   // hook 方案封装，必须添加
-  debugImplementation "com.xander.performance:perf-hook:0.1.11"
+  debugImplementation "com.xander.performance:perf-hook:0.1.12"
   
   // 以下是 hook 方案选择一个就好了。如果运行报错，就换另外一个，如果还是报错，就提个 issue
   // SandHook 方案，推荐添加。如果运行报错，可以替换为 epic 库。
-  debugImplementation "com.xander.performance:perf-hook-sandhook:0.1.11"
+  debugImplementation "com.xander.performance:perf-hook-sandhook:0.1.12"
 
   // epic 方法。如果运行报错，可以替换为 SandHook。
-  // debugImplementation "com.xander.performance:perf-hook-epic:0.1.11"
+  // debugImplementation "com.xander.performance:perf-hook-epic:0.1.12"
 }
 ```
 
@@ -113,17 +113,13 @@ kotlin 示例
 
 # 主要更新记录
 
+- 0.1.12 线程创建的监控，加入 thread name 信息收集。同时接入 startup 库做必要的初始化，以及调整 mulit dex 的时候，配置文件找不到的问题。
 - 0.1.11 优化 hook 方案的封装，通过 SandHook ,IPC 的监控可以按照耗时时间来检测。
 - 0.1.10 FPS 的检测时间间隔从默认 2s 调整为 1s，同时支持自定义时间间隔。
 - 0.1.9  优化线程池创建的监控。
 - 0.1.8  初版发布，完成基本的功能。
 
 不建议直接在线上使用这个库，在编写这个库，测试 hook 的时候，在不同的机器和 `rom` 上，会有不同的问题，这里建议先只在线下自测使用这个检测库。
-
-# 后期计划
-
-- [x] IPC 的监控目前只能监控调用，无法检测 IPC 调用耗时时间，后期计划按照耗时时间来检测。
-- [x] Issue 保存到文件的逻辑优化，目前写的自我感觉不是很好，后面计划优化下。
 
 # 原理介绍
 
