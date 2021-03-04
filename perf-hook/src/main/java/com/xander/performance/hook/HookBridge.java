@@ -60,7 +60,17 @@ public class HookBridge {
     }
   }
 
-  public static void findAndHookMethod(Class<?> clazz, String methodName, Object... parameterTypesAndCallback) {
+  public static void findAllAndHookMethod(Class<?> clazz, String methodName,
+      MethodHook methodHook) {
+    List<Method> methodList = findMethodList(clazz, methodName, true, null);
+    assertNotNullOrEmpty(methodList);
+    for (Method method : methodList) {
+      hookMethod(method, methodHook);
+    }
+  }
+
+  public static void findAndHookMethod(Class<?> clazz, String methodName,
+      Object... parameterTypesAndCallback) {
     Class<?>[] parameterTypes = null;
     if (null != parameterTypesAndCallback && parameterTypesAndCallback.length > 1) {
       int len = parameterTypesAndCallback.length - 1;
@@ -95,10 +105,15 @@ public class HookBridge {
     }
   }
 
-  private static List<Method> findMethodList(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
+  private static List<Method> findMethodList(Class<?> clazz, String methodName,
+      Class<?>... parameterTypes) {
+    return findMethodList(clazz, methodName, false, parameterTypes);
+  }
+
+  private static List<Method> findMethodList(Class<?> clazz, String methodName,
+      boolean justCheckName, Class<?>... parameterTypes) {
     List<Method> list = new ArrayList<>();
-    boolean justCheckName = false;
-    if (null == parameterTypes || parameterTypes.length == 0) {
+    if (!justCheckName && (null == parameterTypes || parameterTypes.length == 0)) {
       justCheckName = true;
     }
     if (justCheckName) {

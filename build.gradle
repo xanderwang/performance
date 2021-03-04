@@ -12,8 +12,8 @@ buildscript {
   ext.kotlin_version = '1.4.20'
   ext.lib_publish_version = "0.1.12"
   ext.lib_version = "0.1.12"
-  ext.use_local_lib = false
-  ext.use_local_hook_lib = false
+  ext.use_local_lib = true
+  ext.use_local_hook_lib = true
 
   ext.local_repo_path = rootProject.file("./repos").absolutePath
   println("local repo path:$local_repo_path")

@@ -157,6 +157,9 @@ public class Issue {
   }
 
   protected void buildListString(StringBuilder sb, List<?> dataList) {
+    if (null == dataList || dataList.isEmpty()) {
+      return;
+    }
     for (int i = 0, len = dataList.size(); i < len; i++) {
       Object item = dataList.get(i);
       sb.append('\t').append(item).append('\n');

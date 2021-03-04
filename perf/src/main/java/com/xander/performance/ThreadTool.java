@@ -99,6 +99,12 @@ class ThreadTool {
     }
   }
 
+  static class ThreadTraceIssue extends Issue {
+    public ThreadTraceIssue(String msg, Object data) {
+      super(Issue.TYPE_THREAD, msg, data);
+    }
+  }
+
   /**
    * thread 的信息，包括线程池里面创建的，可以通过 ThreadInfo.threadPoolInfoKey 字段判断是否为线程池创建
    */
@@ -218,9 +224,17 @@ class ThreadTool {
       return;
     }
     String threadKey = Integer.toHexString(thread.hashCode());
+    if (dumpTaskMap.containsKey(threadKey)) {
+      // 这种情况会在 kt 里面创建线程的时候发生，目前发现到的是 kt 代码创建的线程貌似会缓存起来。
+      // 线程的 runnable 的 run 方法执行完后，不会立即结束 thread 的 run 方法。 kt 会缓存下来，貌似。
+      // 所以后续要做的是如果是 kt 的线程进来的，移除之前的，保证准确性
+      DumpThreadTraceTask oldTask = dumpTaskMap.remove(threadKey);
+      threadTraceHandler.removeCallbacks(oldTask);
+    }
     DumpThreadTraceTask dumpTask = new DumpThreadTraceTask(Thread.currentThread());
     dumpTaskMap.put(threadKey, dumpTask);
     threadTraceHandler.postDelayed(dumpTask, Config.THREAD_BLOCK_TIME);
+    aLog.e(TAG, "threadRunStart:dumpTaskMap size:%s,delayTime:%s", dumpTaskMap.size(), Config.THREAD_BLOCK_TIME);
   }
 
   private static void threadRunEnd(Thread thread) {
@@ -233,6 +247,15 @@ class ThreadTool {
     if (null == dumpTask) {
       aLog.ee(TAG, "RunnableRunHook afterHookedMethod null task!!!", new Throwable());
     }
+  }
+
+  private static void threadPriorityChanged() {
+    //Priority
+    ThreadTraceIssue traceIssue = new ThreadTraceIssue(
+        "THREAD PRIORITY CHANGED TRACE",
+        StackTraceUtils.list(Thread.currentThread())
+    );
+    traceIssue.print();
   }
 
   static void init() {
@@ -265,10 +288,31 @@ class ThreadTool {
     // 根据构造方法里面的 runnable 是否为 Worker 可知是否为线程池创建的线程。
     HookBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
     HookBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
-    HookBridge.findAndHookMethod(Thread.class, "exit", new ThreadExitHook());
     // run 方法执行完，表示线程执行完。可以考虑在里面做一些清理工作，目前发现还是有问题
-    // HookBridge.findAndHookMethod(Thread.class, "run", new RunnableRunHook());
-    // HookBridge.findAndHookMethod(Runnable.class, "run", new RunnableRunHook());
+    HookBridge.findAndHookMethod(Thread.class, "run", new ThreadExitHook());
+    try {
+      // kotlin 的线程执行和 java 的不一致，这里需要做个区分
+      Class<?> ktThreadRunnable = Class.forName("kotlin.concurrent.ThreadsKt$thread$thread$1");
+      HookBridge.findAndHookMethod(ktThreadRunnable, "run", new RunnableRunHook());
+    } catch (ClassNotFoundException e) {
+      aLog.ee(TAG, "kotlin.concurrent.ThreadsKt$thread$thread$1", e);
+    }
+
+    // hook 优先级的设置
+    // HookBridge.findAndHookMethod(
+    //     Thread.class,
+    //     "setPriority",
+    //     int.class,
+    //     new ThreadSetPriorityHook()
+    // );
+    //
+    // HookBridge.findAndHookMethod(
+    //     Process.class,
+    //     "setThreadPriority",
+    //     int.class,
+    //     new ProcessSetThreadPriorityHook()
+    // );
+
   }
 
   static class ThreadPoolExecutorConstructorHook extends MethodHook {
@@ -342,10 +386,24 @@ class ThreadTool {
   }
 
   static class ThreadExitHook extends MethodHook {
+
+    @Override
+    public void beforeHookedMethod(MethodParam param) throws Throwable {
+      // super.beforeHookedMethod(param);
+      Thread cThread = Thread.currentThread();
+      if (cThread == Looper.getMainLooper().getThread()) {
+        aLog.d(TAG, "ThreadExitHook beforeHookedMethod in main thread");
+        return;
+      }
+      threadRunStart(cThread);
+    }
+
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
+      aLog.d(TAG, "ThreadExitHook afterHookedMethod");
       // super.afterHookedMethod(param);
       Thread cThread = (Thread) param.getThisObject();
+      threadRunEnd(cThread);
       String threadKey = Integer.toHexString(cThread.hashCode());
       clearInfoWhenExitThread(threadKey);
     }
@@ -354,6 +412,9 @@ class ThreadTool {
   static class RunnableRunHook extends MethodHook {
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
+      // aLog.d(TAG, "RunnableRunHook beforeHookedMethod:%s", param.getThisObject());
+      // aLog.d(TAG, "RunnableRunHook beforeHookedMethod currentThread:%s", Thread.currentThread());
+      // aLog.d(TAG, "RunnableRunHook beforeHookedMethod MainLooper:%s", Looper.getMainLooper().getThread());
       Thread cThread = Thread.currentThread();
       if (cThread == Looper.getMainLooper().getThread()) {
         aLog.d(TAG, "RunnableRunHook beforeHookedMethod in main thread");
@@ -364,6 +425,9 @@ class ThreadTool {
 
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
+      // aLog.d(TAG, "RunnableRunHook afterHookedMethod:%s", param.getThisObject());
+      // aLog.d(TAG, "RunnableRunHook afterHookedMethod currentThread:%s", Thread.currentThread());
+      // aLog.d(TAG, "RunnableRunHook afterHookedMethod MainLooper:%s", Looper.getMainLooper().getThread());
       Thread cThread = Thread.currentThread();
       if (cThread == Looper.getMainLooper().getThread()) {
         aLog.d(TAG, "RunnableRunHook afterHookedMethod in main thread");
@@ -373,12 +437,21 @@ class ThreadTool {
     }
   }
 
-  static class ThreadTraceIssue extends Issue {
-
-    public ThreadTraceIssue(String msg, Object data) {
-      super(Issue.TYPE_THREAD, msg, data);
+  // java.lang.Thread.setPriority
+  static class ThreadSetPriorityHook extends MethodHook {
+    @Override
+    public void beforeHookedMethod(MethodParam param) throws Throwable {
+      super.beforeHookedMethod(param);
+      threadPriorityChanged();
     }
+  }
 
+  //android.os.Process.setThreadPriority
+  static class ProcessSetThreadPriorityHook extends MethodHook {
+    @Override
+    public void beforeHookedMethod(MethodParam param) throws Throwable {
+      super.beforeHookedMethod(param);
+    }
   }
 
   /**
@@ -397,8 +470,9 @@ class ThreadTool {
       if (null == threadRef || threadRef.get() == null) {
         return;
       }
+      // aLog.e(TAG, "DumpThreadTraceTask:%s", threadRef.get());
       ThreadTraceIssue traceIssue = new ThreadTraceIssue(
-          "THREAD RUN TRACE",
+          "THREAD RUN BLOCK TRACE",
           StackTraceUtils.list(threadRef.get())
       );
       traceIssue.print();
