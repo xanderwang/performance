@@ -193,13 +193,14 @@ class ThreadTool {
   }
 
   private static void clearInfoWhenExitThread(String threadKey) {
-    aLog.d(TAG, "clear info when exit thread threadKey:%s", threadKey);
+    aLog.d(TAG, "clear info when exit thread, threadKey:%s", threadKey);
     ThreadIssue threadInfo = threadMap.remove(threadKey);
     if (null == threadInfo) {
       aLog.e(TAG, "can not find thread info when exit thread!!!");
       return;
     }
-    aLog.e(TAG, "clear info when exit thread thread count:%s", threadMap.size());
+    aLog.e(TAG, "clear info when exit thread, thread name:%s", threadInfo.threadName);
+    aLog.e(TAG, "clear info when exit thread, running thread count:%s", threadMap.size());
     if (null == threadInfo.threadPoolKey || "".equals(threadInfo.threadPoolKey)) {
       return;
     }
@@ -214,7 +215,7 @@ class ThreadTool {
     }
     aLog.e(
         TAG,
-        "clear info when exit thread thread pool count:%s",
+        "clear info when exit thread, thread pool count:%s",
         threadPoolMap.size()
     );
   }
@@ -226,8 +227,8 @@ class ThreadTool {
     String threadKey = Integer.toHexString(thread.hashCode());
     if (dumpTaskMap.containsKey(threadKey)) {
       // 这种情况会在 kt 里面创建线程的时候发生，目前发现到的是 kt 代码创建的线程貌似会缓存起来。
-      // 线程的 runnable 的 run 方法执行完后，不会立即结束 thread 的 run 方法。 kt 会缓存下来，貌似。
-      // 所以后续要做的是如果是 kt 的线程进来的，移除之前的，保证准确性
+      // kt 创建的线程的 `run 的方法块`执行完后，不会立即结束 thread 的 run 方法。 kt 会缓存线程下来。
+      // 所以如果是 kt 的线程`run 的方法块`执行了，就移除之前的信息，保证准确性。
       DumpThreadTraceTask oldTask = dumpTaskMap.remove(threadKey);
       threadTraceHandler.removeCallbacks(oldTask);
     }
@@ -274,12 +275,11 @@ class ThreadTool {
       HookBridge.hookMethod(constructors[i], constructorHook);
     }
 
-    // java.util.concurrent.ThreadPoolExecutor$Worker 是一个内部类，
-    // 所以构造方法第一参数就是 ThreadPoolExecutor, 所以构造方法可以将 Worker 和 线程池绑定
-    Class<?> workerClass = null;
     try {
+      // java.util.concurrent.ThreadPoolExecutor$Worker 是一个内部类，
+      // 所以构造方法第一参数就是 ThreadPoolExecutor, 所以构造方法可以将 Worker 和 线程池绑定
       // java.util.concurrent.ThreadPoolExecutor$Worker
-      workerClass = Class.forName("java.util.concurrent.ThreadPoolExecutor$Worker");
+      Class<?> workerClass = Class.forName("java.util.concurrent.ThreadPoolExecutor$Worker");
       HookBridge.hookAllConstructors(workerClass, new WorkerConstructorHook());
     } catch (ClassNotFoundException e) {
       aLog.ee(TAG, "java.util.concurrent.ThreadPoolExecutor$Worker", e);
@@ -298,20 +298,20 @@ class ThreadTool {
       aLog.ee(TAG, "kotlin.concurrent.ThreadsKt$thread$thread$1", e);
     }
 
-    // hook 优先级的设置
-    // HookBridge.findAndHookMethod(
-    //     Thread.class,
-    //     "setPriority",
-    //     int.class,
-    //     new ThreadSetPriorityHook()
-    // );
-    //
-    // HookBridge.findAndHookMethod(
-    //     Process.class,
-    //     "setThreadPriority",
-    //     int.class,
-    //     new ProcessSetThreadPriorityHook()
-    // );
+    // hook 优先级
+    HookBridge.findAndHookMethod(
+        Thread.class,
+        "setPriority",
+        int.class,
+        new ThreadSetPriorityHook()
+    );
+
+    HookBridge.findAndHookMethod(
+        Process.class,
+        "setThreadPriority",
+        int.class,
+        new ProcessSetThreadPriorityHook()
+    );
 
   }
 
@@ -451,11 +451,12 @@ class ThreadTool {
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
       super.beforeHookedMethod(param);
+      threadPriorityChanged();
     }
   }
 
   /**
-   * 打印任务
+   * 打印某个线程调用栈的任务
    */
   static class DumpThreadTraceTask implements Runnable {
 

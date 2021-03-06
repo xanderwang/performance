@@ -5,10 +5,7 @@ import android.app.Service
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
-import android.os.Looper
+import android.os.*
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.xander.asu.aLog
@@ -27,12 +24,12 @@ class MainActivity : AppCompatActivity() {
     thread(name = "test-thread-10000", start = true) {
       Thread.sleep(10000)
       aLog.d(TAG, "${Thread.currentThread()}")
-      aLog.de(TAG, "${Thread.currentThread()}", Throwable())
+      // aLog.de(TAG, "${Thread.currentThread()}", Throwable())
     }
     thread(name = "test-thread-3000", start = true) {
       Thread.sleep(3000)
       aLog.d(TAG, "${Thread.currentThread()}")
-      aLog.de(TAG, "${Thread.currentThread()}", Throwable())
+      // aLog.de(TAG, "${Thread.currentThread()}", Throwable())
     }
     val r = Runnable {
       Thread.sleep(5000)
@@ -52,6 +49,20 @@ class MainActivity : AppCompatActivity() {
     // Executors.newFixedThreadPool(3, Executors.defaultThreadFactory()).execute {
     //   aLog.d(TAG, "execute!!!")
     // }
+  }
+
+  fun testThreadPriority(v: View) {
+    val r1 = Runnable {
+      Process.setThreadPriority(Process.THREAD_PRIORITY_DISPLAY)
+    }
+    val t1 = Thread(r1, "test-thread-priority-1")
+    t1.start()
+    val r2 = Runnable {
+      // Process.setThreadPriority(Process.THREAD_PRIORITY_DISPLAY)
+      Thread.currentThread().priority = 3
+    }
+    val t2 = Thread(r2, "test-thread-priority-2")
+    t2.start()
   }
 
   fun testANR(v: View) {
