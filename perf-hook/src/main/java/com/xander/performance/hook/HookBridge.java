@@ -61,11 +61,11 @@ public class HookBridge {
   }
 
   public static void findAllAndHookMethod(Class<?> clazz, String methodName,
-      MethodHook methodHook) {
+      MethodHook methodHookCallback) {
     List<Method> methodList = findMethodList(clazz, methodName, true, null);
     assertNotNullOrEmpty(methodList);
     for (Method method : methodList) {
-      hookMethod(method, methodHook);
+      hookMethod(method, methodHookCallback);
     }
   }
 
@@ -131,8 +131,8 @@ public class HookBridge {
       try {
         Method m = clazz.getDeclaredMethod(methodName, parameterTypes);
         list.add(m);
-      } catch (NoSuchMethodException e) {
-        e.printStackTrace();
+      } catch (Exception e) {
+        aLog.ee(TAG, "findMethodList", e);
       }
     }
     return list;
