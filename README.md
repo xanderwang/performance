@@ -29,17 +29,17 @@
 ```groovy
 dependencies {
   // 必选
-  debugImplementation "com.xander.performance:perf:0.1.13"
-  releaseImplementation "com.xander.performance:perf-noop:0.1.13"  
+  debugImplementation "com.xander.performance:perf:0.2.0"
+  releaseImplementation "com.xander.performance:perf-noop:0.2.0"  
   // hook 方案封装，必须添加
-  debugImplementation "com.xander.performance:perf-hook:0.1.13"
+  debugImplementation "com.xander.performance:perf-hook:0.2.0"
   
   // 以下是 hook 方案选择一个就好了。如果运行报错，就换另外一个，如果还是报错，就提个 issue
   // SandHook 方案，推荐添加。如果运行报错，可以替换为 epic 库。
-  debugImplementation "com.xander.performance:perf-hook-sandhook:0.1.13"
+  debugImplementation "com.xander.performance:perf-hook-sandhook:0.2.0"
 
   // epic 方法。如果运行报错，可以替换为 SandHook。
-  // debugImplementation "com.xander.performance:perf-hook-epic:0.1.13"
+  // debugImplementation "com.xander.performance:perf-hook-epic:0.2.0"
 }
 ```
 
