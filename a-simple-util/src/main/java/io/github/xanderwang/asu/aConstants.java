@@ -1,4 +1,4 @@
-package com.xander.asu;
+package io.github.xanderwang.asu;
 
 import android.util.Log;
 

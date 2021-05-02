@@ -1,4 +1,4 @@
-package com.xander.asu;
+package io.github.xanderwang.asu;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;

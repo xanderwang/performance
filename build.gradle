@@ -65,7 +65,7 @@ allprojects {
   tasks.getByPath(":perf-hook-core:javadocRelease").enabled = false
   tasks.getByPath(":perf-hook-epic:javadocRelease").enabled = false
   tasks.getByPath(":perf-hook-sandhook:javadocRelease").enabled = false
-  tasks.getByPath(":a-simple-util:javadocRelease").enabled = false
+  // tasks.getByPath(":a-simple-util:javadocRelease").enabled = false
 
   repositories {
     maven { url uri("${local_repo_path}") }
