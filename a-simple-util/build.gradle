@@ -51,12 +51,6 @@ uploadArchives {
   }
 }
 
-// build a jar with javadoc
-// task javadocJar(type: Jar, dependsOn: javadoc) {
-//   // classifier = 'javadoc'
-//   archiveClassifier.set("javadoc")
-//   from javadoc.destinationDir
-// }
 
 task buildSourcesJar(type: Jar) {
   def sourcesDir = "${project.projectDir.absolutePath}/src/main/java"
