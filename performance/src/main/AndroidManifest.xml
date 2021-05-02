@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools"
-  package="com.xander.performance">
+  package="io.github.xanderwang.performance">
 
   <uses-sdk tools:overrideLibrary="me.weishu.freereflection" />
 
@@ -13,7 +13,7 @@
       tools:node="merge">
       <!-- This entry makes ExampleLoggerInitializer discoverable. -->
       <meta-data
-        android:name="com.xander.performance.PerfInitializer"
+        android:name="io.github.xanderwang.performance.PerfInitializer"
         android:value="androidx.startup" />
     </provider>
 

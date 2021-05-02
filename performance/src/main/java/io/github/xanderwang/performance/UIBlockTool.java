@@ -1,4 +1,4 @@
-package com.xander.performance;
+package io.github.xanderwang.performance;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -6,9 +6,9 @@ import android.util.Printer;
 import android.view.KeyEvent;
 
 import io.github.xanderwang.asu.aLog;
-import com.xander.performance.hook.HookBridge;
-import com.xander.performance.hook.core.MethodParam;
-import com.xander.performance.hook.core.MethodHook;
+import io.github.xanderwang.hook.HookBridge;
+import io.github.xanderwang.hook.core.MethodParam;
+import io.github.xanderwang.hook.core.MethodHook;
 
 
 /**

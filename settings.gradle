@@ -22,7 +22,7 @@ include ':hook-epic'
 include ':hook-sandhook'
 include ':hook'
 
-include ':perf'
-include ':perf-noop'
+include ':performance'
+include ':performance-noop'
 
 include ':app'

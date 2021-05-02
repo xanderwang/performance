@@ -1,4 +1,4 @@
-package com.xander.performance;
+package io.github.xanderwang.performance;
 
 import android.util.Log;
 

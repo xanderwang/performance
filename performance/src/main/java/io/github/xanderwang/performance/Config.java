@@ -1,4 +1,4 @@
-package com.xander.performance;
+package io.github.xanderwang.performance;
 
 /**
  * @author xander
