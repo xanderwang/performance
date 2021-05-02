@@ -1,4 +1,4 @@
-package com.xander.performance.hook.core;
+package io.github.xanderwang.hook.core;
 
 public abstract class MethodHook {
 

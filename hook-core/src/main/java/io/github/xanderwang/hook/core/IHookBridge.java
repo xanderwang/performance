@@ -1,4 +1,4 @@
-package com.xander.performance.hook.core;
+package io.github.xanderwang.hook.core;
 
 import java.lang.reflect.Member;
 

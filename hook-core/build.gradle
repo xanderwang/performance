@@ -10,12 +10,10 @@ android {
   buildToolsVersion _android['buildToolsVersion']
 
   defaultConfig {
-    // minSdkVersion _android['minSdkVersion']
-    minSdkVersion 9
+    minSdkVersion _android['minSdkVersion']
     targetSdkVersion _android['targetSdkVersion']
     versionCode 1
     versionName "1.0"
-
   }
 
   buildTypes {
@@ -25,16 +23,19 @@ android {
   }
 }
 
+dependencies {
+  // def _dependencies = rootProject.ext.dependencies
+  // api _dependencies['asu']
+}
 
 // group
 def _groupId = 'io.github.xanderwang'
-def _artifactId = 'asu'
-def _version = "0.2.0"
+def _artifactId = 'hook-core'
+def _version = rootProject.ext.lib_publish_version
 
 // 需要上传的文件，先定义好，后续要用
-// artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
 def _libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
-println("lib file:${_libFile}")
+println("lib file: ${_libFile}")
 
 // GRADLE_USER_HOME 里面的 gradle.properties 有定义
 def _ossUsername = sonatypeUsername
@@ -79,7 +80,7 @@ publishing {
         // 构件名称，可以自定义
         name = _artifactId
         // 构件描述
-        description = 'a simple utils'
+        description = 'a hook lib for android'
         // 构件主页
         url = 'https://github.com/XanderWang/performance'
         // 许可证名称和地址
@@ -153,4 +154,3 @@ publishing {
 signing {
   sign publishing.publications
 }
-
