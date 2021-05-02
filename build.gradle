@@ -48,7 +48,7 @@ buildscript {
 
     // NOTE: Do not place your application dependencies here; they belong
     // in the individual module build.gradle files
-    classpath 'com.novoda:bintray-release:0.9.2'
+    // classpath 'com.novoda:bintray-release:0.9.2'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.ext.kotlin_version}"
     if (rootProject.ext.use_plugin) {
       classpath "${plugin_classpath}"
@@ -72,16 +72,16 @@ allprojects {
     resolutionStrategy.dependencySubstitution {
       // Substitute project and module dependencies
       // 远程的 lib 依赖变成本地的依赖
-      // substitute module('com.xander.asu:asu') with project(':a-simple-util')
+      // substitute module('io.github.xanderwang:asu') with project(':a-simple-util')
       if (rootProject.ext.use_local_lib) {
-        substitute module('com.xander.performance:perf') with project(':perf')
-        substitute module('com.xander.performance:perf-noop') with project(':perf-noop')
+        substitute module('io.github.xanderwang:performance') with project(':performance')
+        substitute module('io.github.xanderwang:performance-noop') with project(':performance-noop')
       }
       if (rootProject.ext.use_local_hook_lib) {
-        substitute module('com.xander.performance:perf-hook-core') with project(':perf-hook-core')
-        substitute module('com.xander.performance:perf-hook-epic') with project(':perf-hook-epic')
-        substitute module('com.xander.performance:perf-hook-sandhook') with project(':perf-hook-sandhook')
-        substitute module('com.xander.performance:perf-hook') with project(':perf-hook')
+        substitute module('io.github.xanderwang:hook-core') with project(':hook-core')
+        substitute module('io.github.xanderwang:hook-epic') with project(':hook-epic')
+        substitute module('io.github.xanderwang:hook-sandhook') with project(':hook-sandhook')
+        substitute module('io.github.xanderwang:hook') with project(':hook')
       }
       // Substitute one module dependency for another
       // 修改某个依赖的版本

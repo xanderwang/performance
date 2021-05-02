@@ -1,9 +1,9 @@
-package com.xander.performance.demo;
+package io.github.xanderwang.performance.demo;
 
 import android.app.Application;
 import android.content.Context;
 
-import com.xander.performance.PERF;
+import io.github.xanderwang.performance.PERF;
 
 import java.io.File;
 

@@ -25,4 +25,4 @@ include ':hook'
 include ':performance'
 include ':performance-noop'
 
-include ':app'
+include ':demo'

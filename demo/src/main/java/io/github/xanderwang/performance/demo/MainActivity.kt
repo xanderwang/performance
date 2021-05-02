@@ -1,4 +1,4 @@
-package com.xander.performance.demo
+package io.github.xanderwang.performance.demo
 
 import android.app.ActivityManager
 import android.app.Service

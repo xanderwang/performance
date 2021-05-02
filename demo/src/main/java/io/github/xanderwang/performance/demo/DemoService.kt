@@ -1,10 +1,10 @@
-package com.xander.performance.demo
+package io.github.xanderwang.performance.demo
 
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.os.RemoteException
-import com.xander.asu.aLog
+import io.github.xanderwang.asu.aLog
 
 /**
  * @author Xander Wang
