@@ -1,6 +1,6 @@
-package com.xander.performance.hook.epic;
+package io.github.xanderwang.hook.epic;
 
-import com.xander.performance.hook.core.MethodHook;
+import io.github.xanderwang.hook.core.MethodHook;
 
 import de.robv.android.xposed.XC_MethodHook;
 

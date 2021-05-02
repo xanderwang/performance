@@ -1,7 +1,7 @@
-package com.xander.performance.hook.epic;
+package io.github.xanderwang.hook.epic;
 
-import com.xander.performance.hook.core.IHookBridge;
-import com.xander.performance.hook.core.MethodHook;
+import io.github.xanderwang.hook.core.IHookBridge;
+import io.github.xanderwang.hook.core.MethodHook;
 
 import java.lang.reflect.Member;
 

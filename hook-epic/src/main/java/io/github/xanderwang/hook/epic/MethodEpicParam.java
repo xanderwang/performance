@@ -1,6 +1,6 @@
-package com.xander.performance.hook.epic;
+package io.github.xanderwang.hook.epic;
 
-import com.xander.performance.hook.core.MethodParam;
+import io.github.xanderwang.hook.core.MethodParam;
 
 import java.lang.reflect.Member;
 

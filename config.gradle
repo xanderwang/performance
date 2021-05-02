@@ -18,6 +18,7 @@ ext {
       'perf'                      : "com.xander.performance:perf:${rootProject.ext.lib_version}",
       'perf-noop'                 : "com.xander.performance:perf-noop:${rootProject.ext.lib_version}",
       'perf-hook-core'            : "com.xander.performance:perf-hook-core:${rootProject.ext.lib_version}",
+      'hook-core'                 : "io.github.xanderwang:hook-core:0.3.0",
       'perf-hook-epic'            : "com.xander.performance:perf-hook-epic:${rootProject.ext.lib_version}",
       'perf-hook-sandhook'        : "com.xander.performance:perf-hook-sandhook:${rootProject.ext.lib_version}",
       'perf-hook'                 : "com.xander.performance:perf-hook:${rootProject.ext.lib_version}",
