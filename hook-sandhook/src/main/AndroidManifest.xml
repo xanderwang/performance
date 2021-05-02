@@ -1,2 +1,2 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.xander.performance.hook.sandhook" />
+  package="io.github.xanderwang.hook.sandhook" />

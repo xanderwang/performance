@@ -1,7 +1,7 @@
-package com.xander.performance.hook.sandhook;
+package io.github.xanderwang.hook.sandhook;
 
-import com.xander.performance.hook.core.IHookBridge;
-import com.xander.performance.hook.core.MethodHook;
+import io.github.xanderwang.hook.core.IHookBridge;
+import io.github.xanderwang.hook.core.MethodHook;
 
 import java.lang.reflect.Member;
 

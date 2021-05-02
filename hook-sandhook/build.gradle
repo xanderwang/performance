@@ -1,0 +1,160 @@
+apply plugin: 'com.android.library'
+apply plugin: "maven"
+
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+android {
+  def _android = rootProject.ext.android
+  compileSdkVersion _android['compileSdkVersion']
+  buildToolsVersion _android['buildToolsVersion']
+
+  defaultConfig {
+    minSdkVersion _android['minSdkVersion']
+    targetSdkVersion _android['targetSdkVersion']
+    versionCode 1
+    versionName "1.0"
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+    }
+  }
+}
+
+dependencies {
+  def _dependencies = rootProject.ext.dependencies
+  implementation _dependencies['hook-core']
+  implementation _dependencies['asu']
+  implementation _dependencies['sandhook']
+  implementation _dependencies['sandhook-nativehook']
+  implementation _dependencies['sandhook-xposedcompat']
+}
+
+// group
+def _groupId = 'io.github.xanderwang'
+def _artifactId = 'hook-sandhook'
+def _version = rootProject.ext.lib_publish_version
+
+// 需要上传的文件，先定义好，后续要用
+def _libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
+println("lib file: ${_libFile}")
+
+// GRADLE_USER_HOME 里面的 gradle.properties 有定义
+def _ossUsername = sonatypeUsername
+// GRADLE_USER_HOME 里面的 gradle.properties 有定义
+def _ossPassword = sonatypePassword
+println("_ossUsername:${_ossUsername},_ossPassword:${_ossPassword}")
+
+uploadArchives {
+  repositories.mavenDeployer {
+    repository(url: uri("${rootProject.ext.local_repo_path}"))
+    pom.groupId = _groupId
+    pom.artifactId = _artifactId
+    pom.version = _version
+  }
+}
+
+
+task buildSourcesJar(type: Jar) {
+  def sourcesDir = "${project.projectDir.absolutePath}/src/main/java"
+  println("buildSourcesJar:${sourcesDir}")
+  archiveClassifier.set("sources")
+  from sourcesDir
+  exclude "**/R.class"
+  exclude "**/BuildConfig.class"
+}
+
+publishing {
+  // 定义发布什么
+  publications {
+    mavenJava(MavenPublication) {
+      // group id，发布后引用的依赖的 group id
+      groupId _groupId
+      // 发布后引用的依赖的 artifact id
+      artifactId _artifactId
+      // 发布的版本
+      version _version
+      // 发布的 lib 的文件和源码以及 java doc
+      artifact("${_libFile}")
+      artifact buildSourcesJar
+      // artifact javadocJar
+      pom {
+        // 构件名称，可以自定义
+        name = _artifactId
+        // 构件描述
+        description = 'a hook lib for android'
+        // 构件主页
+        url = 'https://github.com/XanderWang/performance'
+        // 许可证名称和地址
+        licenses {
+          license {
+            name = 'The Apache License, Version 2.0'
+            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+        // 开发者信息
+        developers {
+          developer {
+            name = 'XanderWang'
+            email = '420640763@qq.com'
+          }
+        }
+        // 版本控制仓库地址
+        scm {
+          url = 'https://github.com/XanderWang/performance'
+          connection = 'scm:git:github.com/XanderWang/performance.git'
+          developerConnection = 'scm:git:ssh://git@github.com/XanderWang/performance.git'
+        }
+        // 解决依赖关系
+        withXml {
+          def dependenciesNode = asNode().appendNode('dependencies')
+          project.configurations.all { configuration ->
+            def name = configuration.name
+            if (name != "implementation" && name != "compile" && name != "api") {
+              return
+            }
+            println(configuration)
+            configuration.dependencies.each { dependencyItem ->
+              println("withXml dependencies:${dependencyItem}")
+              if (dependencyItem.name == "unspecified") {
+                // 忽略无法识别的
+                return
+              }
+              def dependencyNode = dependenciesNode.appendNode('dependency')
+              dependencyNode.appendNode('groupId', dependencyItem.group)
+              dependencyNode.appendNode('artifactId', dependencyItem.name)
+              dependencyNode.appendNode('version', dependencyItem.version)
+              if (name == "api" || name == "compile") {
+                dependencyNode.appendNode("scope", "compile")
+              } else {
+                // implementation
+                dependencyNode.appendNode("scope", "runtime")
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  // 定义发布到哪里
+  repositories {
+    maven {
+      // 发布的位置，这里根据发布的版本区分了 SNAPSHOT 和最终版本两种情况
+      def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+      def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+      url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+      credentials {
+        // 这里就是之前在 issues.sonatype.org 注册的账号
+        // println("_ossUsername:${_ossUsername},_ossPassword:${_ossPassword}")
+        username "${_ossUsername}"
+        password "${_ossPassword}"
+      }
+    }
+  }
+}
+
+signing {
+  sign publishing.publications
+}
