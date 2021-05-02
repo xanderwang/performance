@@ -20,7 +20,7 @@ include ':a-simple-util'
 include ':hook-core'
 include ':hook-epic'
 include ':hook-sandhook'
-include ':perf-hook'
+include ':hook'
 
 include ':perf'
 include ':perf-noop'

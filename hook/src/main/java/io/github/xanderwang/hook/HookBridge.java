@@ -1,7 +1,7 @@
-package com.xander.performance.hook;
+package io.github.xanderwang.hook;
 
-import com.xander.performance.hook.core.IHookBridge;
-import com.xander.performance.hook.core.MethodHook;
+import io.github.xanderwang.hook.core.IHookBridge;
+import io.github.xanderwang.hook.core.MethodHook;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
@@ -63,7 +63,7 @@ public class HookBridge {
 
   public static void findAllAndHookMethod(Class<?> clazz, String methodName,
       MethodHook methodHookCallback) {
-    List<Method> methodList = findMethodList(clazz, methodName, true, null);
+    List<Method> methodList = findMethodList(clazz, methodName, true, (Class<?>) null);
     assertNotNullOrEmpty(methodList);
     for (Method method : methodList) {
       hookMethod(method, methodHookCallback);
