@@ -21,7 +21,7 @@ ext {
       'perf-hook-epic'            : "com.xander.performance:perf-hook-epic:${rootProject.ext.lib_version}",
       'perf-hook-sandhook'        : "com.xander.performance:perf-hook-sandhook:${rootProject.ext.lib_version}",
       'perf-hook'                 : "com.xander.performance:perf-hook:${rootProject.ext.lib_version}",
-      "asu"                       : "com.xander.asu:asu:0.1.0",
+      "asu"                       : "io.github.xanderwang:asu:0.2.0",
       "startup"                   : "androidx.startup:startup-runtime:1.0.0",
       'appcompat'                 : 'androidx.appcompat:appcompat:1.1.0',
       'constraintlayout'          : 'androidx.constraintlayout:constraintlayout:1.1.3',

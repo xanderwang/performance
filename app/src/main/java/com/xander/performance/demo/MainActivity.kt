@@ -8,7 +8,7 @@ import android.content.ServiceConnection
 import android.os.*
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.xander.asu.aLog
+import io.github.xanderwang.asu.aLog;
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 

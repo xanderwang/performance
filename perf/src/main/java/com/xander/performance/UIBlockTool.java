@@ -5,7 +5,7 @@ import android.os.Looper;
 import android.util.Printer;
 import android.view.KeyEvent;
 
-import com.xander.asu.aLog;
+import io.github.xanderwang.asu.aLog;
 import com.xander.performance.hook.HookBridge;
 import com.xander.performance.hook.core.MethodParam;
 import com.xander.performance.hook.core.MethodHook;

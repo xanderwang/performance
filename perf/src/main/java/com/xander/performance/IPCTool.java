@@ -3,13 +3,14 @@ package com.xander.performance;
 import android.os.Parcel;
 import android.os.SystemClock;
 
-import com.xander.asu.aLog;
 import com.xander.performance.hook.HookBridge;
 import com.xander.performance.hook.core.MethodHook;
 import com.xander.performance.hook.core.MethodParam;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+
+import io.github.xanderwang.asu.aLog;
 
 
 /**

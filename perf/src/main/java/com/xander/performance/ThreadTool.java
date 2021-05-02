@@ -4,7 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 
-import com.xander.asu.aLog;
+import io.github.xanderwang.asu.aLog;
 import com.xander.performance.hook.HookBridge;
 import com.xander.performance.hook.core.MethodHook;
 import com.xander.performance.hook.core.MethodParam;

@@ -3,7 +3,6 @@ package com.xander.performance;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
-import com.xander.asu.aLog;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,6 +21,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import io.github.xanderwang.asu.aLog;
 
 /**
  * @author Xander Wang Created on 2020/12/8.

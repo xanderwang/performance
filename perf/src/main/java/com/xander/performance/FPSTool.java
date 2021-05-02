@@ -6,7 +6,8 @@ import android.os.SystemClock;
 import android.view.Choreographer;
 import android.view.Choreographer.FrameCallback;
 
-import com.xander.asu.aLog;
+import io.github.xanderwang.asu.aLog;
+
 
 /**
  * @author Xander Wang Created on 2020/11/4.

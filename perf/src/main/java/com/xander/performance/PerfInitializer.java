@@ -4,7 +4,7 @@ import android.content.Context;
 
 import androidx.startup.Initializer;
 
-import com.xander.asu.aLog;
+import io.github.xanderwang.asu.aLog;
 
 import java.util.ArrayList;
 import java.util.List;
