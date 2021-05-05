@@ -1,5 +1,6 @@
 package io.github.xanderwang.performance;
 
+import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Printer;
@@ -107,9 +108,10 @@ class UIBlockTool {
    * <p>
    * 这里通过 epic 库来 hook DecorView 的 dispatchKeyEvent 方法的来监控 UI block
    */
+  @SuppressLint("PrivateApi")
   private static void hookDecorViewDispatchKeyEvent() {
     try {
-      Class decorViewClass = Class.forName("com.android.internal.policy.DecorView");
+      Class<?> decorViewClass = Class.forName("com.android.internal.policy.DecorView");
       HookBridge.findAndHookMethod(
           decorViewClass,
           "dispatchKeyEvent",

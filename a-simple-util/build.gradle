@@ -29,7 +29,7 @@ android {
 // group
 def _groupId = 'io.github.xanderwang'
 def _artifactId = 'asu'
-def _version = "0.2.0"
+def _version = "0.2.1"
 
 // 需要上传的文件，先定义好，后续要用
 // artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")

@@ -53,6 +53,11 @@ public class PERF {
     boolean mCheckIPC = false;
 
     /**
+     * 是否需要检测 Bitmap 的创建
+     */
+    boolean mCheckBitmap = false;
+
+    /**
      * issue 文件的保存目录
      */
     IssueSupplier<File> cacheDirSupplier = null;
@@ -110,6 +115,11 @@ public class PERF {
       return this;
     }
 
+    public Builder checkBitmap(boolean check) {
+      mCheckBitmap = check;
+      return this;
+    }
+
     public Builder globalTag(String tag) {
       globalTag = tag;
       return this;
@@ -154,7 +164,7 @@ public class PERF {
       builder = new Builder();
     }
     aConstants.logLevel = builder.logLevel;
-    aConstants.globalTag = builder.globalTag;
+    aConstants.setGlobalTag(builder.globalTag);
     Issue.init(builder.cacheDirSupplier, builder.macCacheSizeSupplier, builder.uploaderSupplier);
     if (builder.mCheckThread) {
       Config.THREAD_BLOCK_TIME = builder.mThreadBlockTime;
@@ -170,6 +180,9 @@ public class PERF {
     if (builder.mCheckFPS) {
       Config.FPS_INTERVAL_TIME = builder.mFPSIntervalTime;
       FPSTool.start();
+    }
+    if (builder.mCheckBitmap) {
+      BitmapTool.start();
     }
   }
 

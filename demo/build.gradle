@@ -19,7 +19,7 @@ android {
   defaultConfig {
     minSdkVersion _android['minSdkVersion']
     targetSdkVersion _android['targetSdkVersion']
-    applicationId "com.xander.performace.demo"
+    applicationId "io.github.xanderwang.performance.demo"
     versionCode 1
     versionName "1.0"
 
@@ -64,6 +64,8 @@ dependencies {
   implementation _dependencies['kotlin-stdlib-jdk']
   implementation _dependencies['kotlinx-coroutines-core']
   implementation _dependencies['kotlinx-coroutines-android']
+
+  implementation 'com.github.bumptech.glide:glide:4.11.0'
 
   implementation _dependencies['asu']
 

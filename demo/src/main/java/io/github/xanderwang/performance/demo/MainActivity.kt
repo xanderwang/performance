@@ -7,8 +7,10 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.*
 import android.view.View
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import io.github.xanderwang.asu.aLog;
+import com.bumptech.glide.Glide
+import io.github.xanderwang.asu.aLog
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
@@ -121,6 +123,25 @@ class MainActivity : AppCompatActivity() {
     }
     val i = Intent(this, DemoService::class.java)
     bindService(i, serviceConnection, Service.BIND_AUTO_CREATE)
+  }
+
+  fun testLoadBitmap(v: View) {
+    aLog.d(TAG, "testLoadBitmap !!!")
+    findViewById<ImageView>(R.id.image_view)?.let {
+      val resId = R.drawable.ic_launcher_background
+      var resUrl = "https://w.wallhaven.cc/full/md/wallhaven-md5z28.jpg"
+      aLog.d(TAG, "testLoadBitmap resUrl:$resUrl ,resId:$resId")
+      // it.setBackgroundResource(resId)
+      // it.setImageResource(resId)
+      // Picasso.get()
+      //     .load(resUrl)
+      //     .placeholder(resId)
+      //     .into(it)
+      Glide.get(this).clearMemory()
+      Glide.with(this)
+          .load(resUrl)
+          .into(it)
+    }
   }
 
   companion object {

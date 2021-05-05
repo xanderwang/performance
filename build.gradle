@@ -10,7 +10,7 @@ buildscript {
   ext.mode_composing = properties.getProperty("mode.composing", "false").toBoolean()
 
   ext.kotlin_version = '1.4.20'
-  ext.lib_publish_version = "0.3.0"
+  ext.lib_publish_version = "0.3.1"
   ext.lib_version = "0.2.0"
   ext.use_local_lib = false
   ext.use_local_hook_lib = false
@@ -72,8 +72,8 @@ allprojects {
     resolutionStrategy.dependencySubstitution {
       // Substitute project and module dependencies
       // 远程的 lib 依赖变成本地的依赖
-      // substitute module('io.github.xanderwang:asu') with project(':a-simple-util')
       if (rootProject.ext.use_local_lib) {
+        substitute module('io.github.xanderwang:asu') with project(':a-simple-util')
         substitute module('io.github.xanderwang:performance') with project(':performance')
         substitute module('io.github.xanderwang:performance-noop') with project(':performance-noop')
       }

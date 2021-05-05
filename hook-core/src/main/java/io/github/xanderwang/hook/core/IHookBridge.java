@@ -9,7 +9,7 @@ public interface IHookBridge {
   int TYPE_FAST_HOOK = 2;
 
   /**
-   * 是那种 hook 方案，方便后续由于调试需求，需要根据  hook 方案做不同的逻辑
+   * 是哪种 hook 方案，方便后续由于调试需求，需要根据不同的 hook 方案做不同的逻辑处理
    *
    * @return
    */

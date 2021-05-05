@@ -72,19 +72,19 @@ public class HookBridge {
 
   public static void findAndHookMethod(Class<?> clazz, String methodName,
       Object... parameterTypesAndCallback) {
+
+    Object callback = null;
     Class<?>[] parameterTypes = null;
-    if (null != parameterTypesAndCallback && parameterTypesAndCallback.length > 1) {
+    // 默认 parameterTypesAndCallback 里面最后一个是 MethodHook
+    if (null != parameterTypesAndCallback && parameterTypesAndCallback.length > 0) {
       int len = parameterTypesAndCallback.length - 1;
       parameterTypes = new Class<?>[len];
       for (int i = 0; i < len; i++) {
         parameterTypes[i] = (Class<?>) parameterTypesAndCallback[i];
       }
+      callback = parameterTypesAndCallback[len];
     }
 
-    Object callback = null;
-    if (null != parameterTypesAndCallback && parameterTypesAndCallback.length >= 1) {
-      callback = parameterTypesAndCallback[parameterTypesAndCallback.length - 1];
-    }
     assertNotNullOrEmpty(callback);
     MethodHook methodCallback = (MethodHook) callback;
 
@@ -114,9 +114,6 @@ public class HookBridge {
   private static List<Method> findMethodList(Class<?> clazz, String methodName,
       boolean justCheckName, Class<?>... parameterTypes) {
     List<Method> list = new ArrayList<>();
-    if (!justCheckName && (null == parameterTypes || parameterTypes.length == 0)) {
-      justCheckName = true;
-    }
     if (justCheckName) {
       // getMethods  public 的方法，包括继承的
       // getDeclaredMethods 自身定义的和实现的接口的方法，无论是
@@ -145,7 +142,7 @@ public class HookBridge {
       // throw new IllegalArgumentException("null object!!!");
     }
     if (object instanceof List) {
-      if (((List) object).isEmpty()) {
+      if (((List<?>) object).isEmpty()) {
         aLog.ee(TAG, "assertNotNullOrEmpty", new IllegalArgumentException("empty list!!!"));
         // throw new IllegalArgumentException("empty list!!!");
       }

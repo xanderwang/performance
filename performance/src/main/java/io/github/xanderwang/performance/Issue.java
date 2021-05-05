@@ -47,6 +47,10 @@ public class Issue {
    * 检测线程的创建
    */
   public static final int    TYPE_THREAD   = 3;
+  /**
+   * 图片相关的
+   */
+  public static final int    TYPE_BITMAP   = 4;
 
   private volatile static ExecutorService taskService = Executors.newSingleThreadExecutor();
 
@@ -55,31 +59,24 @@ public class Issue {
    * <p>
    * 所以这样写没有太大的问题
    */
-  private static SimpleDateFormat dateFormat = new SimpleDateFormat(
-      "yyyy-MM-dd HH:mm:ss",
-      Locale.US
-  );
+  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
   /**
    * 类型
    */
-  protected int type = -1;
-
+  protected int    type       = -1;
   /**
    * 消息
    */
-  protected String msg = "";
-
+  protected String msg        = "";
   /**
    * 发生的时间
    */
   protected String createTime = "";
-
   /**
    * 数据
    */
   protected Object data;
-
   /**
    * byte 数据，用来缓存数据的 string 数组
    */
@@ -123,6 +120,9 @@ public class Issue {
       case TYPE_THREAD:
         str = "THREAD";
         break;
+      case TYPE_BITMAP:
+        str = "BITMAP";
+        break;
       default:
         str = "NONE";
     }
@@ -131,7 +131,7 @@ public class Issue {
 
   private void buildIssueString() {
     String dataString = null;
-    if (null == dataBytes || dataBytes.length == 0 ) {
+    if (null == dataBytes || dataBytes.length == 0) {
       StringBuilder sb = new StringBuilder();
       sb.append("\n=================================================\n");
       sb.append("type: ").append(typeToString()).append('\n');

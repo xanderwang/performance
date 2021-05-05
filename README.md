@@ -29,18 +29,18 @@
 ```groovy
 dependencies {
   // 基础依赖，必须添加
-  debugImplementation 'io.github.xanderwang:performance:0.3.0'
-  releaseImplementation 'io.github.xanderwang:performance-noop:0.3.0'
+  debugImplementation 'io.github.xanderwang:performance:0.3.1'
+  releaseImplementation 'io.github.xanderwang:performance-noop:0.3.1'
 
   // hook 方案封装，必须添加
-  debugImplementation 'io.github.xanderwang:hook:0.3.0'
+  debugImplementation 'io.github.xanderwang:hook:0.3.1'
 
   // 以下是 hook 方案选择一个就好了。如果运行报错，就换另外一个，如果还是报错，就提个 issue
   // SandHook 方案，推荐添加。如果运行报错，可以替换为 epic 库。
-  debugImplementation 'io.github.xanderwang:hook-sandhook:0.3.0'
+  debugImplementation 'io.github.xanderwang:hook-sandhook:0.3.1'
 
   // epic 方法。如果运行报错，可以替换为 SandHook。
-  // debugImplementation 'io.github.xanderwang:hook-epic:0.3.0'
+  // debugImplementation 'io.github.xanderwang:hook-epic:0.3.1'
 }
 ```
 
@@ -114,6 +114,7 @@ kotlin 示例
 
 # 主要更新记录
 
+- 0.3.1  新增给 ImageView 设置比实际控件尺寸大的图片检测
 - 0.3.0  修改依赖库发布方式为 MavenCentral 
 - 0.2.0  线程耗时的监控，同时可以监控线程优先级(setPriority)的改变。
 - 0.1.12 线程创建的监控，加入 thread name 信息收集。同时接入 startup 库做必要的初始化，以及调整 multi dex 的时候，配置文件找不到的问题。

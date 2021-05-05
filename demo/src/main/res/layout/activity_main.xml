@@ -87,5 +87,21 @@
     app:layout_constraintStart_toEndOf="@+id/test_handler"
     app:layout_constraintTop_toTopOf="@+id/test_handler" />
 
+  <Button
+    android:id="@+id/load_bitmap"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:onClick="testLoadBitmap"
+    android:text="load bitmap"
+    app:layout_constraintStart_toStartOf="@+id/test_handler"
+    app:layout_constraintTop_toBottomOf="@+id/test_handler" />
+
+  <ImageView
+    android:id="@+id/image_view"
+    android:layout_width="100dp"
+    android:layout_height="100dp"
+    app:layout_constraintStart_toEndOf="@+id/load_bitmap"
+    app:layout_constraintTop_toBottomOf="@+id/test_handler" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

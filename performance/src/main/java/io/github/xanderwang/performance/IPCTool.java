@@ -1,5 +1,6 @@
 package io.github.xanderwang.performance;
 
+import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.SystemClock;
 
@@ -66,6 +67,7 @@ class IPCTool {
     hookIPC();
   }
 
+  @SuppressLint("PrivateApi")
   private static void hookIPC() {
     try {
       if (HookBridge.isSandHook()) {
