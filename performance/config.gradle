@@ -1,7 +1,7 @@
 ext {
   libGroupId = 'io.github.xanderwang'
   libArtifactId = 'performance'
-  libVersion = rootProject.ext.lib_publish_version
+  libVersion = rootProject.ext.lib_perf_version
 
   libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
 

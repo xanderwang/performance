@@ -1,7 +1,7 @@
 ext {
   libGroupId = 'io.github.xanderwang'
   libArtifactId = 'hook-epic'
-  libVersion = rootProject.ext.lib_publish_version
+  libVersion = rootProject.ext.lib_hook_version
 
   libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
 

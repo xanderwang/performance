@@ -1,7 +1,7 @@
 ext {
   libGroupId = 'io.github.xanderwang'
   libArtifactId = 'performance-noop'
-  libVersion = "0.2.1"
+  libVersion = rootProject.ext.lib_perf_version
 
   libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
 

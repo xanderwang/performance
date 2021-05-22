@@ -1,7 +1,7 @@
 ext {
   libGroupId = 'io.github.xanderwang'
   libArtifactId = 'asu'
-  libVersion = "0.2.1"
+  libVersion = rootProject.ext.lib_asu_version
 
   libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
 
