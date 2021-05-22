@@ -1,44 +1,37 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 println("=" * 100)
+println("start build.gradle")
 apply from: 'config.gradle'
 
 buildscript {
-
-  def properties_file_path = "${rootProject.getProjectDir()}${File.separator}gradle.properties"
-  Properties properties = new Properties()
-  properties.load(file(properties_file_path).newDataInputStream())
-  ext.mode_composing = properties.getProperty("mode.composing", "false").toBoolean()
+  println("enter ${project.name} buildscript")
 
   ext.kotlin_version = '1.4.20'
   ext.lib_publish_version = "0.3.1"
-  ext.lib_version = "0.2.0"
+  ext.lib_version = "0.3.1"
   ext.use_local_lib = false
   ext.use_local_hook_lib = false
 
   ext.local_repo_path = rootProject.file("./repos").absolutePath
-  println("local repo path:$local_repo_path")
+  println("local repo path:${rootProject.ext.local_repo_path}")
 
-  ext.plugin_version = "0.1.9"
-  ext.local_plugin_exit = file("${local_repo_path}/com/xander/performance/performance/${plugin_version}").exists()
-  ext.plugin_artifact_id = mode_composing ? "local-plugin" : "performance"
-  ext.plugin_version = mode_composing ? "1.0" : rootProject.ext.plugin_version
-  ext.plugin_classpath = "com.xander.performance:${plugin_artifact_id}:${plugin_version}"
-  ext.plugin_apply_name = "com.xander.performance.${mode_composing ? "plugin" : "performance"}"
-
-  ext.use_plugin = mode_composing ? true : local_plugin_exit
-  ext.use_plugin = false
-  println("use plugin:${use_plugin}")
-  if (use_plugin) {
-    println("plugin classpath:${plugin_classpath}")
-    println("plugin apply name:${plugin_apply_name}")
+  ext.devName = "XanderWang"
+  ext.devEmail = "420640763@qq.com"
+  ext.ossUsername = "xxx"
+  ext.ossPassword = "xxx"
+  try {
+    ext.ossUsername = sonatypeUsername
+    ext.ossPassword = sonatypePassword
+  } catch (ignored) {
+    ignored.printStackTrace()
   }
+  println("ossUsername:${rootProject.ext.ossUsername},ossPassword:${rootProject.ext.ossPassword}")
 
   repositories {
-    maven { url uri("${local_repo_path}") }
+    maven { url uri("${rootProject.ext.local_repo_path}") }
     mavenCentral()
     maven { url 'https://maven.aliyun.com/repository/jcenter' }
     maven { url "https://maven.aliyun.com/repository/google" }
-    jcenter()
     google()
   }
 
@@ -50,21 +43,18 @@ buildscript {
     // in the individual module build.gradle files
     // classpath 'com.novoda:bintray-release:0.9.2'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.ext.kotlin_version}"
-    if (rootProject.ext.use_plugin) {
-      classpath "${plugin_classpath}"
-    }
   }
 }
 
 allprojects {
+  println("enter ${project.name} allprojects")
 
   repositories {
-    maven { url uri("${local_repo_path}") }
+    maven { url uri("${rootProject.ext.local_repo_path}") }
     mavenCentral()
     maven { url 'https://maven.aliyun.com/repository/jcenter' }
     maven { url "https://maven.aliyun.com/repository/google" }
     google()
-    jcenter()
   }
 
   // add dependency substitution rules
@@ -87,6 +77,151 @@ allprojects {
       // 修改某个依赖的版本
       //substitute module('org.gradle:api:2.0') with module('org.gradle:api:2.1')
     }
+  }
+}
+
+/** Configure publishing and signing for published Java and JavaPlatform subprojects. */
+subprojects { project ->
+  println("enter ${project.name} subprojects")
+
+  File configFile = new File("${project.projectDir.absolutePath}/config.gradle")
+  if (configFile.exists()) {
+    apply from: configFile
+  }
+
+  // println("enter subprojects project ext -----------------------------------------")
+  // project.ext.each { item ->
+  //   item.getProperties().each { node ->
+  //     println("project:${project.name} ext ${node.key}:${node.value}")
+  //   }
+  // }
+  // println("exit subprojects project ext -----------------------------------------")
+
+  boolean isPublicProject = false
+  try {
+    isPublicProject = project.ext.libArtifactId != null
+  } catch (e) {
+    e.printStackTrace()
+  }
+  if (!isPublicProject) return
+
+  apply plugin: "maven"
+  apply plugin: 'maven-publish'
+  apply plugin: 'signing'
+
+  uploadArchives {
+    repositories.mavenDeployer {
+      repository(url: uri("${rootProject.ext.local_repo_path}"))
+      pom.groupId = project.ext.libGroupId
+      pom.artifactId = project.ext.libArtifactId
+      pom.version = project.ext.libVersion
+    }
+  }
+
+  task buildSourcesJar(type: Jar) {
+    def sourcesDir = "${project.projectDir.absolutePath}/src/main/java"
+    println("buildSourcesJar:${sourcesDir}")
+    archiveClassifier.set("sources")
+    from sourcesDir
+    exclude "**/R.class"
+    exclude "**/BuildConfig.class"
+  }
+
+  publishing {
+    // 定义发布什么
+    publications {
+      mavenJava(MavenPublication) {
+        // group id，发布后引用的依赖的 group id
+        groupId project.ext.libGroupId
+        // 发布后引用的依赖的 artifact id
+        artifactId project.ext.libArtifactId
+        // 发布的版本
+        version project.ext.libVersion
+        // 发布的 lib 的文件和源码以及 java doc
+        artifact("${project.ext.libFile}")
+        artifact buildSourcesJar
+        // artifact javadocJar
+        pom {
+          // 构件名称，可以自定义
+          name = project.ext.pomName
+          // 构件描述
+          description = project.ext.pomDescription
+          // 构件主页
+          url = project.ext.pomUrl
+          // 许可证名称和地址
+          licenses {
+            license {
+              name = 'The Apache License, Version 2.0'
+              url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+          }
+          // 开发者信息
+          developers {
+            developer {
+              name = rootProject.ext.devName
+              email = rootProject.ext.devEmail
+            }
+          }
+          // 版本控制仓库地址
+          scm {
+            // url = 'https://github.com/XanderWang/performance'
+            // connection = 'scm:git:github.com/XanderWang/performance.git'
+            // developerConnection = 'scm:git:ssh://git@github.com/XanderWang/performance.git'
+            url = project.ext.scmUrl
+            connection = project.ext.scmConnection
+            developerConnection = project.ext.scmDeveloperConnection
+          }
+          // 解决依赖关系
+          withXml {
+            def dependenciesNode = asNode().appendNode('dependencies')
+            project.configurations.all { configuration ->
+              def name = configuration.name
+              if (name != "implementation" && name != "compile" && name != "api") {
+                return
+              }
+              println(configuration)
+              configuration.dependencies.each { dependencyItem ->
+                println("withXml dependencies:${dependencyItem}")
+                if (dependencyItem.name == "unspecified") {
+                  // 忽略无法识别的
+                  return
+                }
+                def dependencyNode = dependenciesNode.appendNode('dependency')
+                dependencyNode.appendNode('groupId', dependencyItem.group)
+                dependencyNode.appendNode('artifactId', dependencyItem.name)
+                dependencyNode.appendNode('version', dependencyItem.version)
+                if (name == "api" || name == "compile") {
+                  dependencyNode.appendNode("scope", "compile")
+                } else {
+                  // implementation
+                  dependencyNode.appendNode("scope", "runtime")
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 定义发布到哪里
+    repositories {
+      maven {
+        // 发布的位置，这里根据发布的版本区分了 SNAPSHOT 和最终版本两种情况
+        def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+        def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+        url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+        credentials {
+          // 这里就是之前在 issues.sonatype.org 注册的账号
+          // println("_ossUsername:${_ossUsername},_ossPassword:${_ossPassword}")
+          username rootProject.ext.ossUsername
+          password rootProject.ext.ossPassword
+        }
+      }
+    }
+  }
+
+  signing {
+    sign publishing.publications
   }
 }
 

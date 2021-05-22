@@ -1,9 +1,9 @@
 ext {
 
-  println("in config ext -----------------------------------------")
+  println("enter config ext -----------------------------------------")
   rootProject.ext.each { item ->
     item.getProperties().each { node ->
-      println("in config rootProject.ext ${node.key}:${node.value}")
+      println("rootProject.ext ${node.key}:${node.value}")
     }
   }
 
@@ -34,4 +34,6 @@ ext {
       "epic-xander"               : 'me.weishu.epic:epic-xander:1.8.0-c',
       "exposed-xposedapi"         : 'me.weishu.exposed:exposed-xposedapi:0.4.5',
   ]
+
+  println("exit config ext -----------------------------------------")
 }
