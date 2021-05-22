@@ -59,7 +59,8 @@ public class Issue {
    * <p>
    * 所以这样写没有太大的问题
    */
-  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_S");
+  private static SimpleDateFormat dateFormat =
+      new SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US);
 
   /**
    * 类型
