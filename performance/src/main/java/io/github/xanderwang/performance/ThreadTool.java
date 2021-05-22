@@ -326,12 +326,12 @@ class ThreadTool {
         new ThreadSetPriorityHook()
     );
 
-    HookBridge.findAndHookMethod(
+    /*HookBridge.findAndHookMethod(
         Process.class,
         "setThreadPriority",
         int.class,
         new ProcessSetThreadPriorityHook()
-    );
+    );*/
 
   }
 
