@@ -38,6 +38,11 @@ public class PERF {
     long mThreadBlockTime = Config.THREAD_BLOCK_TIME;
 
     /**
+     * IPC 调用 block 的时间间隔
+     */
+    long mIpcBlockTime = Config.IPC_BLOCK_TIME;
+
+    /**
      * UI 线程的检测触发时间间隔，超过时间间隔，会被认为发生了 block
      */
     long mFPSIntervalTime = Config.FPS_INTERVAL_TIME;
@@ -120,6 +125,12 @@ public class PERF {
       return this;
     }
 
+    public Builder checkIPC(boolean check, long ipcBlockTime) {
+      mCheckIPC = check;
+      mIpcBlockTime = ipcBlockTime;
+      return this;
+    }
+
     public Builder checkBitmap(boolean check) {
       mCheckBitmap = check;
       return this;
@@ -186,6 +197,7 @@ public class PERF {
       UIBlockTool.start();
     }
     if (builder.mCheckIPC) {
+      Config.IPC_BLOCK_TIME = builder.mIpcBlockTime;
       IPCTool.start();
     }
     if (builder.mCheckFPS) {

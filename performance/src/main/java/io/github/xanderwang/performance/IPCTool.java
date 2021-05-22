@@ -28,12 +28,15 @@ class IPCTool {
   private static HashMap<String, IPCIssue> issueHashMap = new HashMap<>(64);
 
   private static void startTransact(Object ipcInterface, Object methodToken) {
+    // aLog.d(TAG, "startTransact ipcInterface:%s", ipcInterface);
+    // aLog.d(TAG, "startTransact methodToken:%s", methodToken);
     if (null == ipcInterface) {
       Issue ipcIssue = new Issue(Issue.TYPE_IPC, "IPC", StackTraceUtils.list());
       ipcIssue.print();
       return;
     }
     String ipcToken = String.format("%s_%s", ipcInterface, methodToken);
+    // aLog.d(TAG, "startTransact ipcToken:%s", ipcToken);
     IPCIssue ipcIssue = new IPCIssue(ipcInterface, "IPC", null);
     ipcIssue.startTime = SystemClock.elapsedRealtime();
     issueHashMap.put(ipcToken, ipcIssue);
@@ -41,14 +44,17 @@ class IPCTool {
 
   private static void endTransact(Object ipcInterface, Object methodToken,
       StackTraceElement[] startTrace) {
+    // aLog.d(TAG, "endTransact ipcInterface:%s", ipcInterface);
+    // aLog.d(TAG, "endTransact methodToken:%s", methodToken);
     if (null == ipcInterface) {
       return;
     }
     String ipcToken = String.format("%s_%s", ipcInterface, methodToken);
+    // aLog.d(TAG, "endTransact ipcToken:%s", ipcToken);
     IPCIssue ipcIssue = issueHashMap.remove(ipcToken);
     if (null != ipcIssue) {
       ipcIssue.costTime = SystemClock.elapsedRealtime() - ipcIssue.startTime;
-      if (ipcIssue.costTime >= Config.UI_BLOCK_TIME) {
+      if (ipcIssue.costTime >= Config.IPC_BLOCK_TIME) {
         ipcIssue.setData(StackTraceUtils.list(startTrace));
         ipcIssue.print();
       }
@@ -70,7 +76,7 @@ class IPCTool {
   @SuppressLint("PrivateApi")
   private static void hookIPC() {
     try {
-      if (HookBridge.isSandHook()) {
+      if (HookBridge.isSandHook() || HookBridge.isEpic()) {
         // 这个方法  epic hook 的话会报错，很奇怪，理论上是一个比较好的 hook 点
         Class<?> binderProxyClass = Class.forName("android.os.BinderProxy");
         if (null != binderProxyClass) {

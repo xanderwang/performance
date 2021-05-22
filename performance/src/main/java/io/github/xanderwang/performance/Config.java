@@ -17,6 +17,10 @@ class Config {
    * 线程后台执行任务的时间检测间隔，超时就打印出来
    */
   public static long THREAD_BLOCK_TIME = 1000L;
+  /**
+   * IPC 通讯的耗时时间间隔
+   */
+  public static long IPC_BLOCK_TIME = 100L;
 
   /**
    * 是否过滤类名

@@ -34,6 +34,10 @@ public class PERF {
       return this;
     }
 
+    public Builder checkIPC(boolean check, long ipcBlockTime) {
+      return this;
+    }
+
     public Builder checkBitmap(boolean check) {
       return this;
     }
