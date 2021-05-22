@@ -29,8 +29,8 @@
 ```groovy
 dependencies {
   // 基础依赖，必须添加
-  debugImplementation 'io.github.xanderwang:performance:0.3.1'
-  releaseImplementation 'io.github.xanderwang:performance-noop:0.3.1'
+  debugImplementation 'io.github.xanderwang:performance:0.3.2'
+  releaseImplementation 'io.github.xanderwang:performance-noop:0.3.2'
 
   // hook 方案封装，必须添加
   debugImplementation 'io.github.xanderwang:hook:0.3.1'
@@ -61,6 +61,7 @@ Java 初始化示例
         .checkIPC(true) // 检查 ipc 调用
         .checkFps(true, 1000) // 检查 fps
         .checkThread(true) // 检查线程和线程池
+        .checkBitmap(true) // 检测 Bitmap 的创建
         .globalTag("test_perf") // 全局 logcat tag ,方便过滤
         .cacheDirSupplier(new PERF.IssueSupplier<File>() {
           @Override
@@ -100,6 +101,7 @@ kotlin 示例
         .checkIPC(true) // 检查 ipc 调用
         .checkFps(true, 1000) // 检查 fps
         .checkThread(true)// 检查线程和线程池
+        .checkBitmap(true) // 检测 Bitmap 的创建
         .globalTag("test_perf")// 全局 logcat tag ,方便过滤
         .cacheDirSupplier { context.cacheDir } // issue 文件保存目录
         .maxCacheSizeSupplier { 10 * 1024 * 1024 } // issue 文件最大占用存储空间

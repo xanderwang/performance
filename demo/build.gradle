@@ -60,8 +60,8 @@ dependencies {
   implementation _dependencies['asu']
 
   // 基础依赖，必须添加
-  debugImplementation 'io.github.xanderwang:performance:0.3.1'
-  releaseImplementation 'io.github.xanderwang:performance-noop:0.3.1'
+  debugImplementation 'io.github.xanderwang:performance:0.3.2'
+  releaseImplementation 'io.github.xanderwang:performance-noop:0.3.2'
 
   // hook 方案封装，必须添加
   debugImplementation 'io.github.xanderwang:hook:0.3.1'
