@@ -38,6 +38,10 @@ public class PERF {
       return this;
     }
 
+    public Builder filterClass(boolean filter) {
+      return this;
+    }
+
     public Builder globalTag(String tag) {
       return this;
     }

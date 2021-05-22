@@ -17,4 +17,9 @@ class Config {
    * 线程后台执行任务的时间检测间隔，超时就打印出来
    */
   public static long THREAD_BLOCK_TIME = 2000L;
+
+  /**
+   * 是否过滤类名
+   */
+  public static boolean FILTER_CLASS_NAME = true;
 }

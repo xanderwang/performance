@@ -58,6 +58,11 @@ public class PERF {
     boolean mCheckBitmap = false;
 
     /**
+     * 是否需要在打印 log 的时候过滤一些不必要的类名。
+     */
+    boolean mFilterClass = true;
+
+    /**
      * issue 文件的保存目录
      */
     IssueSupplier<File> cacheDirSupplier = null;
@@ -120,6 +125,11 @@ public class PERF {
       return this;
     }
 
+    public Builder filterClass(boolean filter) {
+      mFilterClass = filter;
+      return this;
+    }
+
     public Builder globalTag(String tag) {
       globalTag = tag;
       return this;
@@ -163,6 +173,7 @@ public class PERF {
     if (builder == null) {
       builder = new Builder();
     }
+    Config.FILTER_CLASS_NAME = builder.mFilterClass;
     aConstants.logLevel = builder.logLevel;
     aConstants.setGlobalTag(builder.globalTag);
     Issue.init(builder.cacheDirSupplier, builder.macCacheSizeSupplier, builder.uploaderSupplier);

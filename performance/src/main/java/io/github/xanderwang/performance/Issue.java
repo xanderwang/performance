@@ -59,7 +59,7 @@ public class Issue {
    * <p>
    * 所以这样写没有太大的问题
    */
-  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+  private static SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_S");
 
   /**
    * 类型
@@ -124,7 +124,7 @@ public class Issue {
         str = "BITMAP";
         break;
       default:
-        str = "NONE";
+        str = "UNKNOWN";
     }
     return str;
   }
@@ -204,7 +204,7 @@ public class Issue {
       }
       buffer.put(issue.dataBytes);
       int dataPosition = buffer.position();
-      // xLog.e(TAG, "SaveIssueTask buffer at:" + dataPosition);
+      aLog.d(TAG, "SaveIssueTask buffer at:" + dataPosition);
       gLineBytes = String.format(Locale.US, LINE_FORMAT, dataPosition).getBytes();
       buffer.position(0);
       buffer.put(gLineBytes);
@@ -305,7 +305,8 @@ public class Issue {
       zipLogFile(gLogFile);
       gLogFile = null;
     }
-    String fileName = "issues_" + SystemClock.elapsedRealtimeNanos() + ".log";
+    // String fileName = "issues_" + SystemClock.elapsedRealtimeNanos() + ".log";
+    String fileName = "issues_" + dateFormat.format(new Date()) + ".log";
     gLogFile = new File(ISSUES_CACHE_DIR, fileName);
     if (gLogFile.exists()) {
       gLogFile.delete();
@@ -339,9 +340,9 @@ public class Issue {
     }
     Arrays.sort(files, new Comparator<File>() {
       @Override
-      public int compare(File o1, File o2) {
-        // 结果为负数表示 o2 排在前面，也就是说后创建的文件在前面
-        return (int) (o2.lastModified() - o1.lastModified());
+      public int compare(File fileA, File fileB) {
+        // 结果为负数表示 fileB 排在前面，也就是说后创建的文件在前面
+        return (int) (fileB.lastModified() - fileA.lastModified());
       }
     });
     // List<File> waitToZipLogFiles = new ArrayList<>();
@@ -368,6 +369,7 @@ public class Issue {
             }
           }
         };
+        // fixme 上传文件可以考虑用另外的线程来上传，暂时放到这里
         executorService().execute(uploadRunnable);
       }
     }
@@ -479,9 +481,9 @@ public class Issue {
         }
         Arrays.sort(files, new Comparator<File>() {
           @Override
-          public int compare(File o1, File o2) {
-            // 结果为负数表示 o2 排在前面，也就是说后创建的文件在前面
-            return (int) (o2.lastModified() - o1.lastModified());
+          public int compare(File fileA, File fileB) {
+            // 结果为负数表示 fileB 排在前面，也就是说后创建的文件在前面
+            return (int) (fileB.lastModified() - fileA.lastModified());
           }
         });
         long fileLength = 0;
