@@ -15,13 +15,26 @@ import java.util.List;
  */
 class StackTraceUtils {
 
-  private static HashSet<String> IGNORE_CLASS_NAME_SET = new HashSet<>();
+  private static HashSet<String>   IGNORE_CLASS_NAME_SET  = new HashSet<>();
+  private static ArrayList<String> IGNORE_CLASS_NAME_List = new ArrayList<>();
 
   static {
     IGNORE_CLASS_NAME_SET.add(BitmapTool.class.getName());
     IGNORE_CLASS_NAME_SET.add(IPCTool.class.getName());
     IGNORE_CLASS_NAME_SET.add(ThreadTool.class.getName());
     IGNORE_CLASS_NAME_SET.add(UIBlockTool.class.getName());
+    IGNORE_CLASS_NAME_SET.add(StackTraceUtils.class.getName());
+
+    IGNORE_CLASS_NAME_List.add(BitmapTool.class.getName());
+    IGNORE_CLASS_NAME_List.add(IPCTool.class.getName());
+    IGNORE_CLASS_NAME_List.add(ThreadTool.class.getName());
+    IGNORE_CLASS_NAME_List.add(UIBlockTool.class.getName());
+
+    IGNORE_CLASS_NAME_List.add("io.github.xanderwang.hook");
+    IGNORE_CLASS_NAME_List.add("de.robv.android");
+    IGNORE_CLASS_NAME_List.add("me.weishu.epic");
+    IGNORE_CLASS_NAME_List.add("com.swift.sandhook");
+    IGNORE_CLASS_NAME_List.add("SandHookerNew_");
   }
 
   /**
@@ -40,11 +53,10 @@ class StackTraceUtils {
     if (IGNORE_CLASS_NAME_SET.contains(className)) {
       return true;
     }
-    if (className.startsWith("io.github.xanderwang.hook")
-        || className.startsWith("de.robv.android")
-        || className.startsWith("me.weishu.epic")
-        || className.startsWith("com.swift.sandhook")) {
-      return true;
+    for (int i = IGNORE_CLASS_NAME_List.size() - 1; i >= 0; i--) {
+      if (className.startsWith(IGNORE_CLASS_NAME_List.get(i))) {
+        return true;
+      }
     }
     return false;
   }
