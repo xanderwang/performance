@@ -11,6 +11,7 @@ import io.github.xanderwang.hook.core.MethodParam;
 
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -128,11 +129,22 @@ class ThreadTool {
    */
   static ConcurrentHashMap<String, String> workerThreadPoolMap = new ConcurrentHashMap<>(32);
 
+  static Field THREAD_TARGET = null;
 
-  static Handler threadTraceHandler = new Handler();
+  static Field WORKER_THREAD = null;
+
+  static DumpThread dumpThread = new DumpThread();
+  static Handler    threadTraceHandler; // 主线程阻塞的话，可能会导致实际执行时刻和期望执行时刻不同步
 
   static Map<String, DumpThreadTraceTask> dumpTaskMap = new HashMap<>();
 
+  /**
+   * 保存线程池创建信息
+   *
+   * @param threadPoolKey
+   * @param msg
+   * @param createTrace
+   */
   private static void saveThreadPoolCreateInfo(String threadPoolKey, String msg,
       StackTraceElement[] createTrace) {
     if (threadPoolMap.containsKey(threadPoolKey)) {
@@ -146,10 +158,24 @@ class ThreadTool {
     threadPoolIssues.print();
   }
 
+  /**
+   * 关联线程池和 worker
+   *
+   * @param threadPoolKey
+   * @param workerKey
+   */
   private static void linkThreadPoolAndWorker(String threadPoolKey, String workerKey) {
     workerThreadPoolMap.put(workerKey, threadPoolKey);
   }
 
+  /**
+   * 线程的创建信息，这个暂时可以不用关系，因为后续会关心 start
+   *
+   * @param threadKey
+   * @param workerKey
+   * @param createTrace
+   */
+  @Deprecated
   private static void saveThreadCreateInfo(String threadKey, String workerKey,
       StackTraceElement[] createTrace) {
     ThreadIssue threadInfo = new ThreadIssue("THREAD CREATE");
@@ -182,6 +208,52 @@ class ThreadTool {
     threadMap.put(threadKey, threadInfo);
   }
 
+  /**
+   * 关联线程池和线程池创建的线程
+   *
+   * @param threadKey
+   * @param workerKey
+   * @param createTrace
+   */
+  private static void linkThreadAndThreadPool(String threadKey, String workerKey,
+      StackTraceElement[] createTrace) {
+    ThreadIssue threadInfo = new ThreadIssue("THREAD CREATE");
+    threadInfo.lostCreateTrace = true;
+    threadInfo.key = threadKey;
+    boolean isInThreadPool = workerThreadPoolMap.containsKey(workerKey);
+    aLog.w(TAG, "linkThreadAndThreadPool: thread is in thread pool:%s", isInThreadPool);
+    if (isInThreadPool) {
+      // 线程池创建的线程
+      String threadPoolKey = workerThreadPoolMap.get(workerKey);
+      ThreadPoolIssue threadPoolInfo = threadPoolMap.get(threadPoolKey);
+      if (threadPoolInfo == null) {
+        // 部分情况下，比如库初始化的比较晚，部分线程池已经创建了，就会出现线程创建时没有对应的线程池
+        // 这里用线程的创建调用链来代替线程池的创建调用链，多少有些参考价值
+        threadPoolInfo = new ThreadPoolIssue("THREAD POOL LOST CREATE INFO!!!");
+        threadPoolInfo.key = threadPoolKey;
+        threadPoolInfo.lostCreateTrace = true;
+        if (null != createTrace) {
+          threadPoolInfo.createTrace = StackTraceUtils.list(createTrace);
+        }
+        threadPoolMap.put(threadPoolKey, threadPoolInfo);
+        threadPoolInfo.print();
+      }
+      threadInfo.threadPoolKey = threadPoolKey;
+      threadPoolInfo.addThreadInfo(threadInfo);
+      // 建立 thread 和 thread pool 的关联后，断开 worker 和 thread pool 的关联
+      // 因为，Worker 只创建一个 Thread
+      workerThreadPoolMap.remove(workerKey);
+    }
+    threadMap.put(threadKey, threadInfo);
+  }
+
+  /**
+   * 线程启动了
+   *
+   * @param threadKey
+   * @param threadName
+   * @param startTrace
+   */
   private static void saveStartThreadInfo(String threadKey, String threadName,
       StackTraceElement[] startTrace) {
     ThreadIssue threadInfo = threadMap.get(threadKey);
@@ -203,6 +275,11 @@ class ThreadTool {
     }
   }
 
+  /**
+   * 清除一些信息
+   *
+   * @param threadKey
+   */
   private static void clearInfoWhenExitThread(String threadKey) {
     aLog.d(TAG, "clear info when exit thread, threadKey:%s", threadKey);
     ThreadIssue threadInfo = threadMap.remove(threadKey);
@@ -231,6 +308,11 @@ class ThreadTool {
     );
   }
 
+  /**
+   * 线程开始执行
+   *
+   * @param thread
+   */
   private static void threadRunStart(Thread thread) {
     if (null == thread) {
       return;
@@ -254,6 +336,11 @@ class ThreadTool {
     );
   }
 
+  /**
+   * 线程执行结束
+   *
+   * @param thread
+   */
   private static void threadRunEnd(Thread thread) {
     if (null == thread) {
       return;
@@ -266,6 +353,9 @@ class ThreadTool {
     }
   }
 
+  /**
+   * 线程优先级改变
+   */
   private static void threadPriorityChanged() {
     //Priority
     ThreadTraceIssue traceIssue = new ThreadTraceIssue(
@@ -278,6 +368,7 @@ class ThreadTool {
 
   static void init() {
     aLog.e(TAG, "init");
+    dumpThread.start();
     hookThread();
   }
 
@@ -287,9 +378,9 @@ class ThreadTool {
     Constructor<?>[] constructors = ThreadPoolExecutor.class.getDeclaredConstructors();
     for (int i = 0; i < constructors.length; i++) {
       if (constructors[i].getParameterTypes().length <= 6) {
-        continue;
+        // 7 个参数的构造方法，貌似 hook 有问题，暂时不 hook。但是这里还是有些问题的 fixme
+        HookBridge.hookMethod(constructors[i], constructorHook);
       }
-      HookBridge.hookMethod(constructors[i], constructorHook);
     }
 
     try {
@@ -297,19 +388,28 @@ class ThreadTool {
       // 所以构造方法第一参数就是 ThreadPoolExecutor, 所以构造方法可以将 Worker 和 线程池绑定
       // java.util.concurrent.ThreadPoolExecutor$Worker
       Class<?> workerClass = Class.forName("java.util.concurrent.ThreadPoolExecutor$Worker");
+      WORKER_THREAD = workerClass.getDeclaredField("thread");
       HookBridge.hookAllConstructors(workerClass, new WorkerConstructorHook());
-    } catch (ClassNotFoundException e) {
+    } catch (Exception e) {
       aLog.ee(TAG, "java.util.concurrent.ThreadPoolExecutor$Worker", e);
     }
 
     // 根据构造方法里面的 runnable 是否为 Worker 可知是否为线程池创建的线程。
-    HookBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
+    //    HookBridge.hookAllConstructors(Thread.class, new ThreadConstructorHook());
+    //    HookBridge.findAndHookMethod(Thread.class, "init", new ThreadConstructorHook());
+    //    aLog.e(TAG, "findAndHookMethod Thread.init");
+
+    try {
+      THREAD_TARGET = Thread.class.getDeclaredField("target");
+    } catch (Exception e) {
+      aLog.ee(TAG, "THREAD_TARGET error", e);
+    }
 
     // start 方法表示
     HookBridge.findAndHookMethod(Thread.class, "start", new ThreadStartHook());
 
     // run 方法执行完，表示线程执行完。可以考虑在里面做一些清理工作，目前发现还是有问题
-    HookBridge.findAndHookMethod(Thread.class, "run", new ThreadExitHook());
+    HookBridge.findAndHookMethod(Thread.class, "run", new ThreadRunHook());
     try {
       // kotlin 的线程执行和 java 的不一致，这里需要做个区分
       Class<?> ktThreadRunnable = Class.forName("kotlin.concurrent.ThreadsKt$thread$thread$1");
@@ -341,11 +441,11 @@ class ThreadTool {
     public void beforeHookedMethod(MethodParam param) throws Throwable {
       Object threadPool = param.getThisObject();
       String threadPoolInfoKey = Integer.toHexString(threadPool.hashCode());
-      // aLog.d(
-      //     TAG,
-      //     "ThreadPoolExecutorConstructorHook beforeHookedMethod:%s",
-      //     Arrays.toString(param.getArgs())
-      // );
+      aLog.e(
+          TAG,
+          "ThreadPoolExecutorConstructorHook beforeHookedMethod:%s",
+          Arrays.toString(param.getArgs())
+      );
       // aLog.d(
       //     TAG,
       //     "ThreadPoolExecutorConstructorHook beforeHookedMethod threadPoolInfoKey:%s",
@@ -369,13 +469,30 @@ class ThreadTool {
       // aLog.w(TAG, "WorkerConstructorHook beforeHookedMethod threadPoolKey:%s", threadPoolKey);
       linkThreadPoolAndWorker(threadPoolKey, workerKey);
     }
+
+    @Override
+    public void afterHookedMethod(MethodParam param) throws Throwable {
+      super.afterHookedMethod(param);
+      // 关联 thread 和 worker
+      if (null != WORKER_THREAD) {
+        WORKER_THREAD.setAccessible(true);
+        Object thread = WORKER_THREAD.get(param.getThisObject());
+        if (thread != null) {
+          String threadKey = Integer.toHexString(thread.hashCode());
+          String workerKey = Integer.toHexString(param.getThisObject().hashCode());
+          linkThreadAndThreadPool(threadKey, workerKey, null);
+        }
+      } else {
+        aLog.e(TAG, "WorkerConstructorHook afterHookedMethod WORKER_THREAD is null!!!");
+      }
+    }
   }
 
   static class ThreadConstructorHook extends MethodHook {
 
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
-      // aLog.d(TAG, "ThreadConstructorHook afterHookedMethod:%s", Arrays.toString(param.getArgs()));
+      aLog.d(TAG, "ThreadConstructorHook afterHookedMethod:%s", Arrays.toString(param.getArgs()));
       Thread cThread = (Thread) param.getThisObject();
       String threadKey = Integer.toHexString(cThread.hashCode());
       // 获取 workerKey
@@ -383,8 +500,9 @@ class ThreadTool {
       Object[] args = param.getArgs();
       for (int i = 0; i < args.length; i++) {
         String argClassName = args[i].getClass().getName();
-        // aLog.d(TAG, "ThreadConstructorHook afterHookedMethod arg class name:%s", argClassName);
+        //         aLog.e(TAG, "ThreadConstructorHook afterHookedMethod arg class name:%s", argClassName);
         if ("java.util.concurrent.ThreadPoolExecutor$Worker".equals(argClassName)) {
+          aLog.w(TAG, "ThreadConstructorHook afterHookedMethod find worker");
           workerKey = Integer.toHexString(args[i].hashCode());
         }
       }
@@ -394,6 +512,30 @@ class ThreadTool {
   }
 
   static class ThreadStartHook extends MethodHook {
+
+    // @Override
+    // public void beforeHookedMethod(MethodParam param) throws Throwable {
+    //   super.beforeHookedMethod(param);
+    //   Thread cThread = (Thread) param.getThisObject();
+    //   String threadKey = Integer.toHexString(cThread.hashCode());
+    //   String runnableClassName = "";
+    //   int runnableHashCode = 0;
+    //   String workerKey = "";
+    //   // 看 target 是否为 worker 开判断是否为线程池创建的
+    //   if (null != THREAD_TARGET) {
+    //     THREAD_TARGET.setAccessible(true);
+    //     Object target = THREAD_TARGET.get(cThread);
+    //     if (null != target) {
+    //       runnableClassName = target.getClass().getName();
+    //       runnableHashCode = target.hashCode();
+    //     }
+    //   }
+    //   aLog.e(TAG, "ThreadStartHook beforeHookedMethod runnable class name:%s", runnableClassName);
+    //   if ("java.util.concurrent.ThreadPoolExecutor$Worker".equals(runnableClassName)) {
+    //     workerKey = Integer.toHexString(runnableHashCode);
+    //   }
+    //   // linkThreadAndThreadPool(threadKey, workerKey, new Throwable().getStackTrace());
+    // }
 
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
@@ -405,14 +547,14 @@ class ThreadTool {
     }
   }
 
-  static class ThreadExitHook extends MethodHook {
+  static class ThreadRunHook extends MethodHook {
 
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
       // super.beforeHookedMethod(param);
       Thread cThread = Thread.currentThread();
       if (cThread == Looper.getMainLooper().getThread()) {
-        aLog.d(TAG, "ThreadExitHook beforeHookedMethod in main thread");
+        aLog.d(TAG, "ThreadRunHook beforeHookedMethod in main thread");
         return;
       }
       threadRunStart(cThread);
@@ -420,7 +562,7 @@ class ThreadTool {
 
     @Override
     public void afterHookedMethod(MethodParam param) throws Throwable {
-      aLog.d(TAG, "ThreadExitHook afterHookedMethod");
+      aLog.d(TAG, "ThreadRunHook afterHookedMethod");
       // super.afterHookedMethod(param);
       Thread cThread = (Thread) param.getThisObject();
       threadRunEnd(cThread);
@@ -466,12 +608,22 @@ class ThreadTool {
     }
   }
 
-  //android.os.Process.setThreadPriority
+  // android.os.Process.setThreadPriority
   static class ProcessSetThreadPriorityHook extends MethodHook {
     @Override
     public void beforeHookedMethod(MethodParam param) throws Throwable {
       super.beforeHookedMethod(param);
       threadPriorityChanged();
+    }
+  }
+
+  static class DumpThread extends Thread {
+    @Override
+    public void run() {
+      super.run();
+      Looper.prepare();
+      threadTraceHandler = new Handler(Looper.myLooper());
+      Looper.loop();
     }
   }
 
@@ -488,14 +640,19 @@ class ThreadTool {
 
     @Override
     public void run() {
-      if (null == threadRef || threadRef.get() == null) {
+      if (null == threadRef) {
+        return;
+      }
+      Thread thread = threadRef.get();
+      if (null == thread) {
         return;
       }
       // aLog.e(TAG, "DumpThreadTraceTask:%s", threadRef.get());
       ThreadTraceIssue traceIssue = new ThreadTraceIssue(
           "THREAD RUN BLOCK TRACE",
-          StackTraceUtils.list(threadRef.get())
+          StackTraceUtils.list(thread)
       );
+      traceIssue.threadName = thread.getName();
       traceIssue.print();
       threadRef = null;
     }
