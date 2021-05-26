@@ -76,7 +76,7 @@ class IPCTool {
   @SuppressLint("PrivateApi")
   private static void hookIPC() {
     try {
-      if (HookBridge.isSandHook() || HookBridge.isEpic()) {
+      if (HookBridge.isSandHook() /*|| HookBridge.isEpic()*/) {
         // 这个方法  epic hook 的话会报错，很奇怪，理论上是一个比较好的 hook 点
         Class<?> binderProxyClass = Class.forName("android.os.BinderProxy");
         if (null != binderProxyClass) {
