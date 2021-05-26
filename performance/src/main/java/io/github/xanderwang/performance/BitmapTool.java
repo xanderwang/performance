@@ -25,8 +25,8 @@ import io.github.xanderwang.hook.core.MethodParam;
  * 2. 调用 ImageView.setImageBitmap 或者 ImageView.setImageDrawable 方法的时候，
  * 判断 Bitmap 的大小是否超过阈值，超过的话需要展示异常，如果没有超过的话，忽略。
  * 3. 有异常的时候，可以根据ImageView.setImageBitmap 或者 ImageView.setImageDrawable 的方法调用链里面是否包含
- *    'EngineJob$CallResourceReady.run' 方法来判断是手动设置还是框架回调，如果是框架回调，就需要找到之前的 into
- *    方法调用栈 A，如果不是框架回调，直接显示方法调用链。
+ * 'EngineJob$CallResourceReady.run' 方法来判断是手动设置还是框架回调，如果是框架回调，就需要找到之前的 into
+ * 方法调用栈 A，如果不是框架回调，直接显示方法调用链。
  * <p/>
  * Fresco
  * 待完成
@@ -37,20 +37,42 @@ public class BitmapTool {
 
   private static final String TAG = "BitmapTool";
 
-  private static HashMap<String, Issue> imageViewLoadMap = new HashMap<>(64);
+  private static HashMap<String, BitmapIssue> imageViewLoadMap = new HashMap<>(64);
 
   private static class BitmapIssue extends Issue {
 
+    public int viewWidth   = 0;
+    public int viewHeight  = 0;
+    public int imageWidth  = 0;
+    public int imageHeight = 0;
+
     public BitmapIssue(Object data) {
       super(Issue.TYPE_BITMAP, "LARGE BITMAP", data);
+    }
+
+    public void imageInfo(int viewWidth, int viewHeight, int imageWidth, int imageHeight) {
+      this.viewWidth = viewWidth;
+      this.viewHeight = viewHeight;
+      this.imageWidth = imageWidth;
+      this.imageHeight = imageHeight;
+    }
+
+    @Override
+    protected void buildOtherString(StringBuilder sb) {
+      if (viewWidth > 0) {
+        sb.append("image info:")
+            .append("viewWidth:").append(viewWidth)
+            .append(",viewHeight:").append(viewHeight)
+            .append(",imageWidth:").append(imageWidth)
+            .append(",imageHeight:").append(imageHeight).append('\n');
+      }
     }
   }
 
   private static void linkLoadImageAndImageView(String imageViewKey,
       StackTraceElement[] loadTrace) {
-    Issue issue = new BitmapIssue(StackTraceUtils.list(loadTrace));
+    BitmapIssue issue = new BitmapIssue(StackTraceUtils.list(loadTrace));
     imageViewLoadMap.put(imageViewKey, issue);
-
   }
 
   private static void unlinkLoadImageAndImageView(String imageViewKey) {
@@ -237,6 +259,7 @@ public class BitmapTool {
 
   /**
    * 暂时认为如果加载的图片宽或高中的一个或者多个大于 view 的宽高的话
+   *
    * @param bitmapWidth
    * @param bitmapHeight
    * @param viewWidth
@@ -246,7 +269,15 @@ public class BitmapTool {
    */
   private static void checkBitmap(int bitmapWidth, int bitmapHeight, int viewWidth, int viewHeight,
       String viewKey, StackTraceElement[] trace) {
-    if (bitmapWidth > viewWidth || bitmapHeight > viewHeight) {
+    aLog.e(
+        TAG,
+        "checkBitmap bitmapWidth:%s ,bitmapHeight:%s ,viewWidth:%s ,viewHeight:%s",
+        bitmapWidth,
+        bitmapHeight,
+        viewWidth,
+        viewHeight
+    );
+    if ((bitmapWidth > viewWidth || bitmapHeight > viewHeight) && (viewWidth > 0 && viewHeight > 0)) {
       // 到这里就有问题了，然后需要看是通过框架库还是手动设置
       // 手动设置的话，需要提示，如果是框架库的话，需要找到框架库开始 load 的地方。
       List<String> traceList = StackTraceUtils.list(trace);
@@ -257,14 +288,15 @@ public class BitmapTool {
           break;
         }
       }
+      BitmapIssue issue = null;
       if (isInLibrary) {
         // 找到之前的 image library load image start 的地方
-        Issue issue = imageViewLoadMap.remove(viewKey);
-        if (null != issue) {
-          issue.print();
-        }
+        issue = imageViewLoadMap.remove(viewKey);
       } else {
-        Issue issue = new BitmapIssue(traceList);
+        issue = new BitmapIssue(traceList);
+      }
+      if (null != issue) {
+        issue.imageInfo(viewWidth, viewHeight, bitmapWidth, bitmapHeight);
         issue.print();
       }
     } else {
