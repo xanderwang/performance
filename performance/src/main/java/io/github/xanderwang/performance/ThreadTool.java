@@ -133,8 +133,7 @@ class ThreadTool {
 
   static Field WORKER_THREAD = null;
 
-  static DumpThread dumpThread = new DumpThread();
-  static Handler    threadTraceHandler; // 主线程阻塞的话，可能会导致实际执行时刻和期望执行时刻不同步
+  static Handler threadTraceHandler; // 主线程阻塞的话，可能会导致实际执行时刻和期望执行时刻不同步
 
   static Map<String, DumpThreadTraceTask> dumpTaskMap = new HashMap<>();
 
@@ -368,7 +367,7 @@ class ThreadTool {
 
   static void init() {
     aLog.e(TAG, "init");
-    dumpThread.start();
+    threadTraceHandler = new Handler(AppHelper.getPerfLooper());
     hookThread();
   }
 
@@ -614,16 +613,6 @@ class ThreadTool {
     public void beforeHookedMethod(MethodParam param) throws Throwable {
       super.beforeHookedMethod(param);
       threadPriorityChanged();
-    }
-  }
-
-  static class DumpThread extends Thread {
-    @Override
-    public void run() {
-      super.run();
-      Looper.prepare();
-      threadTraceHandler = new Handler(Looper.myLooper());
-      Looper.loop();
     }
   }
 

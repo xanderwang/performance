@@ -3,6 +3,7 @@ package io.github.xanderwang.performance;
 import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.util.Printer;
 import android.view.KeyEvent;
 
@@ -25,39 +26,59 @@ class UIBlockTool {
 
   private static final String TAG = "UIBlockTool";
 
+  /**
+   * 用于发起定时任务
+   */
+  private static Handler uiBlockHandler;
+
+  /**
+   * 用于 dump block 时候，系统相关的信息。
+   */
+  private static final DumpBlockInfoRunnable dumpBlockInfoRunnable = new DumpBlockInfoRunnable();
+
   static void start() {
     aLog.e(TAG, "start");
-    startDumpInfoThread();
+    uiBlockHandler = new Handler(AppHelper.getPerfLooper());
+    // hookLooperPrinter();
+    hookHandlerDispatchMessage();
     hookDecorViewDispatchKeyEvent();
-    initMainLooperPrinter();
   }
 
-  private static void startDumpInfoThread() {
-    dumpInfoThread.start();
-  }
-
-  private static void initMainLooperPrinter() {
-    Looper.getMainLooper().setMessageLogging(new WatcherMainLooperPrinter());
-  }
 
   private static void startDumpInfo() {
-    if (null == dumpInfoHandler) {
+    if (null == uiBlockHandler) {
       return;
     }
-    dumpInfoHandler.removeCallbacks(dumpMainThreadRunnable);
-    dumpInfoHandler.postDelayed(dumpMainThreadRunnable, Config.UI_BLOCK_TIME);
+    uiBlockHandler.removeCallbacks(dumpBlockInfoRunnable);
+    uiBlockHandler.postDelayed(dumpBlockInfoRunnable, Config.UI_BLOCK_TIME);
   }
 
   private static void clearDumpInfo() {
-    if (null == dumpInfoHandler) {
+    if (null == uiBlockHandler) {
       return;
     }
-    dumpInfoHandler.removeCallbacks(dumpMainThreadRunnable);
+    uiBlockHandler.removeCallbacks(dumpBlockInfoRunnable);
   }
 
-  private static DumpInfoThread   dumpInfoThread         = new DumpInfoThread("DumpInfoThread");
-  private static Handler          dumpInfoHandler;
-  private static DumpInfoRunnable dumpMainThreadRunnable = new DumpInfoRunnable();
+
+  /**
+   * dump 信息，目前主要 dump 主线程的调用栈，后续可以考虑 dump 更多的信息。
+   */
+  private static class DumpBlockInfoRunnable implements Runnable {
+    @Override
+    public void run() {
+      Issue uiIssue = new Issue(
+          Issue.TYPE_UI_BLOCK,
+          "UI BLOCK",
+          StackTraceUtils.list(Looper.getMainLooper().getThread())
+      );
+      uiIssue.print();
+    }
+  }
+
+  public static void hookLooperPrinter() {
+    Looper.getMainLooper().setMessageLogging(new WatcherMainLooperPrinter());
+  }
 
   private static class WatcherMainLooperPrinter implements Printer {
     @Override
@@ -70,34 +91,30 @@ class UIBlockTool {
     }
   }
 
-  /**
-   * 后台异步 dump info 线程，利用 Looper 机制，做延时任务处理。
-   */
-  private static class DumpInfoThread extends Thread {
-    DumpInfoThread(String name) {
-      super(name);
-    }
-
-    @Override
-    public void run() {
-      Looper.prepare();
-      dumpInfoHandler = new Handler(Looper.myLooper());
-      Looper.loop();
-    }
+  private static void hookHandlerDispatchMessage() {
+    HookBridge.findAndHookMethod(
+        Handler.class,
+        "dispatchMessage",
+        Message.class,
+        new HandlerDispatchMessageHook()
+    );
   }
 
-  /**
-   * dump 信息，目前主要 dump 主线程的调用栈，后续可以考虑 dump 更多的信息。
-   */
-  private static class DumpInfoRunnable implements Runnable {
+  private static class HandlerDispatchMessageHook extends MethodHook {
     @Override
-    public void run() {
-      Issue uiIssue = new Issue(
-          Issue.TYPE_UI_BLOCK,
-          "UI BLOCK",
-          StackTraceUtils.list(Looper.getMainLooper().getThread())
-      );
-      uiIssue.print();
+    public void beforeHookedMethod(MethodParam param) throws Throwable {
+      // super.beforeHookedMethod(param);
+      if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
+        startDumpInfo();
+      }
+    }
+
+    @Override
+    public void afterHookedMethod(MethodParam param) throws Throwable {
+      // super.afterHookedMethod(param);
+      if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
+        clearDumpInfo();
+      }
     }
   }
 

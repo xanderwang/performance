@@ -187,6 +187,7 @@ public class PERF {
     Config.FILTER_CLASS_NAME = builder.mFilterClass;
     aConstants.logLevel = builder.logLevel;
     aConstants.setGlobalTag(builder.globalTag);
+    AppHelper.init();
     Issue.init(builder.cacheDirSupplier, builder.macCacheSizeSupplier, builder.uploaderSupplier);
     if (builder.mCheckThread) {
       Config.THREAD_BLOCK_TIME = builder.mThreadBlockTime;
