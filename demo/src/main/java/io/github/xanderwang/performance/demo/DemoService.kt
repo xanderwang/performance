@@ -9,27 +9,27 @@ import io.github.xanderwang.asu.aLog
 /**
  * @author Xander Wang
  * Created on 2020/12/24.
- * @Description //TODO
+ * @Description
  */
 class DemoService : Service() {
-  internal class MyDemoServer : IDemoService.Stub() {
-    @Throws(RemoteException::class)
-    override fun demo() {
-      aLog.e(TAG, "DemoService demo thread:$${Thread.currentThread().name}")
-      Thread.sleep(1000)
+    internal class MyDemoServer : IDemoService.Stub() {
+        @Throws(RemoteException::class)
+        override fun demo() {
+            aLog.e(TAG, "DemoService demo thread:$${Thread.currentThread().name}")
+            Thread.sleep(1000)
+        }
     }
-  }
 
-  private val myDemoServer = MyDemoServer()
+    private val myDemoServer = MyDemoServer()
 
-  override fun onBind(intent: Intent): IBinder? {
-    aLog.d(TAG, "DemoService onBind:$this")
-    aLog.d(TAG, "DemoService MyDemoServer:$myDemoServer")
-    aLog.d(TAG, "DemoService onBind thread:$${Thread.currentThread().name}")
-    return myDemoServer
-  }
+    override fun onBind(intent: Intent): IBinder? {
+        aLog.d(TAG, "DemoService onBind:$this")
+        aLog.d(TAG, "DemoService MyDemoServer:$myDemoServer")
+        aLog.d(TAG, "DemoService onBind thread:$${Thread.currentThread().name}")
+        return myDemoServer
+    }
 
-  companion object {
-    private const val TAG = "DemoService"
-  }
+    companion object {
+        private const val TAG = "DemoService"
+    }
 }

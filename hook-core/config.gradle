@@ -7,9 +7,9 @@ ext {
 
   pomName = libArtifactId
   pomDescription = 'a hook lib for android'
-  pomUrl = 'https://github.com/XanderWang/performance'
+  pomUrl = 'https://github.com/xanderwang/performance'
 
-  scmUrl = 'https://github.com/XanderWang/performance'
-  scmConnection = 'scm:git:github.com/XanderWang/performance.git'
-  scmDeveloperConnection = 'scm:git:ssh://git@github.com/XanderWang/performance.git'
+  scmUrl = 'https://github.com/xanderwang/performance'
+  scmConnection = 'scm:git:github.com/xanderwang/performance.git'
+  scmDeveloperConnection = 'scm:git:ssh://git@github.com/xanderwang/performance.git'
 }

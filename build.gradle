@@ -6,7 +6,7 @@ apply from: 'config.gradle'
 buildscript {
   println("enter ${project.name} buildscript")
 
-  ext.kotlin_version = '1.4.20'
+  ext.kotlin_version = "1.6.10"
   ext.lib_asu_version = "0.2.1"
   ext.lib_hook_version = "0.3.1"
   ext.lib_perf_version = "0.3.2"
@@ -39,7 +39,7 @@ buildscript {
 
   dependencies {
 
-    classpath 'com.android.tools.build:gradle:3.6.4'
+    classpath 'com.android.tools.build:gradle:4.2.0'
 
     // NOTE: Do not place your application dependencies here; they belong
     // in the individual module build.gradle files
@@ -48,6 +48,7 @@ buildscript {
 }
 
 allprojects {
+  println("*" * 100)
   println("enter ${project.name} allprojects")
 
   repositories {
@@ -83,9 +84,11 @@ allprojects {
 
 /** Configure publishing and signing for published Java and JavaPlatform subprojects. */
 subprojects { project ->
+  println("-" * 50)
   println("enter ${project.name} subprojects")
   File configFile = new File("${project.projectDir.absolutePath}/config.gradle")
   if (configFile.exists()) {
+    println("apply ${configFile.absolutePath}")
     apply from: configFile
   } else {
     return

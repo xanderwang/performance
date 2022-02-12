@@ -3,9 +3,9 @@
 由于本人工作需要，需要解决一些性能问题，虽然有 `Profiler` 、`Systrace
 ` 等工具，但是无法实时监控，多少有些不方便，于是计划写一个能实时监控性能的小工具。经过学习大佬们的文章，最终完成了这个开源的性能实时检测库。初步能达到预期效果，这里做个记录，算是小结了。
 
-开源库的[地址](https://github.com/XanderWang/performance)是:
+开源库的[地址](https://github.com/xanderwang/performance)是:
 
-> https://github.com/XanderWang/performance
+> https://github.com/xanderwang/performance
 
 幸苦各位能给个小小的 star 鼓励下。
 

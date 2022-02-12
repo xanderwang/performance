@@ -7,44 +7,34 @@ import android.util.Log;
  */
 public class Logger {
 
-    private static int LOG_LEVEL = Log.DEBUG;
+    private static final boolean DEBUG = Debug.DEBUG;
 
-    public static String preFix = "epic_";
-
-    public static void setLogLevel(int logLevel) {
-        LOG_LEVEL = logLevel;
-    }
-
-    public static void setPreFix(String preFix) {
-        Logger.preFix = preFix;
-    }
+    public static final String preFix = "epic.";
 
     public static void i(String tag, String msg) {
-        if (LOG_LEVEL <= Log.INFO) {
+        if (DEBUG) {
             Log.i(preFix + tag, msg);
         }
     }
 
     public static void d(String tagSuffix, String msg) {
-        if (LOG_LEVEL <= Log.DEBUG) {
+        if (DEBUG) {
             Log.d(preFix + tagSuffix, msg);
         }
     }
 
     public static void w(String tag, String msg) {
-        if (LOG_LEVEL <= Log.WARN) {
-            Log.w(preFix + tag, msg);
-        }
+        Log.w(preFix + tag, msg);
     }
 
     public static void e(String tag, String msg) {
-        if (LOG_LEVEL <= Log.ERROR) {
+        if (DEBUG) {
             Log.e(preFix + tag, msg);
         }
     }
 
     public static void e(String tag, String msg, Throwable e) {
-        if (LOG_LEVEL <= Log.ERROR) {
+        if (DEBUG) {
             Log.e(preFix + tag, msg, e);
         }
     }

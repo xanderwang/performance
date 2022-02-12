@@ -68,9 +68,9 @@ dependencies {
 
   // 以下是 hook 方案选择一个就好了。如果运行报错，就换另外一个，如果还是报错，就提个 issue
   // SandHook 方案，推荐添加。如果运行报错，可以替换为 epic 库。
-  debugImplementation 'io.github.xanderwang:hook-sandhook:0.3.1'
+//  debugImplementation 'io.github.xanderwang:hook-sandhook:0.3.1'
 
   // epic 方法。如果运行报错，可以替换为 SandHook。
-  // debugImplementation 'io.github.xanderwang:hook-epic:0.3.1'
+   debugImplementation 'io.github.xanderwang:hook-epic:0.3.1'
 
 }

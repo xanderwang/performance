@@ -13,7 +13,13 @@
 //   println("include ':performance-plugin'")
 //   include ':performance-plugin'
 // }
-// include ':lib-epic'
+
+def open_epic_source = false
+if (open_epic_source) {
+    include ':lib-epic'
+    include ':lib-epic-exposed-xposedapi'
+}
+
 
 include ':a-simple-util'
 

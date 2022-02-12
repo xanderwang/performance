@@ -2,25 +2,25 @@ println("in ${project.name}")
 apply plugin: 'com.android.library'
 
 android {
-  println("in ${project.name} android")
-  def _android = rootProject.ext.android
-  compileSdkVersion _android['compileSdkVersion']
-  buildToolsVersion _android['buildToolsVersion']
+    println("in ${project.name} android")
+    def _android = rootProject.ext.android
+    compileSdkVersion _android['compileSdkVersion']
+    buildToolsVersion _android['buildToolsVersion']
 
-  defaultConfig {
-    // minSdkVersion _android['minSdkVersion']
-    minSdkVersion 9
-    targetSdkVersion _android['targetSdkVersion']
-    versionCode 1
-    versionName "1.0"
+    defaultConfig {
+        // minSdkVersion _android['minSdkVersion']
+        minSdkVersion 9
+        targetSdkVersion _android['targetSdkVersion']
+        versionCode 1
+        versionName "1.0"
 
-  }
-
-  buildTypes {
-    release {
-      minifyEnabled false
     }
-  }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
 }
 
 

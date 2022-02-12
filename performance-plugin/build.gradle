@@ -22,9 +22,9 @@ compileTestKotlin {
 }
 
 // git项目的地址
-def _siteUrl = 'https://github.com/XanderWang/performance'
+def _siteUrl = 'https://github.com/xanderwang/performance'
 // git的路径
-def _gitUrl = 'https://github.com/XanderWang/performance.git'
+def _gitUrl = 'https://github.com/xanderwang/performance.git'
 // group
 def _group = 'com.xander.performance'
 def _artifactId = 'performance'
