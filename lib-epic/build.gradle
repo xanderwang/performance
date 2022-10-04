@@ -32,6 +32,9 @@ dependencies {
     def _dependencies = rootProject.ext.dependencies
 
     api _dependencies['free_reflection']
-    api _dependencies['exposed-xposedapi']
-
+    if (rootProject.ext.use_local_epic) {
+        api _dependencies['exposed-xposedapi-xander']
+    } else {
+        api _dependencies['exposed-xposedapi']
+    }
 }

@@ -7,21 +7,67 @@ import java.lang.reflect.Member;
  */
 public interface MethodParam {
 
-  Object getResult();
+    /**
+     * 方法调用结果
+     *
+     * @return 方法调用的结果
+     */
+    Object getResult();
 
-  void setResult(Object result);
+    /**
+     * 设置方法调用结果
+     *
+     * @param result 自定义的方法结果
+     */
+    void setResult(Object result);
 
-  Throwable getThrowable();
+    /**
+     * 获取异常
+     *
+     * @return 方法 hook 后，被调用时的异常
+     */
+    Throwable getThrowable();
 
-  boolean hasThrowable();
+    /**
+     * 方法 hook 后，被调用后，是否有异常
+     *
+     * @return true 表示方法 hook 后，被调用后，有异常
+     */
+    boolean hasThrowable();
 
-  void setThrowable(Throwable throwable);
+    /**
+     * 设置异常
+     *
+     * @param throwable
+     */
+    void setThrowable(Throwable throwable);
 
-  Object getResultOrThrowable() throws Throwable;
+    /**
+     * 获取调用后的结果或者异常
+     *
+     * @return
+     * @throws Throwable
+     */
+    Object getResultOrThrowable() throws Throwable;
 
-  Object[] getArgs();
+    /**
+     * 获取方法入参实例
+     *
+     * @return 方法入参的实例
+     */
+    Object[] getArgs();
 
-  Object getThisObject();
+    /**
+     * 获取运行时的实例
+     *
+     * @return
+     */
+    Object getThisObject();
 
-  Member getMethod();
+    /**
+     * 获取被 hook 的原始方法
+     *
+     * @return
+     */
+    Member getMethod();
 }

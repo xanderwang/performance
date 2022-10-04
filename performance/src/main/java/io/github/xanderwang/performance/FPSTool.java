@@ -21,49 +21,49 @@ import io.github.xanderwang.asu.aLog;
  */
 class FPSTool {
 
-  private static final String TAG = "FPSTool";
+    private static final String TAG = "FPSTool";
 
-  private static FrameRunnable frameRunnable = new FrameRunnable();
+    private static FrameRunnable frameRunnable = new FrameRunnable();
 
-  private static Handler handler = new Handler();
+    private static Handler handler = new Handler();
 
-  static void start() {
-    aLog.e(TAG, "start");
-    handler = new Handler(Looper.getMainLooper());
-    handler.post(frameRunnable);
-    Choreographer.getInstance().postFrameCallback(frameRunnable);
-  }
-
-
-  private static class FrameRunnable implements Runnable, FrameCallback {
-
-    long time  = 0;
-    int  count = 0;
-
-    @Override
-    public void doFrame(long frameTimeNanos) {
-      count++;
-      Choreographer.getInstance().postFrameCallback(this);
+    static void start() {
+        aLog.e(TAG, "start");
+        handler = new Handler(Looper.getMainLooper());
+        handler.post(frameRunnable);
+        Choreographer.getInstance().postFrameCallback(frameRunnable);
     }
 
-    @Override
-    public void run() {
-      long curTime = SystemClock.elapsedRealtime();
-      if (time == 0) {
-        // 第一次开始监控，跳过
-      } else {
-        int fps = (int) (1000.f * count / (curTime - time) + 0.5f);
-        String fpsStr = String.format("APP FPS is: %-3sHz", fps);
-        if (fps <= 50) {
-          aLog.e(TAG, fpsStr);
-        } else {
-          aLog.w(TAG, fpsStr);
+
+    private static class FrameRunnable implements Runnable, FrameCallback {
+
+        long time = 0;
+        int count = 0;
+
+        @Override
+        public void doFrame(long frameTimeNanos) {
+            count++;
+            Choreographer.getInstance().postFrameCallback(this);
         }
-      }
-      count = 0;
-      time = curTime;
-      handler.postDelayed(this, Config.FPS_INTERVAL_TIME);
+
+        @Override
+        public void run() {
+            long curTime = SystemClock.elapsedRealtime();
+            if (time == 0) {
+                // 第一次开始监控，跳过
+            } else {
+                int fps = (int) (1000.f * count / (curTime - time) + 0.5f);
+                String fpsStr = String.format("APP FPS is: %-3sHz", fps);
+                if (fps <= 50) {
+                    aLog.e(TAG, fpsStr);
+                } else {
+                    aLog.w(TAG, fpsStr);
+                }
+            }
+            count = 0;
+            time = curTime;
+            handler.postDelayed(this, Config.FPS_INTERVAL_TIME);
+        }
     }
-  }
 
 }

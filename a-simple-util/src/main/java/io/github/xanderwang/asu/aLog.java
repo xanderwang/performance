@@ -10,39 +10,81 @@ import android.util.Log;
  */
 public class aLog {
 
-    public static void d(String tag, String formatMsg, Object... args) {
+    /**
+     * log d
+     *
+     * @param tag
+     * @param msg
+     * @param args
+     */
+    public static void d(String tag, String msg, Object... args) {
         if (aConstants.logLevel <= Log.DEBUG) {
-            Log.d(aUtil.logTag(tag), aUtil.format(formatMsg, args));
+            Log.d(aUtil.logTag(tag), aUtil.format(msg, args));
         }
     }
 
-    public static void de(String tag, String errMsg, Throwable throwable) {
+    /**
+     * log d ，同时打印 error
+     *
+     * @param tag
+     * @param msg
+     * @param throwable
+     */
+    public static void d(String tag, String msg, Throwable throwable) {
         if (aConstants.logLevel <= Log.DEBUG) {
-            Log.d(aUtil.logTag(tag), errMsg, throwable);
+            Log.d(aUtil.logTag(tag), msg, throwable);
         }
     }
 
-    public static void w(String tag, String formatMsg, Object... args) {
+    /**
+     * log w
+     *
+     * @param tag
+     * @param msg
+     * @param args
+     */
+    public static void w(String tag, String msg, Object... args) {
         if (aConstants.logLevel <= Log.WARN) {
-            Log.w(aUtil.logTag(tag), aUtil.format(formatMsg, args));
+            Log.w(aUtil.logTag(tag), aUtil.format(msg, args));
         }
     }
 
-    public static void we(String tag, String errMsg, Throwable throwable) {
+    /**
+     * log w
+     *
+     * @param tag
+     * @param msg
+     * @param throwable
+     */
+    public static void w(String tag, String msg, Throwable throwable) {
         if (aConstants.logLevel <= Log.WARN) {
-            Log.w(aUtil.logTag(tag), errMsg, throwable);
+            Log.w(aUtil.logTag(tag), msg, throwable);
         }
     }
 
-    public static void e(String tag, String formatMsg, Object... args) {
+    /**
+     * log e
+     *
+     * @param tag
+     * @param msg
+     * @param args
+     */
+    public static void e(String tag, String msg, Object... args) {
         if (aConstants.logLevel <= Log.ERROR) {
-            Log.e(aUtil.logTag(tag), aUtil.format(formatMsg, args));
+            Log.e(aUtil.logTag(tag), aUtil.format(msg, args));
         }
     }
 
-    public static void ee(String tag, String errMsg, Throwable throwable) {
+    /**
+     * log e
+     *
+     * @param tag
+     * @param msg
+     * @param throwable
+     */
+    public static void e(String tag, String msg, Throwable throwable) {
         if (aConstants.logLevel <= Log.ERROR) {
-            Log.e(aUtil.logTag(tag), errMsg, throwable);
+            Log.e(aUtil.logTag(tag), msg, throwable);
         }
     }
 }

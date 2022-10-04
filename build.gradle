@@ -1,233 +1,109 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-println("=" * 100)
+println("=" * 50)
 println("start build.gradle")
 apply from: 'config.gradle'
 
 buildscript {
-  println("enter ${project.name} buildscript")
+    println("enter ${project.name} buildscript")
 
-  ext.kotlin_version = "1.6.10"
-  ext.lib_asu_version = "0.2.1"
-  ext.lib_hook_version = "0.3.1"
-  ext.lib_perf_version = "0.3.2"
+    ext.kotlin_version = "1.7.10"
+    ext.lib_asu_version = "0.2.2"
+    ext.lib_hook_version = "0.3.5"
+    ext.lib_perf_version = "0.3.5"
 
-  ext.use_local_lib = false
-  ext.use_local_hook_lib = false
+    ext.use_local_lib = true
+    ext.use_local_hook_lib = true
+    ext.use_local_epic = useLocalEpic.toBoolean()
 
-  ext.local_repo_path = rootProject.file("./repos").absolutePath
-  println("local repo path:${rootProject.ext.local_repo_path}")
+    ext.print_module_deps = false
 
-  ext.devName = "XanderWang"
-  ext.devEmail = "420640763@qq.com"
-  ext.ossUsername = "xxx"
-  ext.ossPassword = "xxx"
-  try {
-    ext.ossUsername = sonatypeUsername
-    ext.ossPassword = sonatypePassword
-  } catch (ignored) {
-    ignored.printStackTrace()
-  }
-  println("ossUsername:${rootProject.ext.ossUsername},ossPassword:${rootProject.ext.ossPassword}")
+    ext.local_repo_path = rootProject.file("./repos").absolutePath
+    println("local repo path:${rootProject.ext.local_repo_path}")
 
-  repositories {
-    maven { url uri("${rootProject.ext.local_repo_path}") }
-    mavenCentral()
-    maven { url 'https://maven.aliyun.com/repository/jcenter' }
-    maven { url "https://maven.aliyun.com/repository/google" }
-    google()
-  }
+    ext.devName = "XanderWang"
+    ext.devEmail = "420640763@qq.com"
+    ext.ossUsername = "xxx"
+    ext.ossPassword = "xxx"
+    try {
+        // sonatypeUsername 和 sonatypePassword 在本地的
+        ext.ossUsername = sonatypeUsername
+        ext.ossPassword = sonatypePassword
+    } catch (ignored) {
+        ignored.printStackTrace()
+    }
+    println("ossUsername:${rootProject.ext.ossUsername},ossPassword:${rootProject.ext.ossPassword}")
 
-  dependencies {
+    repositories {
+        maven { url uri("${rootProject.ext.local_repo_path}") }
+        mavenCentral()
+        maven { url "https://maven.aliyun.com/repository/google" }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        google()
+    }
 
-    classpath 'com.android.tools.build:gradle:4.2.0'
+    dependencies {
 
-    // NOTE: Do not place your application dependencies here; they belong
-    // in the individual module build.gradle files
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.ext.kotlin_version}"
-  }
+        classpath 'com.android.tools.build:gradle:7.0.4'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.ext.kotlin_version}"
+    }
 }
 
 allprojects {
-  println("*" * 100)
-  println("enter ${project.name} allprojects")
+    println("-" * 100)
+    println("enter ${project.name} allprojects")
 
-  repositories {
-    maven { url uri("${rootProject.ext.local_repo_path}") }
-    mavenCentral()
-    maven { url 'https://maven.aliyun.com/repository/jcenter' }
-    maven { url "https://maven.aliyun.com/repository/google" }
-    google()
-  }
-
-  // add dependency substitution rules
-  configurations.all {
-    resolutionStrategy.dependencySubstitution {
-      // Substitute project and module dependencies
-      // 远程的 lib 依赖变成本地的依赖
-      if (rootProject.ext.use_local_lib) {
-        substitute module('io.github.xanderwang:asu') with project(':a-simple-util')
-        substitute module('io.github.xanderwang:performance') with project(':performance')
-        substitute module('io.github.xanderwang:performance-noop') with project(':performance-noop')
-      }
-      if (rootProject.ext.use_local_hook_lib) {
-        substitute module('io.github.xanderwang:hook-core') with project(':hook-core')
-        substitute module('io.github.xanderwang:hook-epic') with project(':hook-epic')
-        substitute module('io.github.xanderwang:hook-sandhook') with project(':hook-sandhook')
-        substitute module('io.github.xanderwang:hook') with project(':hook')
-      }
-      // Substitute one module dependency for another
-      // 修改某个依赖的版本
-      //substitute module('org.gradle:api:2.0') with module('org.gradle:api:2.1')
-    }
-  }
-}
-
-/** Configure publishing and signing for published Java and JavaPlatform subprojects. */
-subprojects { project ->
-  println("-" * 50)
-  println("enter ${project.name} subprojects")
-  File configFile = new File("${project.projectDir.absolutePath}/config.gradle")
-  if (configFile.exists()) {
-    println("apply ${configFile.absolutePath}")
-    apply from: configFile
-  } else {
-    return
-  }
-
-  println("enter ${project.name} ext -----------------------------------------")
-  project.ext.each { item ->
-    item.getProperties().each { node ->
-      println("project:${project.name} ext ${node.key}:${node.value}")
-    }
-  }
-  println("exit ${project.name} ext -----------------------------------------")
-
-  boolean isPublicProject = false
-  try {
-    isPublicProject = project.ext.libArtifactId != null
-  } catch (error) {
-    println("error in ${project.name}, msg:${error.localizedMessage}")
-    error.printStackTrace()
-  }
-  println("${project.name} isPublicProject:${isPublicProject}")
-  if (!isPublicProject) return
-
-  apply plugin: "maven"
-  apply plugin: 'maven-publish'
-  apply plugin: 'signing'
-
-  uploadArchives {
-    repositories.mavenDeployer {
-      repository(url: uri("${rootProject.ext.local_repo_path}"))
-      pom.groupId = project.ext.libGroupId
-      pom.artifactId = project.ext.libArtifactId
-      pom.version = project.ext.libVersion
-    }
-  }
-
-  task buildSourcesJar(type: Jar) {
-    def sourcesDir = "${project.projectDir.absolutePath}/src/main/java"
-    println("buildSourcesJar:${sourcesDir}")
-    archiveClassifier.set("sources")
-    from sourcesDir
-    exclude "**/R.class"
-    exclude "**/BuildConfig.class"
-  }
-
-  publishing {
-    // 定义发布什么
-    publications {
-      mavenJava(MavenPublication) {
-        // group id，发布后引用的依赖的 group id
-        groupId project.ext.libGroupId
-        // 发布后引用的依赖的 artifact id
-        artifactId project.ext.libArtifactId
-        // 发布的版本
-        version project.ext.libVersion
-        // 发布的 lib 的文件和源码以及 java doc
-        artifact("${project.ext.libFile}")
-        artifact buildSourcesJar
-        // artifact javadocJar
-        pom {
-          // 构件名称，可以自定义
-          name = project.ext.pomName
-          // 构件描述
-          description = project.ext.pomDescription
-          // 构件主页
-          url = project.ext.pomUrl
-          // 许可证名称和地址
-          licenses {
-            license {
-              name = 'The Apache License, Version 2.0'
-              url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-            }
-          }
-          // 开发者信息
-          developers {
-            developer {
-              name = rootProject.ext.devName
-              email = rootProject.ext.devEmail
-            }
-          }
-          // 版本控制仓库地址
-          scm {
-            url = project.ext.scmUrl
-            connection = project.ext.scmConnection
-            developerConnection = project.ext.scmDeveloperConnection
-          }
-          // 解决依赖关系
-          withXml {
-            def dependenciesNode = asNode().appendNode('dependencies')
-            project.configurations.all { configuration ->
-              def name = configuration.name
-              if (name != "implementation" && name != "compile" && name != "api") {
-                return
-              }
-              println(configuration)
-              configuration.dependencies.each { dependencyItem ->
-                println("withXml dependencies:${dependencyItem}")
-                if (dependencyItem.name == "unspecified") {
-                  // 忽略无法识别的
-                  return
-                }
-                def dependencyNode = dependenciesNode.appendNode('dependency')
-                dependencyNode.appendNode('groupId', dependencyItem.group)
-                dependencyNode.appendNode('artifactId', dependencyItem.name)
-                dependencyNode.appendNode('version', dependencyItem.version)
-                if (name == "api" || name == "compile") {
-                  dependencyNode.appendNode("scope", "compile")
-                } else {
-                  // implementation
-                  dependencyNode.appendNode("scope", "runtime")
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // 定义发布到哪里
     repositories {
-      maven {
-        // 发布的位置，这里根据发布的版本区分了 SNAPSHOT 和最终版本两种情况
-        def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-        def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-        url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-        credentials {
-          // 这里就是之前在 issues.sonatype.org 注册的账号
-          username rootProject.ext.ossUsername
-          password rootProject.ext.ossPassword
-        }
-      }
+        maven { url 'https://jitpack.io' }
+        maven { url "https://maven.aliyun.com/repository/google" }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        mavenCentral()
+        google()
+        maven { url uri("${rootProject.ext.local_repo_path}") }
     }
-  }
 
-  signing {
-    sign publishing.publications
-  }
+    // add dependency substitution rules
+    configurations.all {
+        resolutionStrategy.dependencySubstitution {
+            // Substitute project and module dependencies
+            // 远程的 lib 依赖变成本地的依赖
+            if (rootProject.ext.use_local_lib) {
+                substitute module('io.github.xanderwang:asu') with project(':a-simple-util')
+                substitute module('io.github.xanderwang:performance') with project(':performance')
+                substitute module('io.github.xanderwang:performance-noop') with project(':performance-noop')
+            }
+            if (rootProject.ext.use_local_hook_lib) {
+                substitute module('io.github.xanderwang:hook-core') with project(':hook-core')
+                substitute module('io.github.xanderwang:hook-epic') with project(':hook-epic')
+                substitute module('io.github.xanderwang:hook-sandhook') with project(':hook-sandhook')
+                substitute module('io.github.xanderwang:hook') with project(':hook')
+            }
+            // if (useLocalEpic.toBoolean()) {
+            if (rootProject.ext.use_local_epic) {
+                substitute module('io.github.xanderwang:epic-xander') with project(':lib-epic')
+                substitute module('io.github.xanderwang:exposed-xposedapi-xandeer') with project(':lib-epic-exposed-xposedapi')
+            }
+            // Substitute one module dependency for another
+            // 修改某个依赖的版本
+            //substitute module('org.gradle:api:2.0') with module('org.gradle:api:2.1')
+        }
+
+        // resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        //     ModuleVersionSelector target = details.target
+        //     println "project: ${project.name}, deps: ${target}"
+        // }
+    }
+
+    println("exit ${project.name} allprojects")
+    println("-" * 100)
 }
+
+apply from: 'publish.gradle'
 
 task clean(type: Delete) {
-  delete rootProject.buildDir
+    delete rootProject.buildDir
 }
+
+println("end build.gradle")

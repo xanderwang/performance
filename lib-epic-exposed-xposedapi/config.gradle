@@ -1,15 +1,15 @@
 ext {
-  libGroupId = 'io.github.xanderwang'
-  libArtifactId = 'exposed-xposedapi'
-  libVersion = '0.4.6-a'
+    libGroupId = 'io.github.xanderwang'
+    libArtifactId = 'exposed-xposedapi'
+    libVersion = '0.4.6-a'
 
-  libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
+    libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
 
-  pomName = libArtifactId
-  pomDescription = 'a hook lib for android'
-  pomUrl = 'https://github.com/xanderwang/performance'
+    pomName = libArtifactId
+    pomDescription = 'a hook lib for android'
+    pomUrl = 'https://github.com/xanderwang/performance'
 
-  scmUrl = 'https://github.com/xanderwang/performance'
-  scmConnection = 'scm:git:github.com/xanderwang/performance.git'
-  scmDeveloperConnection = 'scm:git:ssh://git@github.com/xanderwang/performance.git'
+    scmUrl = 'https://github.com/xanderwang/performance'
+    scmConnection = 'scm:git:github.com/xanderwang/performance.git'
+    scmDeveloperConnection = 'scm:git:ssh://git@github.com/xanderwang/performance.git'
 }

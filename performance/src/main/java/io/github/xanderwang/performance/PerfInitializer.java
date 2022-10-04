@@ -16,18 +16,18 @@ import java.util.List;
  */
 public class PerfInitializer implements Initializer {
 
-  private static final String TAG = "PerfInitializer";
+    private static final String TAG = "PerfInitializer";
 
-  @Override
-  public Object create(Context context) {
-    aLog.e(TAG, "PerfInitializer create");
-    AppHelper.mAppContext = context.getApplicationContext();
-    return null;
-  }
+    @Override
+    public Object create(Context context) {
+        aLog.e(TAG, "PerfInitializer create");
+        AppHelper.mAppContext = context.getApplicationContext();
+        return null;
+    }
 
-  @Override
-  public List<Class<? extends Initializer<?>>> dependencies() {
-    aLog.e(TAG, "PerfInitializer dependencies");
-    return new ArrayList<>();
-  }
+    @Override
+    public List<Class<? extends Initializer<?>>> dependencies() {
+        aLog.e(TAG, "PerfInitializer dependencies");
+        return new ArrayList<>();
+    }
 }

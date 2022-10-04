@@ -2,7 +2,6 @@ println("in ${project.name}")
 apply plugin: 'com.android.library'
 
 android {
-    println("in ${project.name} android")
     def _android = rootProject.ext.android
     compileSdkVersion _android['compileSdkVersion']
     buildToolsVersion _android['buildToolsVersion']

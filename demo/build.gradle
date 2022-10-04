@@ -2,75 +2,74 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-  def _android = rootProject.ext.android
-  compileSdkVersion _android['compileSdkVersion']
-  buildToolsVersion _android['buildToolsVersion']
+    def _android = rootProject.ext.android
+    compileSdkVersion _android['compileSdkVersion']
+    buildToolsVersion _android['buildToolsVersion']
 
-  defaultConfig {
-    minSdkVersion _android['minSdkVersion']
-    targetSdkVersion _android['targetSdkVersion']
-    applicationId "io.github.xanderwang.performance.demo"
-    versionCode 1
-    versionName "1.0"
+    defaultConfig {
+        minSdkVersion _android['minSdkVersion']
+        targetSdkVersion _android['targetSdkVersion']
+        applicationId "io.github.xanderwang.performance.demo"
+        versionCode 1
+        versionName "1.0"
 
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-  }
-
-  buildTypes {
-    release {
-      minifyEnabled false
-      proguardFiles /*getDefaultProguardFile('proguard-android-optimize.txt'), */ 'proguard-rules.pro'
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    debug {
-      minifyEnabled false
-      proguardFiles /*getDefaultProguardFile('proguard-android-optimize.txt'), */ 'proguard-rules.pro'
-    }
-  }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles /*getDefaultProguardFile('proguard-android-optimize.txt'), */ 'proguard-rules.pro'
+        }
 
-  signingConfigs {
-    debug {
-      storeFile file('../performance.jks')
-      storePassword 'performance'
-      keyAlias 'demo'
-      keyPassword 'performance'
+        debug {
+            minifyEnabled false
+            proguardFiles /*getDefaultProguardFile('proguard-android-optimize.txt'), */ 'proguard-rules.pro'
+        }
     }
-  }
+
+    signingConfigs {
+        debug {
+            storeFile file('../performance.jks')
+            storePassword 'performance'
+            keyAlias 'demo'
+            keyPassword 'performance'
+        }
+    }
 }
 
 dependencies {
-  implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-  testImplementation 'junit:junit:4.13.1'
-  androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-  androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    def _dependencies = rootProject.ext.dependencies
 
-  def _dependencies = rootProject.ext.dependencies
+    testImplementation _dependencies['junit']
+    androidTestImplementation _dependencies['androidx-junit']
+    androidTestImplementation _dependencies['espresso-core']
 
-  implementation _dependencies['appcompat']
-  implementation _dependencies['constraintlayout']
+    implementation _dependencies['appcompat']
+    implementation _dependencies['constraintlayout']
 
-  implementation _dependencies['core-ktx']
-  implementation _dependencies['kotlin-stdlib-jdk']
-  implementation _dependencies['kotlinx-coroutines-core']
-  implementation _dependencies['kotlinx-coroutines-android']
+    implementation _dependencies['core-ktx']
+    implementation _dependencies['kotlin-stdlib-jdk']
+    implementation _dependencies['kotlinx-coroutines-core']
+    implementation _dependencies['kotlinx-coroutines-android']
 
-  implementation 'com.github.bumptech.glide:glide:4.11.0'
+    implementation _dependencies['glide']
+    implementation _dependencies['asu']
 
-  implementation _dependencies['asu']
+    // 基础依赖，必须添加
+    debugImplementation 'io.github.xanderwang:performance:0.3.5'
+    releaseImplementation 'io.github.xanderwang:performance-noop:0.3.5'
 
-  // 基础依赖，必须添加
-  debugImplementation 'io.github.xanderwang:performance:0.3.2'
-  releaseImplementation 'io.github.xanderwang:performance-noop:0.3.2'
+    // hook 方案封装，必须添加
+    debugImplementation 'io.github.xanderwang:hook:0.3.5'
 
-  // hook 方案封装，必须添加
-  debugImplementation 'io.github.xanderwang:hook:0.3.1'
+    // 以下是 hook 方案选择一个就好了。如果运行报错，就换另外一个，如果还是报错，就提个 issue
+    // SandHook 方案，推荐添加。如果运行报错，可以替换为 epic 库。
+    //  debugImplementation 'io.github.xanderwang:hook-sandhook:0.3.5'
 
-  // 以下是 hook 方案选择一个就好了。如果运行报错，就换另外一个，如果还是报错，就提个 issue
-  // SandHook 方案，推荐添加。如果运行报错，可以替换为 epic 库。
-//  debugImplementation 'io.github.xanderwang:hook-sandhook:0.3.1'
-
-  // epic 方法。如果运行报错，可以替换为 SandHook。
-   debugImplementation 'io.github.xanderwang:hook-epic:0.3.1'
+    // epic 方法。如果运行报错，可以替换为 SandHook。
+    debugImplementation 'io.github.xanderwang:hook-epic:0.3.5'
 
 }

@@ -1,39 +1,50 @@
 ext {
 
-  println("enter config ext -----------------------------------------")
-  rootProject.ext.each { item ->
-    item.getProperties().each { node ->
-      println("rootProject.ext ${node.key}:${node.value}")
+    println("enter config ext -----------------------------------------")
+    rootProject.ext.each { item ->
+        item.getProperties().each { node ->
+            println("rootProject.ext[${node.key}]=${node.value}")
+        }
     }
-  }
 
-  android = [
-      'compileSdkVersion': 29,
-      'buildToolsVersion': "29.0.2",
-      'minSdkVersion'    : 21,
-      'targetSdkVersion' : 29
-  ]
+    android = [
+        'compileSdkVersion': 30,
+        'buildToolsVersion': "30.0.2",
+        'minSdkVersion'    : 21,
+        'targetSdkVersion' : 30
+    ]
 
-  dependencies = [
-      'hook-core'                 : "io.github.xanderwang:hook-core:0.3.1",
-      'hook'                      : "io.github.xanderwang:hook:0.3.1",
-      'asu'                       : "io.github.xanderwang:asu:0.2.1",
-      'startup'                   : "androidx.startup:startup-runtime:1.0.0",
-      'appcompat'                 : 'androidx.appcompat:appcompat:1.1.0',
-      'constraintlayout'          : 'androidx.constraintlayout:constraintlayout:1.1.3',
-      'core-ktx'                  : 'androidx.core:core-ktx:1.3.1',
-      'kotlin-stdlib-jdk'         : "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${rootProject.ext.kotlin_version}",
-      'kotlinx-coroutines-core'   : 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8',
-      'kotlinx-coroutines-android': 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.8',
-      'free_reflection'           : 'me.weishu:free_reflection:3.0.1',
-      'epic'                      : 'me.weishu:epic:0.11.1',
-      'sandhook'                  : 'com.swift.sandhook:hooklib:4.2.1',
-      'sandhook-xposedcompat'     : 'com.swift.sandhook:xposedcompat:4.2.0',
-      'sandhook-nativehook'       : 'com.swift.sandhook:nativehook:4.2.1',
-      "xposed"                    : "de.robv.android.xposed:api:82",
-      "epic-xander"               : 'me.weishu.epic:epic-xander:1.8.0-c',
-      "exposed-xposedapi"         : 'me.weishu.exposed:exposed-xposedapi:0.4.5',
-  ]
+    dependencies = [
+        'junit'                     : 'junit:junit:4.13.2',
+        'androidx-junit'            : 'androidx.test.ext:junit:1.1.3',
+        'espresso-core'             : 'androidx.test.espresso:espresso-core:3.4.0',
+        'glide'                     : 'com.github.bumptech.glide:glide:4.14.1',
+        'startup'                   : 'androidx.startup:startup-runtime:1.1.1',
+        'appcompat'                 : 'androidx.appcompat:appcompat:1.4.1',
+        'constraintlayout'          : 'androidx.constraintlayout:constraintlayout:2.1.3',
+        'core-ktx'                  : 'androidx.core:core-ktx:1.7.0',
+        'kotlin-stdlib-jdk'         : "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${rootProject.ext.kotlin_version}",
+        'kotlinx-coroutines-core'   : 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4',
+        'kotlinx-coroutines-android': 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4',
 
-  println("exit config ext -----------------------------------------")
+        'asu'                       : "io.github.xanderwang:asu:${rootProject.ext.lib_asu_version}",
+        'hook-core'                 : "io.github.xanderwang:hook-core:${rootProject.ext.lib_hook_version}",
+        'hook'                      : "io.github.xanderwang:hook:${rootProject.ext.lib_hook_version}",
+
+        "xposed"                    : 'de.robv.android.xposed:api:82',
+        // 'epic'                      : 'com.github.tiann:epic:0.11.2',
+        'epic'                      : 'me.weishu:epic:0.11.1',
+        'exposed-xposedapi'         : 'me.weishu.exposed:exposed-xposedapi:0.4.5',
+
+        'sandhook'                  : 'com.swift.sandhook:hooklib:4.2.1',
+        'sandhook-xposedcompat'     : 'com.swift.sandhook:xposedcompat:4.2.0',
+        'sandhook-nativehook'       : 'com.swift.sandhook:nativehook:4.2.1',
+
+
+        'epic-xander'               : 'io.github.xanderwang:epic-xander:0.11.2-a',
+        'free_reflection'           : 'me.weishu:free_reflection:3.0.1',
+        "exposed-xposedapi-xander"  : 'io.github.xanderwang:exposed-xposedapi-xandeer:0.4.5',
+    ]
+
+    println("exit config ext -----------------------------------------")
 }

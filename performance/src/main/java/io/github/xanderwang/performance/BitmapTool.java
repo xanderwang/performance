@@ -35,302 +35,282 @@ import io.github.xanderwang.hook.core.MethodParam;
  */
 public class BitmapTool {
 
-  private static final String TAG = "BitmapTool";
+    /**
+     * log tag
+     */
+    private static final String TAG = "BitmapTool";
 
-  private static HashMap<String, BitmapIssue> imageViewLoadMap = new HashMap<>(64);
+    /**
+     * 大图加载堆栈
+     */
+    private static final HashMap<String, BitmapIssue> imageViewLoadMap = new HashMap<>(64);
 
-  private static class BitmapIssue extends Issue {
+    /**
+     * 图片加载堆栈
+     */
+    private static class BitmapIssue extends Issue {
 
-    public int viewWidth   = 0;
-    public int viewHeight  = 0;
-    public int imageWidth  = 0;
-    public int imageHeight = 0;
+        /**
+         * 视图宽
+         */
+        public int viewWidth = 0;
+        /**
+         * 视图高
+         */
+        public int viewHeight = 0;
+        /**
+         * 图片宽
+         */
+        public int imageWidth = 0;
+        /**
+         * 图片高
+         */
+        public int imageHeight = 0;
 
-    public BitmapIssue(Object data) {
-      super(Issue.TYPE_BITMAP, "LARGE BITMAP", data);
-    }
-
-    public void imageInfo(int viewWidth, int viewHeight, int imageWidth, int imageHeight) {
-      this.viewWidth = viewWidth;
-      this.viewHeight = viewHeight;
-      this.imageWidth = imageWidth;
-      this.imageHeight = imageHeight;
-    }
-
-    @Override
-    protected void buildOtherString(StringBuilder sb) {
-      if (viewWidth > 0) {
-        sb.append("image info:")
-            .append("viewWidth:").append(viewWidth)
-            .append(",viewHeight:").append(viewHeight)
-            .append(",imageWidth:").append(imageWidth)
-            .append(",imageHeight:").append(imageHeight).append('\n');
-      }
-    }
-  }
-
-  private static void linkLoadImageAndImageView(String imageViewKey,
-      StackTraceElement[] loadTrace) {
-    BitmapIssue issue = new BitmapIssue(StackTraceUtils.list(loadTrace));
-    imageViewLoadMap.put(imageViewKey, issue);
-  }
-
-  private static void unlinkLoadImageAndImageView(String imageViewKey) {
-    imageViewLoadMap.remove(imageViewKey);
-  }
-
-  static void start() {
-    aLog.e(TAG, "start");
-    hookBitmap();
-    hookGlideInto();
-  }
-
-  private static void hookBitmap() {
-    aLog.e(TAG, "hookBitmap start");
-    HookBridge.findAndHookMethod(
-        ImageView.class,
-        "setImageBitmap",
-        Bitmap.class,
-        new SetImageBitmapHook()
-    );
-    HookBridge.findAndHookMethod(
-        ImageView.class,
-        "setImageDrawable",
-        Drawable.class,
-        new SetImageDrawableHook()
-    );
-    // HookBridge.findAllAndHookMethod(
-    //     BitmapFactory.class,
-    //     "decodeStream",
-    //     new DecodeStreamHook()
-    // );
-    // HookBridge.findAndHookMethod(
-    //     BitmapFactory.class,
-    //     "setDensityFromOptions",
-    //     Bitmap.class,
-    //     BitmapFactory.Options.class,
-    //     new SetDensityFromOptionsHook()
-    // );
-    aLog.e(TAG, "hookBitmap end");
-  }
-
-  private static void hookGlideInto() {
-    aLog.e(TAG, "hookGlideInto start");
-    try {
-      Class<?> clazz = Class.forName("com.bumptech.glide.RequestBuilder");
-      HookBridge.findAndHookMethod(
-          clazz,
-          "into",
-          ImageView.class,
-          new GlideIntoHook()
-      );
-    } catch (Exception e) {
-      aLog.ee(TAG, "hookGlideInto", e);
-    }
-    aLog.e(TAG, "hookGlideInto end");
-  }
-
-  private static class DecodeStreamHook extends MethodHook {
-    @Override
-    public void beforeHookedMethod(MethodParam param) throws Throwable {
-      super.afterHookedMethod(param);
-      Object arg = param.getArgs()[2];
-      if (arg instanceof BitmapFactory.Options) {
-        BitmapFactory.Options opts = (BitmapFactory.Options) arg;
-        aLog.e(
-            TAG,
-            "DecodeStreamHook beforeHookedMethod inJustDecodeBounds:%s",
-            opts.inJustDecodeBounds
-        );
-        aLog.e(TAG, "DecodeStreamHook beforeHookedMethod outWidth:%s", opts.outWidth);
-        aLog.e(TAG, "DecodeStreamHook beforeHookedMethod outHeight:%s", opts.outHeight);
-        // aLog.e(TAG, "DecodeStreamHook beforeHookedMethod %s", aUtil.object2JsonStr(arg));
-      }
-    }
-
-    @Override
-    public void afterHookedMethod(MethodParam param) throws Throwable {
-      super.afterHookedMethod(param);
-      Object arg = param.getArgs()[2];
-      if (arg instanceof BitmapFactory.Options) {
-        BitmapFactory.Options opts = (BitmapFactory.Options) arg;
-        aLog.e(
-            TAG,
-            "DecodeStreamHook afterHookedMethod inJustDecodeBounds:%s",
-            opts.inJustDecodeBounds
-        );
-        aLog.e(TAG, "DecodeStreamHook afterHookedMethod outWidth:%s", opts.outWidth);
-        aLog.e(TAG, "DecodeStreamHook afterHookedMethod outHeight:%s", opts.outHeight);
-        // aLog.e(TAG, "DecodeStreamHook afterHookedMethod %s", aUtil.object2JsonStr(arg));
-      }
-    }
-  }
-
-  private static class SetDensityFromOptionsHook extends MethodHook {
-    // BitmapFactory.setDensityFromOptions(Bitmap outputBitmap, Options opts)
-    @Override
-    public void beforeHookedMethod(MethodParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-      Object arg = param.getArgs()[1];
-      if (arg instanceof BitmapFactory.Options) {
-        BitmapFactory.Options opts = (BitmapFactory.Options) arg;
-        aLog.e(
-            TAG,
-            "SetDensityFromOptionsHook beforeHookedMethod inJustDecodeBounds:%s",
-            opts.inJustDecodeBounds
-        );
-        aLog.e(TAG, "SetDensityFromOptionsHook beforeHookedMethod outWidth:%s", opts.outWidth);
-        aLog.e(TAG, "SetDensityFromOptionsHook beforeHookedMethod outHeight:%s", opts.outHeight);
-        // aLog.e(TAG, "SetDensityFromOptionsHook beforeHookedMethod %s", aUtil.object2JsonStr(arg));
-      }
-    }
-
-    @Override
-    public void afterHookedMethod(MethodParam param) throws Throwable {
-      super.afterHookedMethod(param);
-      Object arg = param.getArgs()[1];
-      if (arg instanceof BitmapFactory.Options) {
-        BitmapFactory.Options opts = (BitmapFactory.Options) arg;
-        aLog.e(
-            TAG,
-            "SetDensityFromOptionsHook afterHookedMethod inJustDecodeBounds:%s",
-            opts.inJustDecodeBounds
-        );
-        aLog.e(TAG, "SetDensityFromOptionsHook afterHookedMethod outWidth:%s", opts.outWidth);
-        aLog.e(TAG, "SetDensityFromOptionsHook afterHookedMethod outHeight:%s", opts.outHeight);
-        // aLog.e(TAG, "SetDensityFromOptionsHook afterHookedMethod %s", aUtil.object2JsonStr(arg));
-        // aLog.ee(TAG, "SetDensityFromOptionsHook", new IllegalArgumentException());
-      }
-    }
-  }
-
-  private static class SetImageBitmapHook extends MethodHook {
-    @Override
-    public void beforeHookedMethod(MethodParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-      // aLog.ee(TAG, "SetImageBitmapHook", new IllegalArgumentException());
-      Object obj = param.getArgs()[0];
-      if (obj instanceof Bitmap) {
-        Bitmap bitmap = (Bitmap) obj;
-        int bitmapWidth = bitmap.getWidth();
-        int bitmapHeight = bitmap.getHeight();
-        ImageView imageView = (ImageView) param.getThisObject();
-        int viewWidth = imageView.getMeasuredWidth();
-        int viewHeight = imageView.getMeasuredHeight();
-        checkBitmap(
-            bitmapWidth,
-            bitmapHeight,
-            viewWidth,
-            viewHeight,
-            Integer.toHexString(imageView.hashCode()),
-            new Throwable().getStackTrace()
-        );
-      }
-    }
-  }
-
-  private static class SetImageDrawableHook extends MethodHook {
-    public SetImageDrawableHook() {
-    }
-
-    @Override
-    public void beforeHookedMethod(MethodParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-      // aLog.ee(TAG, "SetImageDrawableHook", new IllegalArgumentException());
-      Object obj = param.getArgs()[0];
-      if (obj instanceof BitmapDrawable) {
-        BitmapDrawable bitmapDrawable = (BitmapDrawable) obj;
-        int bitmapWidth = bitmapDrawable.getIntrinsicWidth();
-        int bitmapHeight = bitmapDrawable.getIntrinsicHeight();
-        ImageView imageView = (ImageView) param.getThisObject();
-        int viewWidth = imageView.getMeasuredWidth();
-        int viewHeight = imageView.getMeasuredHeight();
-        checkBitmap(
-            bitmapWidth,
-            bitmapHeight,
-            viewWidth,
-            viewHeight,
-            Integer.toHexString(imageView.hashCode()),
-            new Throwable().getStackTrace()
-        );
-      }
-    }
-  }
-
-  /**
-   * 暂时认为如果加载的图片宽或高中的一个或者多个大于 view 的宽高的话
-   *
-   * @param bitmapWidth
-   * @param bitmapHeight
-   * @param viewWidth
-   * @param viewHeight
-   * @param viewKey
-   * @param trace
-   */
-  private static void checkBitmap(int bitmapWidth, int bitmapHeight, int viewWidth, int viewHeight,
-      String viewKey, StackTraceElement[] trace) {
-    aLog.e(
-        TAG,
-        "checkBitmap bitmapWidth:%s ,bitmapHeight:%s ,viewWidth:%s ,viewHeight:%s",
-        bitmapWidth,
-        bitmapHeight,
-        viewWidth,
-        viewHeight
-    );
-    if ((bitmapWidth > viewWidth || bitmapHeight > viewHeight) && (viewWidth > 0 && viewHeight > 0)) {
-      // 到这里就有问题了，然后需要看是通过框架库还是手动设置
-      // 手动设置的话，需要提示，如果是框架库的话，需要找到框架库开始 load 的地方。
-      List<String> traceList = StackTraceUtils.list(trace);
-      boolean isInLibrary = false;
-      for (String item : traceList) {
-        if (inImageLibrary(item)) {
-          isInLibrary = true;
-          break;
+        public BitmapIssue(Object data) {
+            super(Issue.TYPE_BITMAP, "LARGE BITMAP", data);
         }
-      }
-      BitmapIssue issue = null;
-      if (isInLibrary) {
-        // 找到之前的 image library load image start 的地方
-        issue = imageViewLoadMap.remove(viewKey);
-      } else {
-        issue = new BitmapIssue(traceList);
-      }
-      if (null != issue) {
-        issue.imageInfo(viewWidth, viewHeight, bitmapWidth, bitmapHeight);
-        issue.print();
-      }
-    } else {
-      unlinkLoadImageAndImageView(viewKey);
-    }
-  }
 
-  private static boolean inImageLibrary(String classAndMethod) {
-    if (null == classAndMethod) {
-      return false;
-    }
-    if (classAndMethod.startsWith("com.bumptech.glide.load.engine.EngineJob$CallResourceReady.run")) {
-      // glide 库加载成功
-      return true;
-    }
-    // if(classAndMethod.startsWith("com.bumptech.glide.load.engine.EngineJob$CallResourceReady.run")) {
-    //
-    // }
-    return false;
-  }
+        /**
+         * 图片信息
+         *
+         * @param viewWidth   视图宽
+         * @param viewHeight  视图高
+         * @param imageWidth  图片宽
+         * @param imageHeight 图片高
+         */
+        public void imageInfo(int viewWidth, int viewHeight, int imageWidth, int imageHeight) {
+            this.viewWidth = viewWidth;
+            this.viewHeight = viewHeight;
+            this.imageWidth = imageWidth;
+            this.imageHeight = imageHeight;
+        }
 
-  private static class GlideIntoHook extends MethodHook {
-    @Override
-    public void beforeHookedMethod(MethodParam param) throws Throwable {
-      super.beforeHookedMethod(param);
-      // 记录下 image view 和调用栈之间的关联，后续会用到
-      Object obj = param.getArgs()[0];
-      if (obj instanceof ImageView) {
-        linkLoadImageAndImageView(
-            Integer.toHexString(obj.hashCode()),
-            new Throwable().getStackTrace()
-        );
-      }
+        /**
+         * 构建额外的信息
+         * @param sb 外部传入的 stringbuilder ，用于插入额外信息
+         */
+        @Override
+        protected void formatExtraInfo(StringBuilder sb) {
+            if (viewWidth > 0) {
+                sb.append("image info:").append("viewWidth:").append(viewWidth).append(",viewHeight:")
+                    .append(viewHeight).append(",imageWidth:").append(imageWidth).append(",imageHeight:")
+                    .append(imageHeight).append('\n');
+            }
+        }
     }
-  }
+
+    private static void linkLoadImageAndImageView(String imageViewKey, StackTraceElement[] loadTrace) {
+        BitmapIssue issue = new BitmapIssue(StackTraceUtils.list(loadTrace));
+        imageViewLoadMap.put(imageViewKey, issue);
+    }
+
+    private static void unlinkLoadImageAndImageView(String imageViewKey) {
+        imageViewLoadMap.remove(imageViewKey);
+    }
+
+    static void start() {
+        aLog.e(TAG, "start");
+        hookBitmap();
+        hookGlideInto();
+    }
+
+    private static void hookBitmap() {
+        aLog.e(TAG, "hookBitmap start");
+        HookBridge.findAndHookMethod(ImageView.class, "setImageBitmap", Bitmap.class, new SetImageBitmapHook());
+        HookBridge.findAndHookMethod(ImageView.class, "setImageDrawable", Drawable.class, new SetImageDrawableHook());
+        // HookBridge.findAllAndHookMethod(
+        //     BitmapFactory.class,
+        //     "decodeStream",
+        //     new DecodeStreamHook()
+        // );
+        // HookBridge.findAndHookMethod(
+        //     BitmapFactory.class,
+        //     "setDensityFromOptions",
+        //     Bitmap.class,
+        //     BitmapFactory.Options.class,
+        //     new SetDensityFromOptionsHook()
+        // );
+        aLog.e(TAG, "hookBitmap end");
+    }
+
+    private static void hookGlideInto() {
+        aLog.e(TAG, "hookGlideInto start");
+        try {
+            Class<?> clazz = Class.forName("com.bumptech.glide.RequestBuilder");
+            HookBridge.findAndHookMethod(clazz, "into", ImageView.class, new GlideIntoHook());
+        } catch (Exception e) {
+            aLog.e(TAG, "hookGlideInto", e);
+        }
+        aLog.e(TAG, "hookGlideInto end");
+    }
+
+    private static class DecodeStreamHook extends MethodHook {
+        @Override
+        public void beforeHookedMethod(MethodParam param) throws Throwable {
+            super.afterHookedMethod(param);
+            Object arg = param.getArgs()[2];
+            if (arg instanceof BitmapFactory.Options) {
+                BitmapFactory.Options opts = (BitmapFactory.Options) arg;
+                aLog.e(TAG, "DecodeStreamHook beforeHookedMethod inJustDecodeBounds:%s", opts.inJustDecodeBounds);
+                aLog.e(TAG, "DecodeStreamHook beforeHookedMethod outWidth:%s", opts.outWidth);
+                aLog.e(TAG, "DecodeStreamHook beforeHookedMethod outHeight:%s", opts.outHeight);
+                // aLog.e(TAG, "DecodeStreamHook beforeHookedMethod %s", aUtil.object2JsonStr(arg));
+            }
+        }
+
+        @Override
+        public void afterHookedMethod(MethodParam param) throws Throwable {
+            super.afterHookedMethod(param);
+            Object arg = param.getArgs()[2];
+            if (arg instanceof BitmapFactory.Options) {
+                BitmapFactory.Options opts = (BitmapFactory.Options) arg;
+                aLog.e(TAG, "DecodeStreamHook afterHookedMethod inJustDecodeBounds:%s", opts.inJustDecodeBounds);
+                aLog.e(TAG, "DecodeStreamHook afterHookedMethod outWidth:%s", opts.outWidth);
+                aLog.e(TAG, "DecodeStreamHook afterHookedMethod outHeight:%s", opts.outHeight);
+                // aLog.e(TAG, "DecodeStreamHook afterHookedMethod %s", aUtil.object2JsonStr(arg));
+            }
+        }
+    }
+
+    private static class SetDensityFromOptionsHook extends MethodHook {
+        // BitmapFactory.setDensityFromOptions(Bitmap outputBitmap, Options opts)
+        @Override
+        public void beforeHookedMethod(MethodParam param) throws Throwable {
+            super.beforeHookedMethod(param);
+            Object arg = param.getArgs()[1];
+            if (arg instanceof BitmapFactory.Options) {
+                BitmapFactory.Options opts = (BitmapFactory.Options) arg;
+                aLog.e(TAG, "SetDensityFromOptionsHook beforeHookedMethod inJustDecodeBounds:%s",
+                    opts.inJustDecodeBounds);
+                aLog.e(TAG, "SetDensityFromOptionsHook beforeHookedMethod outWidth:%s", opts.outWidth);
+                aLog.e(TAG, "SetDensityFromOptionsHook beforeHookedMethod outHeight:%s", opts.outHeight);
+                // aLog.e(TAG, "SetDensityFromOptionsHook beforeHookedMethod %s", aUtil.object2JsonStr(arg));
+            }
+        }
+
+        @Override
+        public void afterHookedMethod(MethodParam param) throws Throwable {
+            super.afterHookedMethod(param);
+            Object arg = param.getArgs()[1];
+            if (arg instanceof BitmapFactory.Options) {
+                BitmapFactory.Options opts = (BitmapFactory.Options) arg;
+                aLog.e(TAG, "SetDensityFromOptionsHook afterHookedMethod inJustDecodeBounds:%s",
+                    opts.inJustDecodeBounds);
+                aLog.e(TAG, "SetDensityFromOptionsHook afterHookedMethod outWidth:%s", opts.outWidth);
+                aLog.e(TAG, "SetDensityFromOptionsHook afterHookedMethod outHeight:%s", opts.outHeight);
+                // aLog.e(TAG, "SetDensityFromOptionsHook afterHookedMethod %s", aUtil.object2JsonStr(arg));
+                // aLog.ee(TAG, "SetDensityFromOptionsHook", new IllegalArgumentException());
+            }
+        }
+    }
+
+    private static class SetImageBitmapHook extends MethodHook {
+        @Override
+        public void beforeHookedMethod(MethodParam param) throws Throwable {
+            super.beforeHookedMethod(param);
+            // aLog.ee(TAG, "SetImageBitmapHook", new IllegalArgumentException());
+            Object obj = param.getArgs()[0];
+            if (obj instanceof Bitmap) {
+                Bitmap bitmap = (Bitmap) obj;
+                int bitmapWidth = bitmap.getWidth();
+                int bitmapHeight = bitmap.getHeight();
+                ImageView imageView = (ImageView) param.getThisObject();
+                int viewWidth = imageView.getMeasuredWidth();
+                int viewHeight = imageView.getMeasuredHeight();
+                checkBitmap(bitmapWidth, bitmapHeight, viewWidth, viewHeight, Integer.toHexString(imageView.hashCode()),
+                    new Throwable().getStackTrace());
+            }
+        }
+    }
+
+    private static class SetImageDrawableHook extends MethodHook {
+        public SetImageDrawableHook() {
+        }
+
+        @Override
+        public void beforeHookedMethod(MethodParam param) throws Throwable {
+            super.beforeHookedMethod(param);
+            // aLog.ee(TAG, "SetImageDrawableHook", new IllegalArgumentException());
+            Object obj = param.getArgs()[0];
+            if (obj instanceof BitmapDrawable) {
+                BitmapDrawable bitmapDrawable = (BitmapDrawable) obj;
+                int bitmapWidth = bitmapDrawable.getIntrinsicWidth();
+                int bitmapHeight = bitmapDrawable.getIntrinsicHeight();
+                ImageView imageView = (ImageView) param.getThisObject();
+                int viewWidth = imageView.getMeasuredWidth();
+                int viewHeight = imageView.getMeasuredHeight();
+                checkBitmap(bitmapWidth, bitmapHeight, viewWidth, viewHeight, Integer.toHexString(imageView.hashCode()),
+                    new Throwable().getStackTrace());
+            }
+        }
+    }
+
+    /**
+     * 暂时认为如果加载的图片宽或高中的一个或者多个大于 view 的宽高的话
+     *
+     * @param bitmapWidth
+     * @param bitmapHeight
+     * @param viewWidth
+     * @param viewHeight
+     * @param viewKey
+     * @param trace
+     */
+    private static void checkBitmap(int bitmapWidth, int bitmapHeight, int viewWidth, int viewHeight, String viewKey,
+        StackTraceElement[] trace) {
+        aLog.e(TAG, "checkBitmap bitmapWidth:%s ,bitmapHeight:%s ,viewWidth:%s ,viewHeight:%s", bitmapWidth,
+            bitmapHeight, viewWidth, viewHeight);
+        if ((bitmapWidth > viewWidth || bitmapHeight > viewHeight) && (viewWidth > 0 && viewHeight > 0)) {
+            // 到这里就有问题了，然后需要看是通过框架库还是手动设置
+            // 手动设置的话，需要提示，如果是框架库的话，需要找到框架库开始 load 的地方。
+            List<String> traceList = StackTraceUtils.list(trace);
+            boolean isInLibrary = false;
+            for (String item : traceList) {
+                if (inImageLibrary(item)) {
+                    isInLibrary = true;
+                    break;
+                }
+            }
+            BitmapIssue issue = null;
+            if (isInLibrary) {
+                // 找到之前的 image library load image start 的地方
+                issue = imageViewLoadMap.remove(viewKey);
+            } else {
+                issue = new BitmapIssue(traceList);
+            }
+            if (null != issue) {
+                issue.imageInfo(viewWidth, viewHeight, bitmapWidth, bitmapHeight);
+                issue.print();
+            }
+        } else {
+            unlinkLoadImageAndImageView(viewKey);
+        }
+    }
+
+    private static boolean inImageLibrary(String classAndMethod) {
+        if (null == classAndMethod) {
+            return false;
+        }
+        if (classAndMethod.startsWith("com.bumptech.glide.load.engine.EngineJob$CallResourceReady.run")) {
+            // glide 库加载成功
+            return true;
+        }
+        // if(classAndMethod.startsWith("com.bumptech.glide.load.engine.EngineJob$CallResourceReady.run")) {
+        //
+        // }
+        return false;
+    }
+
+    private static class GlideIntoHook extends MethodHook {
+        @Override
+        public void beforeHookedMethod(MethodParam param) throws Throwable {
+            super.beforeHookedMethod(param);
+            // 记录下 image view 和调用栈之间的关联，后续会用到
+            Object obj = param.getArgs()[0];
+            if (obj instanceof ImageView) {
+                linkLoadImageAndImageView(Integer.toHexString(obj.hashCode()), new Throwable().getStackTrace());
+            }
+        }
+    }
 
 }

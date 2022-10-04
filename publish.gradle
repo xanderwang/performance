@@ -1,0 +1,221 @@
+/** Configure publishing and signing for published Java and JavaPlatform subprojects. */
+subprojects { subProject ->
+    println("*" * 50)
+    println("enter ${subProject.name} subprojects")
+    File configFile = new File("${subProject.projectDir.absolutePath}/config.gradle")
+    if (configFile.exists()) {
+        println("apply ${configFile.absolutePath}")
+        apply from: configFile
+    } else {
+        return
+    }
+
+    if (rootProject.ext.print_module_deps) {
+        println("enter ${subProject.name} ext -----------------------------------------")
+        subProject.ext.each { item ->
+            item.getProperties().each { node ->
+                println("project:${subProject.name} ext['${node.key}']=${node.value}")
+            }
+        }
+        println("exit ${subProject.name} ext -----------------------------------------")
+    }
+
+    boolean isPublicProject = false
+    try {
+        isPublicProject = subProject.ext.libArtifactId != null
+    } catch (error) {
+        println("error in ${subProject.name}, msg:${error.localizedMessage}")
+        error.printStackTrace()
+    }
+    println("${subProject.name} isPublicProject:${isPublicProject}")
+    if (!isPublicProject) return
+
+
+    apply plugin: 'signing'
+
+    // 旧的 mavan 插件的写法，用的 uploadArchives
+    // apply plugin: "maven"
+    // uploadArchives {
+    //     repositories.mavenDeployer {
+    //         repository(url: uri("${rootProject.ext.local_repo_path}"))
+    //         pom.groupId = subProject.ext.libGroupId
+    //         pom.artifactId = subProject.ext.libArtifactId
+    //         pom.version = subProject.ext.libVersion
+    //     }
+    // }
+
+    // 新的 maven-publish 插件的写法 是用 publishing
+    apply plugin: 'maven-publish'
+
+    task buildSourcesJar(type: Jar) {
+        def sourcesDir = "${subProject.projectDir.absolutePath}/src/main/java"
+        println("buildSourcesJar:${sourcesDir}")
+        archiveClassifier.set("sources")
+        from sourcesDir
+        exclude "**/R.class"
+        exclude "**/BuildConfig.class"
+    }
+
+    // https://developer.android.google.cn/studio/build/maven-publish-plugin?hl=zh-cn
+    // 实际调试：需要用 2 层 afterEvaluate 才正常，如果在 build.gradle 里面，只需要一层 afterEvaluate
+    subProject.afterEvaluate {
+        subProject.afterEvaluate {
+            publishing {
+                publications {
+                    mavenAar(MavenPublication) {
+                        // Applies the component for the release build variant.
+                        from subProject.components.release
+
+                        // You can then customize attributes of the publication as shown below.
+                        groupId = subProject.ext.libGroupId
+                        artifactId = subProject.ext.libArtifactId
+                        version = subProject.ext.libVersion
+                        println("${subProject.name} publish ${subProject.components*.name}")
+
+                        artifact buildSourcesJar
+
+                        pom {
+                            // 构件名称，可以自定义
+                            name = subProject.ext.pomName
+                            // 构件描述
+                            description = subProject.ext.pomDescription
+                            // 构件主页
+                            url = subProject.ext.pomUrl
+                            // 许可证名称和地址
+                            licenses {
+                                license {
+                                    name = 'The Apache License, Version 2.0'
+                                    url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                                }
+                            }
+                            // 开发者信息
+                            developers {
+                                developer {
+                                    name = rootProject.ext.devName
+                                    email = rootProject.ext.devEmail
+                                }
+                            }
+                            // 版本控制仓库地址
+                            scm {
+                                url = subProject.ext.scmUrl
+                                connection = subProject.ext.scmConnection
+                                developerConnection = subProject.ext.scmDeveloperConnection
+                            }
+                        }
+                    }
+                }
+
+                // 定义发布到哪里
+                repositories {
+                    maven {
+                        // 发布的位置，这里根据发布的版本区分了 SNAPSHOT 和最终版本两种情况
+                        def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                        def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                        url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+                        credentials {
+                            // 这里就是之前在 issues.sonatype.org 注册的账号
+                            username rootProject.ext.ossUsername
+                            password rootProject.ext.ossPassword
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // publishing {
+    //     // 定义发布什么
+    //     publications {
+    //         mavenAar(MavenPublication) {
+    //             // group id，发布后引用的依赖的 group id
+    //             groupId subProject.ext.libGroupId
+    //             // 发布后引用的依赖的 artifact id
+    //             artifactId subProject.ext.libArtifactId
+    //             // 发布的版本
+    //             version subProject.ext.libVersion
+    //             // 发布的 lib 的文件和源码以及 java doc
+    //             artifact("${subProject.ext.libFile}")
+    //             artifact buildSourcesJar
+    //             // artifact javadocJar
+    //             pom {
+    //                 // 构件名称，可以自定义
+    //                 name = subProject.ext.pomName
+    //                 // 构件描述
+    //                 description = subProject.ext.pomDescription
+    //                 // 构件主页
+    //                 url = subProject.ext.pomUrl
+    //                 // 许可证名称和地址
+    //                 licenses {
+    //                     license {
+    //                         name = 'The Apache License, Version 2.0'
+    //                         url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    //                     }
+    //                 }
+    //                 // 开发者信息
+    //                 developers {
+    //                     developer {
+    //                         name = rootProject.ext.devName
+    //                         email = rootProject.ext.devEmail
+    //                     }
+    //                 }
+    //                 // 版本控制仓库地址
+    //                 scm {
+    //                     url = subProject.ext.scmUrl
+    //                     connection = subProject.ext.scmConnection
+    //                     developerConnection = subProject.ext.scmDeveloperConnection
+    //                 }
+    //                 // 解决依赖关系
+    //                 withXml {
+    //                     def dependenciesNode = asNode().appendNode('dependencies')
+    //                     subProject.configurations.all { configuration ->
+    //                         def name = configuration.name
+    //                         if (name != "implementation" && name != "compile" && name != "api") {
+    //                             return
+    //                         }
+    //                         println(configuration)
+    //                         configuration.dependencies.each { dependencyItem ->
+    //                             println("withXml dependencies:${dependencyItem}")
+    //                             if (dependencyItem.name == "unspecified") {
+    //                                 // 忽略无法识别的
+    //                                 return
+    //                             }
+    //                             def dependencyNode = dependenciesNode.appendNode('dependency')
+    //                             dependencyNode.appendNode('groupId', dependencyItem.group)
+    //                             dependencyNode.appendNode('artifactId', dependencyItem.name)
+    //                             dependencyNode.appendNode('version', dependencyItem.version)
+    //                             if (name == "api" || name == "compile") {
+    //                                 dependencyNode.appendNode("scope", "compile")
+    //                             } else {
+    //                                 // implementation
+    //                                 dependencyNode.appendNode("scope", "runtime")
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     // 定义发布到哪里
+    //     repositories {
+    //         maven {
+    //             // 发布的位置，这里根据发布的版本区分了 SNAPSHOT 和最终版本两种情况
+    //             def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+    //             def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+    //             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+    //             credentials {
+    //                 // 这里就是之前在 issues.sonatype.org 注册的账号
+    //                 username rootProject.ext.ossUsername
+    //                 password rootProject.ext.ossPassword
+    //             }
+    //         }
+    //     }
+    // }
+
+    signing {
+        sign publishing.publications
+    }
+
+    println("exit ${subProject.name} subprojects")
+    println("*" * 50)
+}

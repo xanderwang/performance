@@ -1,15 +1,15 @@
 ext {
-  libGroupId = 'io.github.xanderwang'
-  libArtifactId = 'hook'
-  libVersion = rootProject.ext.lib_hook_version
+    libGroupId = 'io.github.xanderwang'
+    libArtifactId = 'hook'
+    libVersion = rootProject.ext.lib_hook_version
 
-  libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
+    libFile = "$buildDir/outputs/aar/${project.getName()}-release.aar"
 
-  pomName = libArtifactId
-  pomDescription = 'a hook lib for android'
-  pomUrl = 'https://github.com/xanderwang/performance'
+    pomName = libArtifactId
+    pomDescription = 'a hook lib for android'
+    pomUrl = 'https://github.com/xanderwang/performance'
 
-  scmUrl = 'https://github.com/xanderwang/performance'
-  scmConnection = 'scm:git:github.com/xanderwang/performance.git'
-  scmDeveloperConnection = 'scm:git:ssh://git@github.com/xanderwang/performance.git'
+    scmUrl = 'https://github.com/xanderwang/performance'
+    scmConnection = 'scm:git:github.com/xanderwang/performance.git'
+    scmDeveloperConnection = 'scm:git:ssh://git@github.com/xanderwang/performance.git'
 }

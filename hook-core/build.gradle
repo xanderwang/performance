@@ -1,25 +1,23 @@
 apply plugin: 'com.android.library'
 
 android {
-  def _android = rootProject.ext.android
-  compileSdkVersion _android['compileSdkVersion']
-  buildToolsVersion _android['buildToolsVersion']
+    def _android = rootProject.ext.android
+    compileSdkVersion _android['compileSdkVersion']
+    buildToolsVersion _android['buildToolsVersion']
 
-  defaultConfig {
-    minSdkVersion _android['minSdkVersion']
-    targetSdkVersion _android['targetSdkVersion']
-    versionCode 1
-    versionName "1.0"
-  }
-
-  buildTypes {
-    release {
-      minifyEnabled false
+    defaultConfig {
+        minSdkVersion _android['minSdkVersion']
+        targetSdkVersion _android['targetSdkVersion']
+        versionCode 1
+        versionName "1.0"
     }
-  }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
 }
 
 dependencies {
-  // def _dependencies = rootProject.ext.dependencies
-  // api _dependencies['asu']
 }
