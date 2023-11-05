@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-
+apply plugin: 'kotlin-android'
 android {
     def _android = rootProject.ext.android
     compileSdkVersion _android['compileSdkVersion']
@@ -18,6 +18,8 @@ android {
         }
     }
 }
-
 dependencies {
+    def _dependencies = rootProject.ext.dependencies
+    implementation _dependencies['core-ktx']
+    implementation _dependencies['kotlin-stdlib-jdk']
 }

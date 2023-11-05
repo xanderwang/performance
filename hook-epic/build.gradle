@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     def _android = rootProject.ext.android
@@ -21,12 +22,16 @@ android {
 
 dependencies {
     def _dependencies = rootProject.ext.dependencies
-    // if (rootProject.ext.use_local_epic) {
-    //     implementation _dependencies['epic-xander']
-    // } else {
-    //     implementation _dependencies['epic']
-    // }
-    implementation _dependencies['epic']
+    if (rootProject.ext.use_local_epic) {
+        implementation _dependencies['epic-xander']
+    } else {
+        implementation _dependencies['epic']
+    }
+    // implementation _dependencies['epic']
     implementation _dependencies['hook-core']
+
     implementation _dependencies['asu']
+
+    implementation _dependencies['core-ktx']
+    implementation _dependencies['kotlin-stdlib-jdk']
 }

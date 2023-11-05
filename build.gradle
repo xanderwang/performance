@@ -6,7 +6,7 @@ apply from: 'config.gradle'
 buildscript {
     println("enter ${project.name} buildscript")
 
-    ext.kotlin_version = "1.7.10"
+    ext.kotlin_version = "1.4.20"
     ext.lib_asu_version = "0.2.2"
     ext.lib_hook_version = "0.3.5"
     ext.lib_perf_version = "0.3.5"
@@ -70,20 +70,20 @@ allprojects {
             // Substitute project and module dependencies
             // 远程的 lib 依赖变成本地的依赖
             if (rootProject.ext.use_local_lib) {
-                substitute module('io.github.xanderwang:asu') with project(':a-simple-util')
-                substitute module('io.github.xanderwang:performance') with project(':performance')
-                substitute module('io.github.xanderwang:performance-noop') with project(':performance-noop')
+                substitute module('io.github.xanderwang:asu') using project(':a-simple-util')
+                substitute module('io.github.xanderwang:performance') using project(':performance')
+                substitute module('io.github.xanderwang:performance-noop') using project(':performance-noop')
             }
             if (rootProject.ext.use_local_hook_lib) {
-                substitute module('io.github.xanderwang:hook-core') with project(':hook-core')
-                substitute module('io.github.xanderwang:hook-epic') with project(':hook-epic')
-                substitute module('io.github.xanderwang:hook-sandhook') with project(':hook-sandhook')
-                substitute module('io.github.xanderwang:hook') with project(':hook')
+                substitute module('io.github.xanderwang:hook-core') using project(':hook-core')
+                substitute module('io.github.xanderwang:hook-epic') using project(':hook-epic')
+                substitute module('io.github.xanderwang:hook-sandhook') using project(':hook-sandhook')
+                substitute module('io.github.xanderwang:hook') using project(':hook')
             }
             // if (useLocalEpic.toBoolean()) {
             if (rootProject.ext.use_local_epic) {
-                substitute module('io.github.xanderwang:epic-xander') with project(':lib-epic')
-                substitute module('io.github.xanderwang:exposed-xposedapi-xandeer') with project(':lib-epic-exposed-xposedapi')
+                substitute module('io.github.xanderwang:epic-xander') using project(':lib-epic')
+                substitute module('io.github.xanderwang:exposed-xposedapi-xandeer') using project(':lib-epic-exposed-xposedapi')
             }
             // Substitute one module dependency for another
             // 修改某个依赖的版本

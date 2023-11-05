@@ -10,7 +10,7 @@ import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
-import io.github.xanderwang.asu.aLog
+import io.github.xanderwang.asu.ALog
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
 
@@ -22,14 +22,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun testThread(v: View) {
-        aLog.e(TAG, "testThread thread name:${Thread.currentThread().name}")
+        ALog.e(TAG, "testThread thread name:${Thread.currentThread().name}")
         thread(name = "test-thread-10000", start = true) {
             Thread.sleep(10000)
-            aLog.d(TAG, "${Thread.currentThread()}") // aLog.de(TAG, "${Thread.currentThread()}", Throwable())
+            ALog.d(TAG, "${Thread.currentThread()}") // aLog.de(TAG, "${Thread.currentThread()}", Throwable())
         }
         thread(name = "test-thread-3000", start = true) {
             Thread.sleep(3000)
-            aLog.d(TAG, "${Thread.currentThread()}") // aLog.de(TAG, "${Thread.currentThread()}", Throwable())
+            ALog.d(TAG, "${Thread.currentThread()}") // aLog.de(TAG, "${Thread.currentThread()}", Throwable())
         }
         val r = Runnable {
             Thread.sleep(5000)
@@ -39,11 +39,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun testThreadPool(v: View) {
-        aLog.e(TAG, "testThreadPool thread name:${Thread.currentThread().name}") // threadPool.submit {
+        ALog.e(TAG, "testThreadPool thread name:${Thread.currentThread().name}") // threadPool.submit {
         //   aLog.d(TAG, "testThreadPool")
         // }
         Executors.newSingleThreadExecutor().execute {
-            aLog.d(TAG, "execute!!!")
+            ALog.d(TAG, "execute!!!")
         } // Executors.newFixedThreadPool(3, Executors.defaultThreadFactory()).execute {
         //   aLog.d(TAG, "execute!!!")
         // }
@@ -63,20 +63,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun testANR(v: View) {
-        aLog.d(TAG, "testANR thread name:${Thread.currentThread().name}")
+        ALog.d(TAG, "testANR thread name:${Thread.currentThread().name}")
         Thread.sleep(1000)
     }
 
     fun testIPC(v: View) {
-        aLog.d(TAG, "testIPC thread name:${Thread.currentThread().name}")
+        ALog.d(TAG, "testIPC thread name:${Thread.currentThread().name}")
         val ams: ActivityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
         ams.runningAppProcesses.forEach {
-            aLog.d(TAG, "runningAppProcesses: ${it.processName}")
+            ALog.d(TAG, "runningAppProcesses: ${it.processName}")
         }
     }
 
     fun testFps(v: View) {
-        aLog.d(TAG, "testFps thread name:${Thread.currentThread().name}")
+        ALog.d(TAG, "testFps thread name:${Thread.currentThread().name}")
         Thread.sleep(200)
     }
 
@@ -87,13 +87,13 @@ class MainActivity : AppCompatActivity() {
     private val handler = Handler()
 
     fun testHandler(v: View) {
-        aLog.d(TAG, "testHandler thread name:${Thread.currentThread().name}")
+        ALog.d(TAG, "testHandler thread name:${Thread.currentThread().name}")
         lazyHandler.post {
-            aLog.d(TAG, "do lazyHandler post msg !!!")
+            ALog.d(TAG, "do lazyHandler post msg !!!")
             Thread.sleep(1000)
         }
         handler.post {
-            aLog.d(TAG, "do handler post msg !!!")
+            ALog.d(TAG, "do handler post msg !!!")
             Thread.sleep(1000)
         }
     }
@@ -102,8 +102,8 @@ class MainActivity : AppCompatActivity() {
 
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            aLog.e(TAG, "onServiceConnected:$service")
-            aLog.e(TAG, "onServiceConnected", IllegalAccessException())
+            ALog.e(TAG, "onServiceConnected:$service")
+            ALog.e(TAG, "onServiceConnected", IllegalAccessException())
             iDemoService = IDemoService.Stub.asInterface(service)
             iDemoService?.demo()
         }
@@ -121,11 +121,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun testLoadBitmap(v: View) {
-        aLog.d(TAG, "testLoadBitmap !!!")
+        ALog.d(TAG, "testLoadBitmap !!!")
         findViewById<ImageView>(R.id.image_view)?.let {
             val resId = R.drawable.ic_launcher_background
             var resUrl = "https://w.wallhaven.cc/full/md/wallhaven-md5z28.jpg"
-            aLog.d(TAG, "testLoadBitmap resUrl:$resUrl ,resId:$resId") // it.setBackgroundResource(resId)
+            ALog.d(TAG, "testLoadBitmap resUrl:$resUrl ,resId:$resId") // it.setBackgroundResource(resId)
             // it.setImageResource(resId)
             // Picasso.get()
             //     .load(resUrl)
